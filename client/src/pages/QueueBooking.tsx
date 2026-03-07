@@ -46,6 +46,7 @@ export default function QueueBooking() {
   const [selectedFaculty, setSelectedFaculty] = useState<string | null>(null);
   const [consultationConcern, setConsultationConcern] = useState("");
   const [selectedSlotKey, setSelectedSlotKey] = useState<string | null>(null);
+  const [selectedConsultationMethod, setSelectedConsultationMethod] = useState<ConsultationType | null>(null);
 
   const maskStudentNumber = (studentId: string) => {
     const normalized = studentId.trim().toUpperCase();
@@ -224,10 +225,13 @@ export default function QueueBooking() {
     setStep("faculty");
   };
 
-  const handleFacultySelect = (facultyId: string) => {
-    setSelectedFaculty(facultyId);
+  const handleFacultySelect = (facultyData: Faculty) => {
+    setSelectedFaculty(facultyData.id);
     setConsultationConcern("");
     setSelectedSlotKey(null);
+    setSelectedConsultationMethod(
+      facultyData.consultation_method === "online" ? "google_meet" : "face_to_face",
+    );
     setStep("type");
   };
 
@@ -245,6 +249,10 @@ export default function QueueBooking() {
       setError("Please select a consultation time slot before booking.");
       return;
     }
+    if (!selectedConsultationMethod) {
+      setError("Please choose a consultation mode before booking.");
+      return;
+    }
     if (!isValidEmail(studentEmail)) {
       setError("A valid student email is required before booking.");
       return;
@@ -259,7 +267,7 @@ export default function QueueBooking() {
         .insert({
           faculty_id: selectedFaculty,
           student_number: studentNumber,
-          consultation_type: selectedSlot.method,
+          consultation_type: selectedConsultationMethod,
           status: "waiting",
         })
         .select().single();
@@ -285,7 +293,7 @@ export default function QueueBooking() {
       historyPayload.push({
         queue_entry_id: queueEntry.id,
         action: "slot_selected",
-        notes: `${selectedSlot.dateLabel} ${selectedSlot.timeLabel} | ${selectedSlot.method.replace(/_/g, " ")}`,
+        notes: `${selectedSlot.dateLabel} ${selectedSlot.timeLabel} | ${selectedConsultationMethod.replace(/_/g, " ")}`,
       });
 
       const { error: historyError } = await kioskSupabase.from("queue_history").insert(historyPayload);
@@ -316,7 +324,13 @@ export default function QueueBooking() {
   const handleBack = () => {
     if (step === "department") { setStep("college"); setSelectedCollege(null); }
     if (step === "faculty") { setStep("department"); setSelectedDepartment(null); }
-    if (step === "type") { setStep("faculty"); setSelectedFaculty(null); setConsultationConcern(""); setSelectedSlotKey(null); }
+    if (step === "type") {
+      setStep("faculty");
+      setSelectedFaculty(null);
+      setConsultationConcern("");
+      setSelectedSlotKey(null);
+      setSelectedConsultationMethod(null);
+    }
   };
 
   return (
@@ -439,7 +453,7 @@ export default function QueueBooking() {
                           <button 
                             key={faculty.id} 
                             className="group flex items-center justify-between p-6 bg-white border border-slate-100 hover:border-[#E8E6EB] hover:shadow-lg rounded-[32px] transition-all duration-300 text-left"
-                            onClick={() => handleFacultySelect(faculty.id)}
+                            onClick={() => handleFacultySelect(faculty)}
                           >
                             <div className="flex items-center gap-6">
                               <div className="h-14 w-14 rounded-2xl bg-[#E8E6EB]/60 flex items-center justify-center text-[#024059] font-black text-xl shadow-sm">
@@ -469,6 +483,42 @@ export default function QueueBooking() {
 
                   {step === "type" && (
                     <div className="md:col-span-2 space-y-5">
+                      <div className="rounded-[28px] border border-slate-100 bg-slate-50 p-6 text-left">
+                        <p className="text-[10px] font-black text-[#024059]/65 uppercase tracking-[0.2em] mb-3">
+                          Consultation Mode
+                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedConsultationMethod("face_to_face")}
+                            className={`rounded-2xl border p-4 text-left transition-all ${
+                              selectedConsultationMethod === "face_to_face"
+                                ? "border-[#024059] bg-[#E8E6EB]/60"
+                                : "border-slate-200 bg-white hover:border-[#E8E6EB]"
+                            }`}
+                          >
+                            <p className="text-[10px] font-black uppercase tracking-widest text-[#024059]/65">
+                              In-Person
+                            </p>
+                            <p className="text-lg font-black text-slate-800 mt-1">Face-to-Face</p>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedConsultationMethod("google_meet")}
+                            className={`rounded-2xl border p-4 text-left transition-all ${
+                              selectedConsultationMethod === "google_meet"
+                                ? "border-[#024059] bg-[#E8E6EB]/60"
+                                : "border-slate-200 bg-white hover:border-[#E8E6EB]"
+                            }`}
+                          >
+                            <p className="text-[10px] font-black uppercase tracking-widest text-[#024059]/65">
+                              Remote
+                            </p>
+                            <p className="text-lg font-black text-slate-800 mt-1">Online (Google Meet)</p>
+                          </button>
+                        </div>
+                      </div>
+
                       <div className="rounded-[28px] border border-slate-100 bg-slate-50 p-6 text-left">
                         <p className="text-[10px] font-black text-[#024059]/65 uppercase tracking-[0.2em] mb-3">
                           Consultation Concern (Required)
@@ -506,7 +556,7 @@ export default function QueueBooking() {
                               </p>
                               <p className="text-lg font-black text-slate-800 mt-1">{slot.timeLabel}</p>
                               <p className="text-[10px] font-black uppercase tracking-widest text-[#024059] mt-2">
-                                {slot.method === "google_meet" ? "Online (Google Meet)" : "Face-to-Face"}
+                                {selectedConsultationMethod === "google_meet" ? "Online (Google Meet)" : "Face-to-Face"}
                               </p>
                             </button>
                           ))}
@@ -521,7 +571,7 @@ export default function QueueBooking() {
                       <Button
                         type="button"
                         onClick={handleSlotBooking}
-                        disabled={loading || !consultationConcern.trim() || !selectedSlot}
+                        disabled={loading || !consultationConcern.trim() || !selectedSlot || !selectedConsultationMethod}
                         className="w-full h-16 bg-[#024059] hover:bg-[#024059] rounded-2xl font-black text-white uppercase tracking-[0.2em]"
                       >
                         Confirm Booking
