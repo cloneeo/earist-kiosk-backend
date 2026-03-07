@@ -174,7 +174,8 @@ export default function QueueBooking() {
           queue_entries(status, called_at)
         `)
         .eq("department_id", selectedDepartment)
-        .eq("status", "accepting");
+        .eq("status", "accepting")
+        .order("name");
       if (err) throw err;
       setFaculties(data || []);
     } catch (err) {
@@ -183,12 +184,51 @@ export default function QueueBooking() {
   }, [selectedDepartment]);
 
   useEffect(() => {
+    if (!selectedDepartment) return;
+
     const subscription = kioskSupabase
-      .channel('faculty-updates')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'faculty' }, () => loadFaculty())
+      .channel(`faculty-updates:${selectedDepartment}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'faculty', filter: `department_id=eq.${selectedDepartment}` },
+        () => loadFaculty(),
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'queue_entries' },
+        () => loadFaculty(),
+      )
       .subscribe();
+
     return () => { subscription.unsubscribe(); };
-  }, [loadFaculty]);
+  }, [loadFaculty, selectedDepartment]);
+
+  useEffect(() => {
+    if (!selectedDepartment || step !== "faculty") return;
+
+    const interval = window.setInterval(() => {
+      void loadFaculty();
+    }, 5000);
+
+    const onFocus = () => {
+      void loadFaculty();
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        void loadFaculty();
+      }
+    };
+
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [loadFaculty, selectedDepartment, step]);
 
   useEffect(() => {
     const loadColleges = async () => {
