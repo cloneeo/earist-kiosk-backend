@@ -1,6 +1,4 @@
 import type { Express } from "express";
-import nodemailer from "nodemailer";
-import { Resend } from "resend";
 
 type QueueEntryRow = {
   id: string;
@@ -28,29 +26,18 @@ type SupabaseListResponse<T> = {
 type SendEmailResult = {
   ok: boolean;
   message?: string;
-  provider?: "resend" | "smtp";
+  provider?: "sendgrid";
 };
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-const resendApiKey = process.env.RESEND_API_KEY || "";
-const smtpHost = process.env.SMTP_HOST || "";
-const smtpPort = Number(process.env.SMTP_PORT || 587);
-const smtpUser = process.env.SMTP_USER || "";
-const smtpPass = process.env.SMTP_PASS || "";
-const smtpSecure = String(process.env.SMTP_SECURE || "").trim().toLowerCase() === "true" || smtpPort === 465;
-const bookingEmailFrom = process.env.BOOKING_EMAIL_FROM || "";
-const resendFrom = process.env.RESEND_FROM || "Acme <onboarding@resend.dev>";
-const smtpConnectionTimeoutMs = Number(process.env.SMTP_CONNECTION_TIMEOUT_MS || 30000);
-const smtpGreetingTimeoutMs = Number(process.env.SMTP_GREETING_TIMEOUT_MS || 30000);
-const smtpSocketTimeoutMs = Number(process.env.SMTP_SOCKET_TIMEOUT_MS || 60000);
+const sendGridApiKey = process.env.SENDGRID_API_KEY || "";
+const sendGridFrom = process.env.SENDGRID_FROM || process.env.BOOKING_EMAIL_FROM || "";
 
 const supabaseRestKey = supabaseServiceRoleKey || supabaseAnonKey;
 const hasSupabaseConfig = !!supabaseUrl && !!supabaseRestKey;
-const hasResendConfig = !!resendApiKey;
-const hasSmtpConfig = !!smtpHost && !!smtpPort && !!smtpUser && !!smtpPass;
-const isGmailHost = /gmail\.com$/i.test(smtpHost);
+const hasSendGridConfig = !!sendGridApiKey && !!sendGridFrom;
 
 const isUuid = (value: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -105,88 +92,40 @@ const resolveFallbackEmail = (value: unknown): string | null => {
   return candidate;
 };
 
-const sendViaResend = async (toEmail: string, subject: string, html: string): Promise<SendEmailResult> => {
-  if (!hasResendConfig) {
-    return { ok: false, message: "Resend is not configured." };
+const sendBookingEmail = async (toEmail: string, subject: string, html: string): Promise<SendEmailResult> => {
+  if (!hasSendGridConfig) {
+    return { ok: false, message: "SendGrid is not configured (SENDGRID_API_KEY, SENDGRID_FROM)." };
   }
 
   try {
-    const resend = new Resend(resendApiKey);
-    await resend.emails.send({
-      from: resendFrom,
-      to: [toEmail],
-      subject,
-      html,
-    });
-    return { ok: true, provider: "resend" };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Resend send failed.";
-    return { ok: false, message, provider: "resend" };
-  }
-};
-
-const sendBookingEmail = async (toEmail: string, subject: string, html: string): Promise<SendEmailResult> => {
-  let providerError = "Email provider is not configured.";
-
-  if (hasSmtpConfig && bookingEmailFrom) {
-    const transportConfigs: any[] = [
-      {
-        host: smtpHost,
-        port: smtpPort,
-        secure: smtpSecure,
-        auth: { user: smtpUser, pass: smtpPass },
-        connectionTimeout: smtpConnectionTimeoutMs,
-        greetingTimeout: smtpGreetingTimeoutMs,
-        socketTimeout: smtpSocketTimeoutMs,
+    const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${sendGridApiKey}`,
+        "Content-Type": "application/json",
       },
-    ];
+      body: JSON.stringify({
+        personalizations: [{ to: [{ email: toEmail }] }],
+        from: { email: sendGridFrom },
+        subject,
+        content: [{ type: "text/html", value: html }],
+      }),
+    });
 
-    if (isGmailHost) {
-      transportConfigs.push(
-        {
-          host: "smtp.gmail.com",
-          port: 465,
-          secure: true,
-          auth: { user: smtpUser, pass: smtpPass },
-          connectionTimeout: smtpConnectionTimeoutMs,
-          greetingTimeout: smtpGreetingTimeoutMs,
-          socketTimeout: smtpSocketTimeoutMs,
-        },
-        {
-          service: "gmail",
-          auth: { user: smtpUser, pass: smtpPass },
-          connectionTimeout: smtpConnectionTimeoutMs,
-          greetingTimeout: smtpGreetingTimeoutMs,
-          socketTimeout: smtpSocketTimeoutMs,
-        },
-      );
+    if (!response.ok) {
+      const errorDetail = await response.text().catch(() => "");
+      return {
+        ok: false,
+        provider: "sendgrid",
+        message: errorDetail || `SendGrid send failed (${response.status})`,
+      };
     }
 
-    let smtpError = "SMTP send failed.";
-    for (const config of transportConfigs) {
-      try {
-        const transporter = nodemailer.createTransport(config);
-        await transporter.sendMail({
-          from: bookingEmailFrom,
-          to: toEmail,
-          subject,
-          html,
-        });
-        return { ok: true, provider: "smtp" };
-      } catch (error) {
-        smtpError = error instanceof Error ? error.message : "SMTP send failed.";
-      }
-    }
-    providerError = smtpError;
+    return { ok: true, provider: "sendgrid" };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "SendGrid request failed.";
+    return { ok: false, provider: "sendgrid", message };
   }
-
-  if (hasResendConfig) {
-    const resendResult = await sendViaResend(toEmail, subject, html);
-    if (resendResult.ok) return resendResult;
-    providerError = resendResult.message || providerError;
-  }
-
-  return { ok: false, message: providerError };
 };
 
 const insertQueueHistory = async (queueEntryId: string, action: string, notes: string) => {
