@@ -127,6 +127,7 @@ export default function FacultyDashboard() {
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [isUploadingRecording, setIsUploadingRecording] = useState(false);
+  const [recordingMode, setRecordingMode] = useState<"mic" | "meet_tab">("mic");
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const meetWatcherRef = useRef<number | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -587,6 +588,49 @@ export default function FacultyDashboard() {
     }
   };
 
+  const startRecorderWithStream = (queueEntryId: string, stream: MediaStream, successMessage: string) => {
+    recorderStreamRef.current = stream;
+
+    const preferredMimeTypes = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"];
+    const mimeType = preferredMimeTypes.find((type) => MediaRecorder.isTypeSupported(type));
+    const mediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+
+    recordingChunksRef.current = [];
+    recordingStartedAtRef.current = Date.now();
+    recordingQueueIdRef.current = queueEntryId;
+
+    mediaRecorder.ondataavailable = (event) => {
+      if (event.data && event.data.size > 0) {
+        recordingChunksRef.current.push(event.data);
+      }
+    };
+
+    mediaRecorder.onstop = () => {
+      const startedAt = recordingStartedAtRef.current || Date.now();
+      const queueId = recordingQueueIdRef.current;
+      const chunks = recordingChunksRef.current;
+
+      const durationSeconds = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
+      const blob = new Blob(chunks, { type: mediaRecorder.mimeType || "audio/webm" });
+
+      recordingStartedAtRef.current = null;
+      recordingQueueIdRef.current = null;
+      recordingChunksRef.current = [];
+      recorderRef.current = null;
+      recorderStreamRef.current?.getTracks().forEach((track) => track.stop());
+      recorderStreamRef.current = null;
+
+      if (queueId && blob.size > 0) {
+        void uploadRecording(queueId, blob, durationSeconds);
+      }
+    };
+
+    mediaRecorder.start(1000);
+    recorderRef.current = mediaRecorder;
+    setIsRecording(true);
+    toast.success(successMessage);
+  };
+
   const handleStartRecording = async (queueEntryId: string) => {
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
       toast.error("Audio recording is not supported on this device/browser.");
@@ -594,47 +638,29 @@ export default function FacultyDashboard() {
     }
 
     try {
+      if (recordingMode === "meet_tab") {
+        const getDisplayMedia = navigator.mediaDevices.getDisplayMedia?.bind(navigator.mediaDevices);
+        if (!getDisplayMedia) {
+          toast.error("Tab/system audio capture is not supported on this browser.");
+          return;
+        }
+
+        const displayStream = await getDisplayMedia({ video: true, audio: true });
+        const audioTracks = displayStream.getAudioTracks();
+        if (audioTracks.length === 0) {
+          displayStream.getTracks().forEach((track) => track.stop());
+          toast.error("No tab/system audio track was shared. Re-share and enable audio.");
+          return;
+        }
+
+        // Record only audio tracks from captured tab/system media.
+        const audioOnlyStream = new MediaStream(audioTracks);
+        startRecorderWithStream(queueEntryId, audioOnlyStream, "Meet tab audio recording started.");
+        return;
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      recorderStreamRef.current = stream;
-
-      const preferredMimeTypes = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"];
-      const mimeType = preferredMimeTypes.find((type) => MediaRecorder.isTypeSupported(type));
-      const mediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
-
-      recordingChunksRef.current = [];
-      recordingStartedAtRef.current = Date.now();
-      recordingQueueIdRef.current = queueEntryId;
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data && event.data.size > 0) {
-          recordingChunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorder.onstop = () => {
-        const startedAt = recordingStartedAtRef.current || Date.now();
-        const queueId = recordingQueueIdRef.current;
-        const chunks = recordingChunksRef.current;
-
-        const durationSeconds = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
-        const blob = new Blob(chunks, { type: mediaRecorder.mimeType || "audio/webm" });
-
-        recordingStartedAtRef.current = null;
-        recordingQueueIdRef.current = null;
-        recordingChunksRef.current = [];
-        recorderRef.current = null;
-        recorderStreamRef.current?.getTracks().forEach((track) => track.stop());
-        recorderStreamRef.current = null;
-
-        if (queueId && blob.size > 0) {
-          void uploadRecording(queueId, blob, durationSeconds);
-        }
-      };
-
-      mediaRecorder.start(1000);
-      recorderRef.current = mediaRecorder;
-      setIsRecording(true);
-      toast.success("Audio recording started.");
+      startRecorderWithStream(queueEntryId, stream, "Microphone recording started.");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";
       toast.error(`Unable to start recording: ${message}`);
@@ -999,6 +1025,17 @@ export default function FacultyDashboard() {
                         </div>
                       )}
                       <div className="flex gap-4 pt-4 max-w-sm mx-auto w-full">
+                        {currentCalling.consultation_type === "google_meet" && !isRecording && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="h-16 px-4 rounded-2xl border-[#E8E6EB] text-[#024059] font-black uppercase tracking-widest text-[10px]"
+                            onClick={() => setRecordingMode((prev) => (prev === "meet_tab" ? "mic" : "meet_tab"))}
+                            disabled={isUploadingRecording}
+                          >
+                            {recordingMode === "meet_tab" ? "Source: Meet Tab" : "Source: Mic"}
+                          </Button>
+                        )}
                         <Button
                           className={`flex-1 h-16 rounded-2xl border-0 font-black uppercase tracking-widest text-[10px] shadow-sm ${
                             isRecording ? "bg-[#024059] text-white hover:bg-[#024059]" : "bg-[#E8E6EB]/60 text-[#024059] hover:bg-[#E8E6EB]/70"
@@ -1013,7 +1050,7 @@ export default function FacultyDashboard() {
                           disabled={isUploadingRecording}
                         >
                           {isRecording ? <Square size={14} className="mr-2" /> : <Mic size={14} className="mr-2" />}
-                          {isRecording ? "Stop Rec" : "Record"}
+                          {isRecording ? "Stop Rec" : recordingMode === "meet_tab" && currentCalling.consultation_type === "google_meet" ? "Record Meet" : "Record"}
                         </Button>
                         <Button className="flex-1 h-16 bg-[#E8E6EB]/60 text-[#024059] hover:bg-[#E8E6EB]/70 rounded-2xl border-0 font-black uppercase tracking-widest text-[10px] shadow-sm" onClick={() => handleComplete(currentCalling.id)}>
                           Complete
