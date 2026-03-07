@@ -38,6 +38,7 @@ import { supabase } from "@/lib/supabase";
 import { kioskSupabase } from "@/lib/supabaseKiosk";
 import { toast } from "react-hot-toast";
 import { barcodeService } from "@/services/BarcodeService";
+import { OnScreenKeyboard } from "@/components/OnScreenKeyboard";
 
 export default function StudentKiosk() {
   const [, setLocation] = useLocation();
@@ -57,6 +58,8 @@ export default function StudentKiosk() {
   const [studentName, setStudentName] = useState("");
   const [studentEmail, setStudentEmail] = useState("");
   const [isResolvingStudent, setIsResolvingStudent] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [keyboardField, setKeyboardField] = useState<"studentNumber" | "studentName" | "studentEmail" | "directorySearch" | null>(null);
 
   const normalizeStudentNumber = (studentId: string) => studentId.trim().toUpperCase();
 
@@ -70,6 +73,33 @@ export default function StudentKiosk() {
     }
     return `${normalized.slice(0, 3)}*****${normalized.slice(-1)}`;
   };
+
+  const shouldUseOnScreenKeyboard =
+    typeof window !== "undefined" &&
+    (window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 1024);
+
+  const openKeyboardFor = (field: "studentNumber" | "studentName" | "studentEmail" | "directorySearch") => {
+    if (!shouldUseOnScreenKeyboard) return;
+    setKeyboardField(field);
+    setKeyboardVisible(true);
+  };
+
+  const getKeyboardValue = () => {
+    if (keyboardField === "studentNumber") return studentNumber;
+    if (keyboardField === "studentName") return studentName;
+    if (keyboardField === "studentEmail") return studentEmail;
+    if (keyboardField === "directorySearch") return searchQuery;
+    return "";
+  };
+
+  const updateKeyboardValue = (next: string) => {
+    if (keyboardField === "studentNumber") setStudentNumber(next.toUpperCase());
+    if (keyboardField === "studentName") setStudentName(next);
+    if (keyboardField === "studentEmail") setStudentEmail(next.toLowerCase());
+    if (keyboardField === "directorySearch") setSearchQuery(next);
+  };
+
+  const keyboardMode = keyboardField === "studentEmail" ? "email" : keyboardField === "studentName" ? "text" : "alphanumeric";
 
   const loadFaculties = useCallback(async () => {
     const { data, error: fetchError } = await kioskSupabase
@@ -495,7 +525,7 @@ export default function StudentKiosk() {
   });
 
   return (
-    <div className="min-h-screen bg-[#E8E6EB] flex flex-col font-sans">
+    <div className={`min-h-screen bg-[#E8E6EB] flex flex-col font-sans ${keyboardVisible ? "pb-64 md:pb-72" : ""}`}>
       <header className="px-8 py-8 lg:px-12 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-[#024059] rounded-xl flex items-center justify-center shadow-lg shadow-[#024059]/20">
@@ -567,6 +597,7 @@ export default function StudentKiosk() {
                     placeholder="e.g., 222-03943M"
                     value={studentNumber}
                     onChange={(e) => setStudentNumber(e.target.value.toUpperCase())}
+                    onFocus={() => openKeyboardFor("studentNumber")}
                     disabled={loading}
                     className="text-center font-mono h-14 border-slate-100 focus-visible:ring-4 focus-visible:ring-[#E8E6EB] focus-visible:border-[#024059] rounded-[20px] text-lg bg-slate-50 font-bold"
                   />
@@ -626,6 +657,7 @@ export default function StudentKiosk() {
                       <Input
                         value={studentName}
                         onChange={(e) => setStudentName(e.target.value)}
+                        onFocus={() => openKeyboardFor("studentName")}
                         placeholder={isResolvingStudent ? "Looking up student..." : "Enter your full name"}
                         disabled={loading || isResolvingStudent}
                         className="h-12 rounded-xl border-slate-200 font-bold"
@@ -640,6 +672,7 @@ export default function StudentKiosk() {
                         type="email"
                         value={studentEmail}
                         onChange={(e) => setStudentEmail(e.target.value)}
+                        onFocus={() => openKeyboardFor("studentEmail")}
                         placeholder="name@earist.edu.ph"
                         disabled={loading || isResolvingStudent}
                         className="h-12 rounded-xl border-slate-200 font-bold"
@@ -712,6 +745,7 @@ export default function StudentKiosk() {
                           placeholder="Search professor or department..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
+                          onFocus={() => openKeyboardFor("directorySearch")}
                           className="w-full bg-white/10 border border-white/20 rounded-2xl py-4 pl-12 pr-6 text-white placeholder:text-white/40 focus:outline-none focus:ring-4 focus:ring-white/10 transition-all font-bold"
                         />
                       </div>
@@ -946,6 +980,18 @@ export default function StudentKiosk() {
           </Card>
         </div>
       </main>
+
+      {keyboardVisible && keyboardField && (
+        <OnScreenKeyboard
+          title="Kiosk Keyboard"
+          value={getKeyboardValue()}
+          onChange={updateKeyboardValue}
+          onEnter={() => setKeyboardVisible(false)}
+          onClose={() => setKeyboardVisible(false)}
+          mode={keyboardMode}
+          forceUppercase={keyboardField === "studentNumber"}
+        />
+      )}
 
       <footer className="px-12 py-8 flex justify-between items-center bg-white border-t border-slate-50">
         <p className="text-[10px] font-black text-slate-200 uppercase tracking-[0.4em]">

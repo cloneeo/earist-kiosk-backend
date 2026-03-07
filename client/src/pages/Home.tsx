@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "react-hot-toast";
+import { OnScreenKeyboard } from "@/components/OnScreenKeyboard";
 
 export default function Home() {
   const { isAuthenticated, signOut } = useAuth();
@@ -21,6 +22,11 @@ export default function Home() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [statusInput, setStatusInput] = useState("");
   const [now, setNow] = useState(new Date());
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  const shouldUseOnScreenKeyboard =
+    typeof window !== "undefined" &&
+    (window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 1024);
 
   const normalizeStudentNumber = (studentId: string) => studentId.trim().toUpperCase();
 
@@ -216,7 +222,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#E8E6EB] font-sans flex flex-col">
-      <nav className="bg-white border-b border-[#E8E6EB] px-8 py-4 sticky top-0 z-30 flex justify-between items-center shadow-sm">
+      <nav className="bg-white border-b border-[#E8E6EB] px-4 py-4 sm:px-8 sticky top-0 z-30 flex justify-between items-center shadow-sm">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-[#024059] rounded-xl flex items-center justify-center shadow-md text-white font-black text-xs">EQ</div>
           <h1 className="text-xl font-black text-[#024059] uppercase tracking-tight">EARIST Kiosk</h1>
@@ -228,16 +234,16 @@ export default function Home() {
         )}
       </nav>
 
-      <main className="max-w-7xl mx-auto w-full px-8 py-12 flex flex-col lg:flex-row gap-10">
+      <main className="max-w-7xl mx-auto w-full px-4 py-6 sm:px-8 sm:py-12 flex flex-col lg:flex-row gap-6 sm:gap-10">
         
         {/* LEFT COLUMN: REGISTRATION */}
         <div className="lg:w-1/3">
           <Card className="border-0 shadow-2xl rounded-[48px] overflow-hidden bg-white sticky top-24">
-            <div className="bg-[#024059] p-10 text-center text-white">
-              <h2 className="text-3xl font-black uppercase leading-none tracking-tighter">Get Started</h2>
+            <div className="bg-[#024059] p-6 text-center text-white sm:p-10">
+              <h2 className="text-2xl font-black uppercase leading-none tracking-tighter sm:text-3xl">Get Started</h2>
               <p className="text-[#E8E6EB] mt-3 text-sm font-medium">Scan Student ID to book</p>
             </div>
-            <CardContent className="p-10 text-center">
+            <CardContent className="p-6 text-center sm:p-10">
               <div className="mb-10 p-8 rounded-[32px] bg-[#E8E6EB]/60 border-2 border-dashed border-[#E8E6EB] flex flex-col items-center">
                  <QrCode className="w-16 h-16 text-[#024059] mb-4" />
                  <h3 className="font-black text-slate-800 uppercase tracking-[0.2em] text-[10px]">Scanner Active</h3>
@@ -254,7 +260,7 @@ export default function Home() {
           
           {/* BUBBLE 1: LIVE MONITOR */}
           <Card className="border-0 shadow-xl rounded-[48px] bg-white overflow-hidden border-t-8 border-[#024059] flex flex-col">
-            <CardContent className="p-10 flex-1 flex flex-col">
+            <CardContent className="p-6 flex-1 flex flex-col sm:p-10">
               <div className="flex justify-between items-center mb-8">
                 <h3 className="font-black text-slate-800 uppercase text-xl flex items-center gap-3 tracking-tighter">
                   <Monitor size={24} className="text-[#024059]"/> Live Monitor
@@ -288,7 +294,7 @@ export default function Home() {
                 <Badge className="bg-[#E8E6EB]/60 text-[#024059] border-0 text-[10px] font-black mb-3 uppercase tracking-widest px-4 py-1.5 rounded-full">
                    Now Consulting
                 </Badge>
-                <h4 className="text-6xl font-black text-slate-800 tracking-tighter uppercase leading-none">
+                <h4 className="text-4xl font-black text-slate-800 tracking-tighter uppercase leading-none sm:text-6xl">
                   {currentServing ? currentServing.student_display_name : "IDLE"}
                 </h4>
                 {currentServing && (
@@ -324,6 +330,9 @@ export default function Home() {
                     className="w-full bg-slate-50 border-transparent focus:ring-2 focus:ring-[#E8E6EB] focus:bg-white rounded-[20px] py-4 pl-12 text-[10px] font-black uppercase tracking-widest transition-all" 
                     value={statusInput} 
                     onChange={(e) => setStatusInput(e.target.value)} 
+                    onFocus={() => {
+                      if (shouldUseOnScreenKeyboard) setKeyboardVisible(true);
+                    }}
                   />
                 </div>
                 <button type="submit" className="bg-[#024059] text-white p-4 rounded-[20px] shadow-lg transition-all hover:bg-[#024059] active:scale-95 flex items-center justify-center">
@@ -335,7 +344,7 @@ export default function Home() {
 
           {/* BUBBLE 2: PROFESSOR SCHEDULE & METHOD */}
           <Card className="border-0 shadow-xl rounded-[48px] bg-white overflow-hidden flex flex-col">
-            <CardContent className="p-10 flex-1 flex flex-col">
+            <CardContent className="p-6 flex-1 flex flex-col sm:p-10">
               <div className="flex items-center gap-5 mb-10">
                 <div className="w-16 h-16 bg-[#E8E6EB]/60 rounded-[28px] flex items-center justify-center text-[#024059] shadow-inner">
                   <Calendar size={32} />
@@ -380,11 +389,23 @@ export default function Home() {
         </div>
       </main>
 
-      <footer className="mt-auto px-12 py-10 bg-white border-t border-slate-50 text-center">
+      <footer className="mt-auto px-4 py-8 bg-white border-t border-slate-50 text-center sm:px-12 sm:py-10">
         <p className="text-[10px] font-black text-slate-200 uppercase tracking-[0.6em] leading-none">
           EARIST QUEUE MANAGEMENT SYSTEM © 2026
         </p>
       </footer>
+
+      {keyboardVisible && (
+        <OnScreenKeyboard
+          title="Ticket Search Keyboard"
+          value={statusInput}
+          onChange={setStatusInput}
+          onEnter={() => setKeyboardVisible(false)}
+          onClose={() => setKeyboardVisible(false)}
+          mode="alphanumeric"
+          forceUppercase
+        />
+      )}
     </div>
   );
 }
