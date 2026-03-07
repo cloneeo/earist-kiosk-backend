@@ -60,7 +60,8 @@ export default function QueueBooking() {
 
   const shouldUseOnScreenKeyboard =
     typeof window !== "undefined" &&
-    (window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 1024);
+    !/android|iphone|ipad|ipod|mobile/i.test(window.navigator.userAgent || "") &&
+    window.matchMedia("(pointer: coarse)").matches;
 
   const maskStudentNumber = (studentId: string) => {
     const normalized = studentId.trim().toUpperCase();

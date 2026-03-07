@@ -26,7 +26,8 @@ export default function Home() {
 
   const shouldUseOnScreenKeyboard =
     typeof window !== "undefined" &&
-    (window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 1024);
+    !/android|iphone|ipad|ipod|mobile/i.test(window.navigator.userAgent || "") &&
+    window.matchMedia("(pointer: coarse)").matches;
 
   const normalizeStudentNumber = (studentId: string) => studentId.trim().toUpperCase();
 
@@ -246,7 +247,6 @@ export default function Home() {
             <CardContent className="p-6 text-center sm:p-10">
               <div className="mb-10 p-8 rounded-[32px] bg-[#E8E6EB]/60 border-2 border-dashed border-[#E8E6EB] flex flex-col items-center">
                  <QrCode className="w-16 h-16 text-[#024059] mb-4" />
-                 <h3 className="font-black text-slate-800 uppercase tracking-[0.2em] text-[10px]">Scanner Active</h3>
               </div>
               <Button onClick={() => setLocation("/kiosk")} className="w-full bg-[#024059] hover:bg-[#024059] h-20 rounded-[32px] font-black uppercase text-white shadow-xl shadow-[#024059]/20 text-lg transition-transform active:scale-95">
                 Start Booking

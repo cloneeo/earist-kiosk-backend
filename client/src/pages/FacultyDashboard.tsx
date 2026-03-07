@@ -138,7 +138,8 @@ export default function FacultyDashboard() {
 
   const shouldUseOnScreenKeyboard =
     typeof window !== "undefined" &&
-    (window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 1024);
+    !/android|iphone|ipad|ipod|mobile/i.test(window.navigator.userAgent || "") &&
+    window.matchMedia("(pointer: coarse)").matches;
 
   const openKeyboardFor = (field: "meetingLink" | "officeLocation") => {
     if (!shouldUseOnScreenKeyboard) return;

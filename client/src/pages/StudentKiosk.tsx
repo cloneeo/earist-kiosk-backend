@@ -76,7 +76,8 @@ export default function StudentKiosk() {
 
   const shouldUseOnScreenKeyboard =
     typeof window !== "undefined" &&
-    (window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 1024);
+    !/android|iphone|ipad|ipod|mobile/i.test(window.navigator.userAgent || "") &&
+    window.matchMedia("(pointer: coarse)").matches;
 
   const openKeyboardFor = (field: "studentNumber" | "studentName" | "studentEmail" | "directorySearch") => {
     if (!shouldUseOnScreenKeyboard) return;
@@ -436,8 +437,7 @@ export default function StudentKiosk() {
       setError("Please scan or enter your ID");
       return;
     }
-    if (!validateStudentNumber(studentNumber)) {
-      setError("Invalid format (e.g., 222-03943M)");
+    if (!validateStudentNumber(studentNumber)) {      setError("Invalid format (e.g., 222-00000M)");
       return;
     }
     await openStudentIdentityDialog(studentNumber.trim().toUpperCase());
@@ -572,14 +572,10 @@ export default function StudentKiosk() {
             <CardContent className="px-8 py-8 space-y-6">
               <div className="p-6 rounded-[28px] bg-[#E8E6EB]/65 border-2 border-dashed border-[#E8E6EB] text-center flex flex-col items-center">
                 <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-4">
-                  <ScanBarcode className="w-7 h-7 text-[#024059] animate-pulse" />
-                </div>
-                <h3 className="font-black text-slate-800 uppercase tracking-widest text-xs">Scanner Active</h3>
+                  <ScanBarcode className="w-7 h-7 text-[#024059] animate-pulse" />                </div>
                 <p className="text-[10px] text-[#024059]/65 font-bold uppercase mt-1">
                   Place ID in front of scanner
-                </p>
-              </div>
-
+                </p>              </div>
               <form onSubmit={handleSubmit} className="space-y-4">
                 {error && (
                   <Alert variant="destructive" className="bg-[#E8E6EB]/60 border-0 text-[#024059] rounded-2xl p-4">
@@ -594,7 +590,7 @@ export default function StudentKiosk() {
                   </label>
                   <Input
                     type="text"
-                    placeholder="e.g., 222-03943M"
+                    placeholder="e.g., 222-00000M"
                     value={studentNumber}
                     onChange={(e) => setStudentNumber(e.target.value.toUpperCase())}
                     onFocus={() => openKeyboardFor("studentNumber")}
