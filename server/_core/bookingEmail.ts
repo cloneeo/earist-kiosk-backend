@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 type QueueEntryRow = {
   id: string;
@@ -33,18 +34,21 @@ type SendEmailResult = {
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+const resendApiKey = process.env.RESEND_API_KEY || "";
 const smtpHost = process.env.SMTP_HOST || "";
 const smtpPort = Number(process.env.SMTP_PORT || 587);
 const smtpUser = process.env.SMTP_USER || "";
 const smtpPass = process.env.SMTP_PASS || "";
 const smtpSecure = String(process.env.SMTP_SECURE || "").trim().toLowerCase() === "true" || smtpPort === 465;
 const bookingEmailFrom = process.env.BOOKING_EMAIL_FROM || "";
+const resendFrom = process.env.RESEND_FROM || bookingEmailFrom || "Acme <onboarding@resend.dev>";
 const smtpConnectionTimeoutMs = Number(process.env.SMTP_CONNECTION_TIMEOUT_MS || 30000);
 const smtpGreetingTimeoutMs = Number(process.env.SMTP_GREETING_TIMEOUT_MS || 30000);
 const smtpSocketTimeoutMs = Number(process.env.SMTP_SOCKET_TIMEOUT_MS || 60000);
 
 const supabaseRestKey = supabaseServiceRoleKey || supabaseAnonKey;
 const hasSupabaseConfig = !!supabaseUrl && !!supabaseRestKey;
+const hasResendConfig = !!resendApiKey;
 const hasSmtpConfig = !!smtpHost && !!smtpPort && !!smtpUser && !!smtpPass;
 const isGmailHost = /gmail\.com$/i.test(smtpHost);
 
@@ -101,9 +105,37 @@ const resolveFallbackEmail = (value: unknown): string | null => {
   return candidate;
 };
 
+const sendViaResend = async (toEmail: string, subject: string, html: string): Promise<SendEmailResult> => {
+  if (!hasResendConfig) {
+    return { ok: false, message: "Resend is not configured." };
+  }
+
+  try {
+    const resend = new Resend(resendApiKey);
+    await resend.emails.send({
+      from: resendFrom,
+      to: [toEmail],
+      subject,
+      html,
+    });
+    return { ok: true };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Resend send failed.";
+    return { ok: false, message };
+  }
+};
+
 const sendBookingEmail = async (toEmail: string, subject: string, html: string): Promise<SendEmailResult> => {
+  let providerError = "Email provider is not configured.";
+
+  if (hasResendConfig) {
+    const resendResult = await sendViaResend(toEmail, subject, html);
+    if (resendResult.ok) return resendResult;
+    providerError = resendResult.message || providerError;
+  }
+
   if (!hasSmtpConfig || !bookingEmailFrom) {
-    return { ok: false, message: "SMTP email settings are not configured." };
+    return { ok: false, message: providerError };
   }
 
   const transportConfigs: any[] = [
@@ -139,7 +171,7 @@ const sendBookingEmail = async (toEmail: string, subject: string, html: string):
     );
   }
 
-  let lastErrorMessage = "SMTP send failed.";
+  let lastErrorMessage = providerError || "SMTP send failed.";
 
   try {
     for (const config of transportConfigs) {
