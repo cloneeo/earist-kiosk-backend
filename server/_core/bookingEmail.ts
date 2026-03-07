@@ -128,52 +128,41 @@ const sendViaResend = async (toEmail: string, subject: string, html: string): Pr
 const sendBookingEmail = async (toEmail: string, subject: string, html: string): Promise<SendEmailResult> => {
   let providerError = "Email provider is not configured.";
 
-  if (hasResendConfig) {
-    const resendResult = await sendViaResend(toEmail, subject, html);
-    if (resendResult.ok) return resendResult;
-    providerError = resendResult.message || providerError;
-  }
-
-  if (!hasSmtpConfig || !bookingEmailFrom) {
-    return { ok: false, message: providerError };
-  }
-
-  const transportConfigs: any[] = [
-    {
-      host: smtpHost,
-      port: smtpPort,
-      secure: smtpSecure,
-      auth: { user: smtpUser, pass: smtpPass },
-      connectionTimeout: smtpConnectionTimeoutMs,
-      greetingTimeout: smtpGreetingTimeoutMs,
-      socketTimeout: smtpSocketTimeoutMs,
-    },
-  ];
-
-  if (isGmailHost) {
-    transportConfigs.push(
+  if (hasSmtpConfig && bookingEmailFrom) {
+    const transportConfigs: any[] = [
       {
-        host: "smtp.gmail.com",
-        port: 465,
-        secure: true,
+        host: smtpHost,
+        port: smtpPort,
+        secure: smtpSecure,
         auth: { user: smtpUser, pass: smtpPass },
         connectionTimeout: smtpConnectionTimeoutMs,
         greetingTimeout: smtpGreetingTimeoutMs,
         socketTimeout: smtpSocketTimeoutMs,
       },
-      {
-        service: "gmail",
-        auth: { user: smtpUser, pass: smtpPass },
-        connectionTimeout: smtpConnectionTimeoutMs,
-        greetingTimeout: smtpGreetingTimeoutMs,
-        socketTimeout: smtpSocketTimeoutMs,
-      },
-    );
-  }
+    ];
 
-  let lastErrorMessage = providerError || "SMTP send failed.";
+    if (isGmailHost) {
+      transportConfigs.push(
+        {
+          host: "smtp.gmail.com",
+          port: 465,
+          secure: true,
+          auth: { user: smtpUser, pass: smtpPass },
+          connectionTimeout: smtpConnectionTimeoutMs,
+          greetingTimeout: smtpGreetingTimeoutMs,
+          socketTimeout: smtpSocketTimeoutMs,
+        },
+        {
+          service: "gmail",
+          auth: { user: smtpUser, pass: smtpPass },
+          connectionTimeout: smtpConnectionTimeoutMs,
+          greetingTimeout: smtpGreetingTimeoutMs,
+          socketTimeout: smtpSocketTimeoutMs,
+        },
+      );
+    }
 
-  try {
+    let smtpError = "SMTP send failed.";
     for (const config of transportConfigs) {
       try {
         const transporter = nodemailer.createTransport(config);
@@ -185,14 +174,19 @@ const sendBookingEmail = async (toEmail: string, subject: string, html: string):
         });
         return { ok: true, provider: "smtp" };
       } catch (error) {
-        lastErrorMessage = error instanceof Error ? error.message : "SMTP send failed.";
+        smtpError = error instanceof Error ? error.message : "SMTP send failed.";
       }
     }
-    return { ok: false, message: lastErrorMessage };
-  } catch (error) {
-    lastErrorMessage = error instanceof Error ? error.message : "SMTP send failed.";
-    return { ok: false, message: lastErrorMessage };
+    providerError = smtpError;
   }
+
+  if (hasResendConfig) {
+    const resendResult = await sendViaResend(toEmail, subject, html);
+    if (resendResult.ok) return resendResult;
+    providerError = resendResult.message || providerError;
+  }
+
+  return { ok: false, message: providerError };
 };
 
 const insertQueueHistory = async (queueEntryId: string, action: string, notes: string) => {
