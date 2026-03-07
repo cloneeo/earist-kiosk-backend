@@ -44,12 +44,19 @@ const isUuid = (value: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 
 const readMeetingLinkFromSchedule = (scheduleRaw: unknown): string => {
-  const raw = String(scheduleRaw || "").trim();
+  if (!scheduleRaw) return "";
+
+  if (typeof scheduleRaw === "object") {
+    const meetingLink = (scheduleRaw as { meetingLink?: unknown }).meetingLink;
+    return typeof meetingLink === "string" ? meetingLink.trim() : "";
+  }
+
+  const raw = String(scheduleRaw).trim();
   if (!raw) return "";
 
   try {
-    const parsed = JSON.parse(raw) as { meetingLink?: string };
-    return String(parsed.meetingLink || "").trim();
+    const parsed = JSON.parse(raw) as { meetingLink?: unknown };
+    return typeof parsed.meetingLink === "string" ? parsed.meetingLink.trim() : "";
   } catch {
     return "";
   }

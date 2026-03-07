@@ -27,10 +27,46 @@ type ParsedScheduleConfig = {
 
 const normalizeDateOnly = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
-const parseScheduleConfig = (raw: string | null | undefined): ParsedScheduleConfig => {
+const parseScheduleConfig = (raw: unknown): ParsedScheduleConfig => {
   if (!raw) return { dates: [], slots: [{ time: "09:00", method: "face_to_face" }], meetingLink: "", officeLocation: "" };
 
-  const source = raw.trim();
+  if (typeof raw === "object") {
+    const parsed = raw as {
+      mode?: string;
+      dates?: string[];
+      slots?: Array<{ time?: string; method?: ConsultationType }>;
+      meetingLink?: string;
+      officeLocation?: string;
+    };
+
+    if (parsed.mode === "slots_v1") {
+      const dates = Array.isArray(parsed.dates)
+        ? parsed.dates
+            .map((item) => new Date(item))
+            .filter((date) => !Number.isNaN(date.getTime()))
+            .map(normalizeDateOnly)
+        : [];
+
+      const slots: SlotConfig[] = Array.isArray(parsed.slots)
+        ? parsed.slots
+            .map((slot): SlotConfig => ({
+              time: String(slot.time || "").trim(),
+              method: slot.method === "google_meet" ? "google_meet" : "face_to_face",
+            }))
+            .filter((slot) => /^\d{2}:\d{2}$/.test(slot.time))
+            .slice(0, 5)
+        : [];
+
+      return {
+        dates,
+        slots: slots.length > 0 ? slots : [{ time: "09:00", method: "face_to_face" }],
+        meetingLink: String(parsed.meetingLink || "").trim(),
+        officeLocation: String(parsed.officeLocation || "").trim(),
+      };
+    }
+  }
+
+  const source = String(raw).trim();
 
   try {
     const parsed = JSON.parse(source) as {

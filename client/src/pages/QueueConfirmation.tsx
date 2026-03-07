@@ -17,11 +17,18 @@ import { buildApiUrl } from "@/lib/apiBase";
 import { clearPendingBookingEmail, enqueuePendingBookingEmail, getPendingBookingEmails } from "@/lib/pendingBookingEmails";
 
 const getMeetingLinkFromSchedule = (scheduleRaw: unknown): string => {
-  const raw = String(scheduleRaw || "").trim();
+  if (!scheduleRaw) return "";
+
+  if (typeof scheduleRaw === "object") {
+    const meetingLink = (scheduleRaw as { meetingLink?: unknown }).meetingLink;
+    return typeof meetingLink === "string" ? meetingLink.trim() : "";
+  }
+
+  const raw = String(scheduleRaw).trim();
   if (!raw) return "";
   try {
-    const parsed = JSON.parse(raw) as { meetingLink?: string };
-    return String(parsed.meetingLink || "").trim();
+    const parsed = JSON.parse(raw) as { meetingLink?: unknown };
+    return typeof parsed.meetingLink === "string" ? parsed.meetingLink.trim() : "";
   } catch {
     return "";
   }
