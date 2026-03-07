@@ -485,15 +485,15 @@ export default function FacultyDashboard() {
   const faceToFaceLocation = parsedFacultySchedule.officeLocation || "Faculty office";
 
   return (
-    <div className="min-h-screen bg-[#EBEBEB] flex flex-col font-sans">
-      <nav className="bg-white border-b border-[#A5CEE0] px-8 py-4 flex justify-between items-center shadow-sm z-10">
+    <div className="min-h-screen bg-[#FFFCEF] flex flex-col font-sans">
+      <nav className="bg-white border-b border-[#659BB9] px-8 py-4 flex justify-between items-center shadow-sm z-10">
         <div className="flex items-center gap-3">
-          <div className="bg-[#10367D] p-2 rounded-lg text-white shadow-md"><Users className="w-5 h-5" /></div>
-          <h1 className="text-xl font-extrabold text-[#10367D] tracking-tight uppercase">Faculty Portal</h1>
+          <div className="bg-[#659BB9] p-2 rounded-lg text-white shadow-md"><Users className="w-5 h-5" /></div>
+          <h1 className="text-xl font-extrabold text-[#659BB9] tracking-tight uppercase">Faculty Portal</h1>
         </div>
         <div className="flex items-center gap-6">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Prof. {faculty?.name}</p>
-          <button onClick={() => signOut()} className="text-slate-400 hover:text-[#10367D] font-black uppercase tracking-widest text-[10px] flex items-center gap-2">
+          <p className="text-[10px] font-black text-[#659BB9]/60 uppercase tracking-widest">Prof. {faculty?.name}</p>
+          <button onClick={() => signOut()} className="text-[#659BB9]/60 hover:text-[#659BB9] font-black uppercase tracking-widest text-[10px] flex items-center gap-2">
             <LogOut size={14} /> Logout
           </button>
         </div>
@@ -502,10 +502,10 @@ export default function FacultyDashboard() {
       <div className="max-w-7xl mx-auto w-full p-6 lg:p-10 grid grid-cols-1 lg:grid-cols-4 gap-8">
         <div className="lg:col-span-1 space-y-6">
           {/* SCHEDULE EDITOR */}
-          <Card className="border-0 shadow-sm rounded-3xl bg-white overflow-hidden border-b-4 border-[#A5CEE0]">
+          <Card className="border-0 shadow-sm rounded-3xl bg-white overflow-hidden border-b-4 border-[#659BB9]">
             <CardHeader className="bg-slate-50 border-b border-slate-100 py-4 flex flex-row justify-between items-center">
-              <CardTitle className="text-[10px] font-black uppercase text-slate-400 tracking-widest">My Schedule</CardTitle>
-              <button onClick={() => setIsEditingSchedule(!isEditingSchedule)} className="text-[#10367D] hover:scale-110 transition-transform">
+              <CardTitle className="text-[10px] font-black uppercase text-[#659BB9]/60 tracking-widest">My Schedule</CardTitle>
+              <button onClick={() => setIsEditingSchedule(!isEditingSchedule)} className="text-[#659BB9] hover:scale-110 transition-transform">
                 <Edit3 size={14} />
               </button>
             </CardHeader>
@@ -519,13 +519,13 @@ export default function FacultyDashboard() {
                     disabled={{ before: today }}
                     className="rounded-xl border border-slate-200 bg-slate-50 p-2"
                   />
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
+                  <p className="text-[10px] font-black text-[#659BB9]/60 uppercase tracking-widest px-1">
                     {availableDates && availableDates.length > 0 ? `${availableDates.length} date(s) selected` : "Select one or more available consultation dates"}
                   </p>
 
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      <label className="text-[10px] font-black text-[#659BB9]/60 uppercase tracking-widest">
                         Time Slots (Max 5)
                       </label>
                       <Button
@@ -543,14 +543,14 @@ export default function FacultyDashboard() {
                           type="time"
                           value={slot.time}
                           onChange={(e) => handleSlotTimeChange(index, e.target.value)}
-                          className="w-full h-10 px-3 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#A5CEE0]"
+                          className="w-full h-10 px-3 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#659BB9]"
                         />
                         <select
                           value={slot.method}
                           onChange={(e) =>
                             handleSlotMethodChange(index, e.target.value === "google_meet" ? "google_meet" : "face_to_face")
                           }
-                          className="w-full h-10 px-3 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#A5CEE0] uppercase"
+                          className="w-full h-10 px-3 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#659BB9] uppercase"
                         >
                           <option value="face_to_face">Face to Face</option>
                           <option value="google_meet">Google Meet</option>
@@ -558,7 +558,7 @@ export default function FacultyDashboard() {
                         <Button
                           type="button"
                           variant="ghost"
-                          className="h-10 px-3 text-[10px] font-black uppercase text-slate-500"
+                          className="h-10 px-3 text-[10px] font-black uppercase text-[#659BB9]/70"
                           onClick={() => handleRemoveSlot(index)}
                         >
                           Remove
@@ -568,58 +568,58 @@ export default function FacultyDashboard() {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Google Meet Link</label>
+                    <label className="text-[10px] font-black text-[#659BB9]/60 uppercase tracking-widest">Google Meet Link</label>
                     <input
                       type="url"
                       value={meetingLink}
                       onChange={(e) => setMeetingLink(e.target.value)}
                       placeholder="https://meet.google.com/..."
-                      className="w-full h-10 px-3 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#A5CEE0]"
+                      className="w-full h-10 px-3 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#659BB9]"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Office / Room (for F2F)</label>
+                    <label className="text-[10px] font-black text-[#659BB9]/60 uppercase tracking-widest">Office / Room (for F2F)</label>
                     <input
                       type="text"
                       value={officeLocation}
                       onChange={(e) => setOfficeLocation(e.target.value)}
                       placeholder="e.g. CE Dept Room 204"
-                      className="w-full h-10 px-3 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#A5CEE0]"
+                      className="w-full h-10 px-3 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#659BB9]"
                     />
                   </div>
 
-                  <Button onClick={handleSaveSchedule} className="w-full bg-[#10367D] text-white rounded-xl h-10 text-[10px] font-black uppercase">
+                  <Button onClick={handleSaveSchedule} className="w-full bg-[#659BB9] text-white rounded-xl h-10 text-[10px] font-black uppercase">
                     <Save size={14} className="mr-2" /> Save Schedule
                   </Button>
                 </div>
               ) : (
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                  <p className="text-[10px] font-black text-[#659BB9]/60 uppercase tracking-widest mb-2">
                     Dates
                   </p>
-                  <p className="text-xs font-bold text-slate-700 leading-relaxed">
+                  <p className="text-xs font-bold text-[#659BB9]/85 leading-relaxed">
                     {parsedFacultySchedule.dates.length > 0
                       ? parsedFacultySchedule.dates.map((date) => format(date, "MMM d, yyyy")).join(" • ")
                       : "No dates set yet."}
                   </p>
 
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-3 mb-2">
+                  <p className="text-[10px] font-black text-[#659BB9]/60 uppercase tracking-widest mt-3 mb-2">
                     Time Slots
                   </p>
                   <div className="space-y-1">
                     {parsedFacultySchedule.slots.slice(0, 5).map((slot, index) => (
-                      <p key={`${slot.time}-${index}`} className="text-xs font-bold text-slate-700">
+                      <p key={`${slot.time}-${index}`} className="text-xs font-bold text-[#659BB9]/85">
                         {formatSlotTime(slot.time)} • {slot.method === "google_meet" ? "Google Meet" : "Face to Face"}
                       </p>
                     ))}
                   </div>
                   {parsedFacultySchedule.meetingLink && (
-                    <p className="text-[10px] font-bold text-[#10367D] mt-3 break-all">
+                    <p className="text-[10px] font-bold text-[#659BB9] mt-3 break-all">
                       Meet Link: {parsedFacultySchedule.meetingLink}
                     </p>
                   )}
                   {parsedFacultySchedule.officeLocation && (
-                    <p className="text-[10px] font-bold text-slate-600 mt-2">
+                    <p className="text-[10px] font-bold text-[#659BB9]/75 mt-2">
                       Office: {parsedFacultySchedule.officeLocation}
                     </p>
                   )}
@@ -630,26 +630,26 @@ export default function FacultyDashboard() {
 
           <Card className="border-0 shadow-sm rounded-3xl bg-white overflow-hidden">
             <CardHeader className="bg-slate-50 border-b border-slate-100 py-4">
-              <CardTitle className="text-[10px] font-black uppercase text-slate-400">Default Consultation Method</CardTitle>
+              <CardTitle className="text-[10px] font-black uppercase text-[#659BB9]/60">Default Consultation Method</CardTitle>
             </CardHeader>
             <CardContent className="p-4 flex gap-2">
               <Button 
                 variant={faculty?.consultation_method === 'face_to_face' ? 'default' : 'outline'}
-                className={`flex-1 rounded-xl h-12 text-[10px] font-black uppercase tracking-widest ${faculty?.consultation_method === 'face_to_face' ? 'bg-[#10367D] text-white border-0' : 'text-slate-400'}`}
+                className={`flex-1 rounded-xl h-12 text-[10px] font-black uppercase tracking-widest ${faculty?.consultation_method === 'face_to_face' ? 'bg-[#659BB9] text-white border-0' : 'text-[#659BB9]/60'}`}
                 onClick={() => handleMethodChange('face_to_face')}
               >
                 <UserCheck size={14} className="mr-2" /> F2F
               </Button>
               <Button 
                 variant={faculty?.consultation_method === 'online' ? 'default' : 'outline'}
-                className={`flex-1 rounded-xl h-12 text-[10px] font-black uppercase tracking-widest ${faculty?.consultation_method === 'online' ? 'bg-[#10367D] text-white border-0' : 'text-slate-400'}`}
+                className={`flex-1 rounded-xl h-12 text-[10px] font-black uppercase tracking-widest ${faculty?.consultation_method === 'online' ? 'bg-[#659BB9] text-white border-0' : 'text-[#659BB9]/60'}`}
                 onClick={() => handleMethodChange('online')}
               >
                 <Globe size={14} className="mr-2" /> Online
               </Button>
             </CardContent>
             <div className="px-4 pb-4">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              <p className="text-[10px] font-bold text-[#659BB9]/60 uppercase tracking-widest">
                 Quick action: applies this method to all current schedule slots.
               </p>
             </div>
@@ -657,17 +657,17 @@ export default function FacultyDashboard() {
 
           <Card className="border-0 shadow-sm rounded-3xl bg-white overflow-hidden">
             <CardHeader className="bg-slate-50 border-b border-slate-100 py-4">
-              <CardTitle className="text-[10px] font-black uppercase text-slate-400">Availability</CardTitle>
+              <CardTitle className="text-[10px] font-black uppercase text-[#659BB9]/60">Availability</CardTitle>
             </CardHeader>
             <CardContent className="p-4 space-y-2">
               {['accepting', 'on_break', 'offline'].map((s) => (
                 <Button 
                   key={s} 
                   variant={faculty?.status === s ? 'default' : 'ghost'} 
-                  className={`w-full justify-start rounded-xl capitalize font-bold ${faculty?.status === s ? 'bg-[#10367D] text-white' : 'text-slate-500'}`}
+                  className={`w-full justify-start rounded-xl capitalize font-bold ${faculty?.status === s ? 'bg-[#659BB9] text-white' : 'text-[#659BB9]/70'}`}
                   onClick={() => handleStatusChange(s as any)}
                 >
-                  <div className={`w-2 h-2 rounded-full mr-3 ${s === 'accepting' ? 'bg-[#A5CEE0]' : s === 'on_break' ? 'bg-[#A5CEE0]' : 'bg-slate-400'}`} />
+                  <div className={`w-2 h-2 rounded-full mr-3 ${s === 'accepting' ? 'bg-[#659BB9]' : s === 'on_break' ? 'bg-[#659BB9]' : 'bg-slate-400'}`} />
                   {s.replace('_', ' ')}
                 </Button>
               ))}
@@ -676,10 +676,10 @@ export default function FacultyDashboard() {
 
           <div className="space-y-3">
             <div className="bg-white p-6 rounded-[24px] shadow-sm border border-slate-100 flex flex-col">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Waiting</span>
-              <span className="text-3xl font-black text-[#10367D]">{stats.waiting}</span>
+              <span className="text-[10px] font-black text-[#659BB9]/60 uppercase tracking-widest">Waiting</span>
+              <span className="text-3xl font-black text-[#659BB9]">{stats.waiting}</span>
             </div>
-            <div className="bg-[#10367D] p-6 rounded-[24px] shadow-lg flex flex-col text-white">
+            <div className="bg-[#659BB9] p-6 rounded-[24px] shadow-lg flex flex-col text-white">
               <span className="text-[10px] font-black opacity-60 uppercase tracking-widest">My Total Today</span>
               <span className="text-3xl font-black">{stats.total}</span>
             </div>
@@ -688,71 +688,71 @@ export default function FacultyDashboard() {
 
         <div className="lg:col-span-3 space-y-8">
           <div className="relative">
-            <div className="absolute -top-4 left-6 right-6 bg-[#10367D] rounded-t-[40px] h-24 shadow-inner opacity-40"></div>
+            <div className="absolute -top-4 left-6 right-6 bg-[#659BB9] rounded-t-[40px] h-24 shadow-inner opacity-40"></div>
             <Card className="relative z-10 border-0 shadow-2xl rounded-[40px] bg-white overflow-hidden min-h-[450px] flex flex-col">
               <CardHeader className="border-b border-slate-50 flex flex-row justify-between items-center px-10 py-8">
-                <CardTitle className="text-xs font-black uppercase text-slate-400 tracking-[0.2em]">Queue Monitor</CardTitle>
-                {timeLeft !== null && <Badge className={`font-mono px-6 py-2 rounded-full text-xl shadow-inner ${timeLeft < 60 ? 'bg-[#10367D] text-white animate-pulse' : 'bg-slate-50 text-slate-600 border border-slate-100'}`}>{formatTime(timeLeft)}</Badge>}
+                <CardTitle className="text-xs font-black uppercase text-[#659BB9]/60 tracking-[0.2em]">Queue Monitor</CardTitle>
+                {timeLeft !== null && <Badge className={`font-mono px-6 py-2 rounded-full text-xl shadow-inner ${timeLeft < 60 ? 'bg-[#659BB9] text-white animate-pulse' : 'bg-slate-50 text-[#659BB9]/75 border border-slate-100'}`}>{formatTime(timeLeft)}</Badge>}
               </CardHeader>
               
               <CardContent className="flex-grow flex flex-col items-center justify-center p-10 text-center">
                 <AnimatePresence mode="wait">
                   {currentCalling ? (
                     <motion.div key="active" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="space-y-10 w-full">
-                      <div className="w-28 h-28 bg-[#A5CEE0]/30 text-[#10367D] rounded-[40px] flex items-center justify-center mx-auto shadow-inner"><User size={56} /></div>
+                      <div className="w-28 h-28 bg-[#659BB9]/30 text-[#659BB9] rounded-[40px] flex items-center justify-center mx-auto shadow-inner"><User size={56} /></div>
                       <div>
                         {currentCalling.student_name && (
-                          <p className="text-xl font-black text-[#10367D] tracking-wide">{currentCalling.student_name}</p>
+                          <p className="text-xl font-black text-[#659BB9] tracking-wide">{currentCalling.student_name}</p>
                         )}
-                        <h2 className="text-7xl font-black text-slate-900 tracking-tighter">{currentCalling.student_number}</h2>
+                        <h2 className="text-7xl font-black text-[#659BB9] tracking-tighter">{currentCalling.student_number}</h2>
                         <div className="flex items-center justify-center gap-2 mt-4">
-                          <span className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Method:</span>
+                          <span className="text-[#659BB9]/60 font-bold uppercase tracking-widest text-[10px]">Method:</span>
                           {currentCalling.consultation_type === "google_meet" ? (
                             <Button
                               type="button"
                               variant="outline"
                               onClick={() => handleLaunchMeet(currentCalling)}
-                              className="h-8 px-4 rounded-lg border-[#A5CEE0] text-[#10367D] font-black uppercase text-[10px]"
+                              className="h-8 px-4 rounded-lg border-[#659BB9] text-[#659BB9] font-black uppercase text-[10px]"
                             >
                               Open Google Meet
                             </Button>
                           ) : (
-                            <Badge variant="outline" className="border-[#A5CEE0] text-[#10367D] font-black px-3 py-1 rounded-lg uppercase text-[10px]">
+                            <Badge variant="outline" className="border-[#659BB9] text-[#659BB9] font-black px-3 py-1 rounded-lg uppercase text-[10px]">
                               Face To Face
                             </Badge>
                           )}
                         </div>
                         {currentCalling.consultation_type !== "google_meet" && (
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">
-                            Office: <span className="text-slate-700 normal-case tracking-normal">{faceToFaceLocation}</span>
+                          <p className="text-[10px] font-black text-[#659BB9]/60 uppercase tracking-widest mt-2">
+                            Office: <span className="text-[#659BB9]/85 normal-case tracking-normal">{faceToFaceLocation}</span>
                           </p>
                         )}
                         {currentCalling.selected_slot && (
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-3">
-                            Slot: <span className="text-slate-700 normal-case tracking-normal">{currentCalling.selected_slot}</span>
+                          <p className="text-[10px] font-black text-[#659BB9]/60 uppercase tracking-widest mt-3">
+                            Slot: <span className="text-[#659BB9]/85 normal-case tracking-normal">{currentCalling.selected_slot}</span>
                           </p>
                         )}
                       </div>
                       {currentCalling.concern && (
                         <div className="max-w-2xl mx-auto text-left bg-slate-50 border border-slate-100 rounded-2xl p-5">
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Consultation Concern</p>
-                          <p className="text-sm font-bold text-slate-700 leading-relaxed">{currentCalling.concern}</p>
+                          <p className="text-[10px] font-black text-[#659BB9]/60 uppercase tracking-widest mb-2">Consultation Concern</p>
+                          <p className="text-sm font-bold text-[#659BB9]/85 leading-relaxed">{currentCalling.concern}</p>
                         </div>
                       )}
                       <div className="flex gap-4 pt-4 max-w-sm mx-auto w-full">
-                        <Button className="flex-1 h-16 bg-[#A5CEE0]/30 text-[#10367D] hover:bg-[#A5CEE0]/45 rounded-2xl border-0 font-black uppercase tracking-widest text-[10px] shadow-sm" onClick={() => handleComplete(currentCalling.id)}>
+                        <Button className="flex-1 h-16 bg-[#659BB9]/30 text-[#659BB9] hover:bg-[#659BB9]/45 rounded-2xl border-0 font-black uppercase tracking-widest text-[10px] shadow-sm" onClick={() => handleComplete(currentCalling.id)}>
                           Complete
                         </Button>
-                        <Button className="flex-1 h-16 bg-[#A5CEE0]/30 text-[#10367D] hover:bg-[#A5CEE0]/45 rounded-2xl border-0 font-black uppercase tracking-widest text-[10px] shadow-sm" onClick={() => handleSkip(currentCalling.id)}>
+                        <Button className="flex-1 h-16 bg-[#659BB9]/30 text-[#659BB9] hover:bg-[#659BB9]/45 rounded-2xl border-0 font-black uppercase tracking-widest text-[10px] shadow-sm" onClick={() => handleSkip(currentCalling.id)}>
                           Skip
                         </Button>
                       </div>
                     </motion.div>
                   ) : (
                     <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-                      <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto opacity-40"><Users size={32} className="text-slate-300" /></div>
-                      <p className="text-slate-300 font-black uppercase tracking-[0.4em] text-xs">No active session</p>
-                      <Button className="bg-[#10367D] hover:bg-[#10367D] text-white px-12 h-16 rounded-[24px] font-black text-lg shadow-xl shadow-[#10367D]/20 uppercase tracking-widest flex items-center gap-3 transition-all active:scale-95" onClick={handleCallNext} disabled={pending.length === 0}>
+                      <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto opacity-40"><Users size={32} className="text-[#659BB9]/60" /></div>
+                      <p className="text-[#659BB9]/60 font-black uppercase tracking-[0.4em] text-xs">No active session</p>
+                      <Button className="bg-[#659BB9] hover:bg-[#659BB9] text-white px-12 h-16 rounded-[24px] font-black text-lg shadow-xl shadow-[#659BB9]/20 uppercase tracking-widest flex items-center gap-3 transition-all active:scale-95" onClick={handleCallNext} disabled={pending.length === 0}>
                         <Play size={20} fill="currentColor" /> Call Next
                       </Button>
                     </motion.div>
@@ -764,27 +764,27 @@ export default function FacultyDashboard() {
 
           <Card className="border-0 shadow-sm rounded-[32px] bg-white overflow-hidden">
              <CardHeader className="bg-slate-50 px-8 py-6 border-b border-slate-100 flex flex-row justify-between items-center">
-                <CardTitle className="text-slate-800 font-black uppercase tracking-widest text-xs">Waiting Students</CardTitle>
-                <Badge className="bg-slate-200 text-slate-600 font-black px-3 py-1 rounded-lg text-[10px]">{pending.length}</Badge>
+                <CardTitle className="text-[#659BB9] font-black uppercase tracking-widest text-xs">Waiting Students</CardTitle>
+                <Badge className="bg-slate-200 text-[#659BB9]/75 font-black px-3 py-1 rounded-lg text-[10px]">{pending.length}</Badge>
              </CardHeader>
              <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                 {pending.map((s, i) => (
-                  <div key={s.id} className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-5 transition-all hover:border-[#A5CEE0] hover:bg-white group">
-                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center font-black text-slate-400 shadow-sm group-hover:text-[#10367D] text-xs">{i + 1}</div>
+                  <div key={s.id} className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-5 transition-all hover:border-[#659BB9] hover:bg-white group">
+                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center font-black text-[#659BB9]/60 shadow-sm group-hover:text-[#659BB9] text-xs">{i + 1}</div>
                     <div className="flex-grow">
-                      <p className="font-black text-[#10367D] text-sm tracking-tight">{s.student_name || "Student"}</p>
-                      <p className="font-black text-slate-800 text-lg tracking-tight">{s.student_number}</p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 flex items-center gap-1.5"><Clock size={10} /> {format(new Date(s.created_at), 'hh:mm a')}</p>
+                      <p className="font-black text-[#659BB9] text-sm tracking-tight">{s.student_name || "Student"}</p>
+                      <p className="font-black text-[#659BB9] text-lg tracking-tight">{s.student_number}</p>
+                      <p className="text-[10px] font-bold text-[#659BB9]/60 uppercase tracking-widest mt-1 flex items-center gap-1.5"><Clock size={10} /> {format(new Date(s.created_at), 'hh:mm a')}</p>
                       {s.selected_slot && (
-                        <p className="text-[10px] font-bold text-slate-500 mt-2">{s.selected_slot}</p>
+                        <p className="text-[10px] font-bold text-[#659BB9]/70 mt-2">{s.selected_slot}</p>
                       )}
                       {s.concern && (
-                        <p className="text-[11px] font-bold text-slate-600 mt-2 leading-relaxed">{s.concern}</p>
+                        <p className="text-[11px] font-bold text-[#659BB9]/75 mt-2 leading-relaxed">{s.concern}</p>
                       )}
                     </div>
                   </div>
                 ))}
-                {pending.length === 0 && <div className="col-span-2 py-16 text-center text-slate-200 font-black uppercase tracking-[0.5em] text-[10px]">No pending requests</div>}
+                {pending.length === 0 && <div className="col-span-2 py-16 text-center text-[#659BB9]/55 font-black uppercase tracking-[0.5em] text-[10px]">No pending requests</div>}
              </CardContent>
           </Card>
         </div>
