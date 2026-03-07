@@ -254,6 +254,45 @@ export default function QueueBooking() {
   const slotOptions = selectedFacultyData ? parseSlotOptions(selectedFacultyData) : [];
   const selectedSlot = slotOptions.find((slot) => slot.key === selectedSlotKey) || null;
 
+  const dispatchBookingEmail = (queueId: string) => {
+    const payload = JSON.stringify({ queueId, studentEmail });
+
+    const attemptDispatch = async () => {
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        try {
+          await fetch(bookingEmailUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            // keepalive reduces dropped requests when navigation happens immediately on mobile.
+            keepalive: true,
+            body: payload,
+          });
+          return;
+        } catch (dispatchError) {
+          if (attempt < 2) {
+            await new Promise((resolve) => window.setTimeout(resolve, 1200));
+            continue;
+          }
+
+          console.warn("Booking email dispatch failed:", dispatchError);
+
+          if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
+            try {
+              const beaconPayload = new Blob([payload], { type: "application/json" });
+              navigator.sendBeacon(bookingEmailUrl, beaconPayload);
+            } catch (beaconError) {
+              console.warn("Booking email beacon fallback failed:", beaconError);
+            }
+          }
+        }
+      }
+    };
+
+    void attemptDispatch();
+  };
+
   const handleSlotBooking = async () => {
     const trimmedConcern = consultationConcern.trim();
     if (!trimmedConcern) {
@@ -326,15 +365,7 @@ export default function QueueBooking() {
       }
 
       // Attempt email dispatch immediately after booking so students receive updates faster.
-      void fetch(bookingEmailUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ queueId: queueEntry.id, studentEmail }),
-      }).catch((dispatchError) => {
-        console.warn("Booking email dispatch failed:", dispatchError);
-      });
+      dispatchBookingEmail(queueEntry.id);
 
       const nameParam = studentName ? `&name=${encodeURIComponent(studentName)}` : "";
       const emailParam = studentEmail ? `&email=${encodeURIComponent(studentEmail)}` : "";

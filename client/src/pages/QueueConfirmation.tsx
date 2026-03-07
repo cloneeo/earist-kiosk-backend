@@ -80,52 +80,82 @@ export default function QueueConfirmation() {
 
     emailDispatchRef.current = true;
 
-    void fetch(bookingEmailUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ queueId, studentEmail }),
-    })
-      .then(async (response) => {
-        const raw = await response.text().catch(() => "");
-        let payload = {} as {
-          ok?: boolean;
-          message?: string;
-          deduped?: boolean;
-        };
+    const payloadBody = JSON.stringify({ queueId, studentEmail });
 
-        if (raw) {
-          try {
-            payload = JSON.parse(raw) as typeof payload;
-          } catch {
-            payload = { message: raw };
-          }
-        }
+    const attemptDispatch = async () => {
+      let response: Response | null = null;
 
-        if (!response.ok) {
-          if (response.status === 404) {
-            sonnerToast.error("Booking email API not found on backend. Check deploy route and VITE_API_BASE_URL.");
-            return;
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        try {
+          response = await fetch(bookingEmailUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            keepalive: true,
+            body: payloadBody,
+          });
+          break;
+        } catch (dispatchError) {
+          if (attempt < 2) {
+            await new Promise((resolve) => window.setTimeout(resolve, 1200));
+            continue;
           }
-          sonnerToast.error(payload.message || `Booking email API failed (${response.status}).`);
+
+          console.warn("Booking email dispatch failed:", dispatchError);
+          if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
+            try {
+              const beaconPayload = new Blob([payloadBody], { type: "application/json" });
+              navigator.sendBeacon(bookingEmailUrl, beaconPayload);
+              sonnerToast("Booking email queued. Please check inbox in a moment.", { icon: "ℹ" });
+              return;
+            } catch (beaconError) {
+              console.warn("Booking email beacon fallback failed:", beaconError);
+            }
+          }
+
+          sonnerToast.error("Booking email dispatch failed. Please try again in a few seconds.");
           return;
         }
+      }
 
-        if (payload.ok && !payload.deduped) {
-          sonnerToast.success("Booking email sent.");
+      if (!response) return;
+
+      const raw = await response.text().catch(() => "");
+      let payload = {} as {
+        ok?: boolean;
+        message?: string;
+        deduped?: boolean;
+      };
+
+      if (raw) {
+        try {
+          payload = JSON.parse(raw) as typeof payload;
+        } catch {
+          payload = { message: raw };
+        }
+      }
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          sonnerToast.error("Booking email API not found on backend. Check deploy route and VITE_API_BASE_URL.");
           return;
         }
+        sonnerToast.error(payload.message || `Booking email API failed (${response.status}).`);
+        return;
+      }
 
-        if (!payload.ok) {
-          sonnerToast.error(payload.message || "Booking email was not sent.");
-        }
-      })
-      .catch((dispatchError) => {
-        console.warn("Booking email dispatch failed:", dispatchError);
-        const reason = dispatchError instanceof Error ? dispatchError.message : "Unknown error";
-        sonnerToast.error(`Booking email dispatch failed (${bookingEmailUrl}): ${reason}`);
-      });
+      if (payload.ok && !payload.deduped) {
+        sonnerToast.success("Booking email sent.");
+        return;
+      }
+
+      if (!payload.ok) {
+        sonnerToast.error(payload.message || "Booking email was not sent.");
+      }
+    };
+
+    void attemptDispatch();
   }, [queueId, queueData, loading, error, studentEmail, bookingEmailUrl]);
 
   const shareUrl = `${window.location.origin}/status/${queueId}`;
