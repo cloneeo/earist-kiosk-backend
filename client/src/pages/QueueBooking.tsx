@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, ChevronLeft, Loader2, School, BookOpen, UserCircle, CheckCircle2, Clock, ChevronRight } from "lucide-react";
 import { kioskSupabase } from "@/lib/supabaseKiosk";
 import type { Database } from "@/lib/supabase";
+import { buildApiUrl } from "@/lib/apiBase";
 
 type College = Database["public"]["Tables"]["colleges"]["Row"];
 type Department = Database["public"]["Tables"]["departments"]["Row"];
@@ -29,25 +30,7 @@ export default function QueueBooking() {
   const studentNumber = params.get("student") || "";
   const studentName = params.get("name") || "";
   const studentEmail = params.get("email") || "";
-  const resolveApiBaseUrl = () => {
-    if (typeof window !== "undefined") {
-      const isViteDev = window.location.port === "5173";
-      if (isViteDev) return "";
-    }
-
-    const fromEnv = String(import.meta.env.VITE_API_BASE_URL || "").trim().replace(/\/$/, "");
-    if (fromEnv) return fromEnv;
-
-    if (typeof window !== "undefined") {
-      const isViteDev = window.location.port === "5173";
-      if (isViteDev) return `${window.location.protocol}//${window.location.hostname}:3000`;
-    }
-
-    return "";
-  };
-
-  const apiBase = resolveApiBaseUrl();
-  const bookingEmailUrl = apiBase ? `${apiBase}/api/booking/email` : "/api/booking/email";
+  const bookingEmailUrl = buildApiUrl("/api/booking/email");
 
   const [step, setStep] = useState<"college" | "department" | "faculty" | "type">("college");
   const [loading, setLoading] = useState(false);

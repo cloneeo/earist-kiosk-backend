@@ -13,6 +13,7 @@ import { supabase } from "@/lib/supabase";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { addActiveTicketId } from "@/lib/activeTickets";
 import { toast as sonnerToast } from "sonner";
+import { buildApiUrl } from "@/lib/apiBase";
 
 export default function QueueConfirmation() {
   const [, setLocation] = useLocation();
@@ -21,25 +22,7 @@ export default function QueueConfirmation() {
   const queueId = params.get("queueId") || "";
   const studentName = params.get("name") || "";
   const studentEmail = params.get("email") || "";
-  const resolveApiBaseUrl = () => {
-    if (typeof window !== "undefined") {
-      const isViteDev = window.location.port === "5173";
-      if (isViteDev) return "";
-    }
-
-    const fromEnv = String(import.meta.env.VITE_API_BASE_URL || "").trim().replace(/\/$/, "");
-    if (fromEnv) return fromEnv;
-
-    if (typeof window !== "undefined") {
-      const isViteDev = window.location.port === "5173";
-      if (isViteDev) return `${window.location.protocol}//${window.location.hostname}:3000`;
-    }
-
-    return "";
-  };
-
-  const apiBase = resolveApiBaseUrl();
-  const bookingEmailUrl = apiBase ? `${apiBase}/api/booking/email` : "/api/booking/email";
+  const bookingEmailUrl = buildApiUrl("/api/booking/email");
   
   const [queueData, setQueueData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -122,7 +105,7 @@ export default function QueueConfirmation() {
 
         if (!response.ok) {
           if (response.status === 404) {
-            sonnerToast.error("Booking email API not found. Start backend server or set VITE_API_BASE_URL.");
+            sonnerToast.error("Booking email API not found on backend. Check deploy route and VITE_API_BASE_URL.");
             return;
           }
           sonnerToast.error(payload.message || `Booking email API failed (${response.status}).`);
@@ -141,7 +124,7 @@ export default function QueueConfirmation() {
       .catch((dispatchError) => {
         console.warn("Booking email dispatch failed:", dispatchError);
         const reason = dispatchError instanceof Error ? dispatchError.message : "Unknown error";
-        sonnerToast.error(`Booking email dispatch failed: ${reason}`);
+        sonnerToast.error(`Booking email dispatch failed (${bookingEmailUrl}): ${reason}`);
       });
   }, [queueId, queueData, loading, error, studentEmail, bookingEmailUrl]);
 
