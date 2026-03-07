@@ -25,13 +25,16 @@ type SlotOption = {
 
 const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
-const randomMeetChunk = (length: number) => {
-  const alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
-  return Array.from({ length }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
+const getMeetingLinkFromSchedule = (scheduleRaw: unknown): string => {
+  const raw = String(scheduleRaw || "").trim();
+  if (!raw) return "";
+  try {
+    const parsed = JSON.parse(raw) as { meetingLink?: string };
+    return String(parsed.meetingLink || "").trim();
+  } catch {
+    return "";
+  }
 };
-
-const createRandomGoogleMeetLink = () =>
-  `https://meet.google.com/${randomMeetChunk(3)}-${randomMeetChunk(4)}-${randomMeetChunk(3)}`;
 
 export default function QueueBooking() {
   const [, setLocation] = useLocation();
@@ -401,11 +404,15 @@ export default function QueueBooking() {
       });
 
       if (selectedConsultationMethod === "google_meet") {
-        historyPayload.push({
-          queue_entry_id: queueEntry.id,
-          action: "google_meet_link_shared",
-          notes: createRandomGoogleMeetLink(),
-        });
+        const selectedFacultyData = faculties.find((faculty) => faculty.id === selectedFaculty);
+        const facultyMeetLink = getMeetingLinkFromSchedule(selectedFacultyData?.schedule);
+        if (facultyMeetLink) {
+          historyPayload.push({
+            queue_entry_id: queueEntry.id,
+            action: "google_meet_link_shared",
+            notes: facultyMeetLink,
+          });
+        }
       }
 
       const { error: historyError } = await kioskSupabase.from("queue_history").insert(historyPayload);

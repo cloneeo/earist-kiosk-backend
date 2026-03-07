@@ -11,6 +11,7 @@ type QueueEntryRow = {
 type FacultyRow = {
   id: string;
   name: string;
+  schedule?: string | null;
 };
 
 type StudentRow = {
@@ -42,13 +43,17 @@ const hasSendGridConfig = !!sendGridApiKey && !!sendGridFrom;
 const isUuid = (value: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 
-const randomMeetChunk = (length: number) => {
-  const alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
-  return Array.from({ length }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
-};
+const readMeetingLinkFromSchedule = (scheduleRaw: unknown): string => {
+  const raw = String(scheduleRaw || "").trim();
+  if (!raw) return "";
 
-const createRandomGoogleMeetLink = () =>
-  `https://meet.google.com/${randomMeetChunk(3)}-${randomMeetChunk(4)}-${randomMeetChunk(3)}`;
+  try {
+    const parsed = JSON.parse(raw) as { meetingLink?: string };
+    return String(parsed.meetingLink || "").trim();
+  } catch {
+    return "";
+  }
+};
 
 const supabaseFetch = async <T>(path: string): Promise<SupabaseListResponse<T>> => {
   const response = await fetch(`${supabaseUrl}/rest/v1/${path}`, {
@@ -203,7 +208,7 @@ export function registerBookingEmailRoutes(app: Express) {
           `students?select=full_name,email&student_number=eq.${studentNumber}&limit=1`
         ),
         supabaseFetch<FacultyRow>(
-          `faculty?select=id,name&id=eq.${queueEntry.faculty_id}&limit=1`
+          `faculty?select=id,name,schedule&id=eq.${queueEntry.faculty_id}&limit=1`
         ),
       ]);
 
@@ -214,6 +219,7 @@ export function registerBookingEmailRoutes(app: Express) {
 
       const student = studentResponse.error ? null : (studentResponse.data?.[0] || null);
       const faculty = facultyResponse.data?.[0] || null;
+      const facultyScheduleMeetLink = readMeetingLinkFromSchedule(faculty?.schedule);
 
       let sharedMeetLink = "";
       if (queueEntry.consultation_type === "google_meet") {
@@ -223,8 +229,8 @@ export function registerBookingEmailRoutes(app: Express) {
 
         sharedMeetLink = String(meetLinkResponse.data?.[0]?.notes || "").trim();
 
-        if (!sharedMeetLink) {
-          sharedMeetLink = createRandomGoogleMeetLink();
+        if (!sharedMeetLink && facultyScheduleMeetLink) {
+          sharedMeetLink = facultyScheduleMeetLink;
           await insertQueueHistory(queueId, "google_meet_link_shared", sharedMeetLink);
         }
       }
