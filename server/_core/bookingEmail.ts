@@ -1,4 +1,5 @@
 import type { Express } from "express";
+import nodemailer from "nodemailer";
 
 type QueueEntryRow = {
   id: string;
@@ -32,11 +33,16 @@ type SendEmailResult = {
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-const resendApiKey = process.env.RESEND_API_KEY || "";
+const smtpHost = process.env.SMTP_HOST || "";
+const smtpPort = Number(process.env.SMTP_PORT || 587);
+const smtpUser = process.env.SMTP_USER || "";
+const smtpPass = process.env.SMTP_PASS || "";
+const smtpSecure = String(process.env.SMTP_SECURE || "").trim().toLowerCase() === "true" || smtpPort === 465;
 const bookingEmailFrom = process.env.BOOKING_EMAIL_FROM || "";
 
 const supabaseRestKey = supabaseServiceRoleKey || supabaseAnonKey;
 const hasSupabaseConfig = !!supabaseUrl && !!supabaseRestKey;
+const hasSmtpConfig = !!smtpHost && !!smtpPort && !!smtpUser && !!smtpPass;
 
 const isUuid = (value: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -92,44 +98,33 @@ const resolveFallbackEmail = (value: unknown): string | null => {
 };
 
 const sendBookingEmail = async (toEmail: string, subject: string, html: string): Promise<SendEmailResult> => {
-  if (!resendApiKey || !bookingEmailFrom) {
-    return { ok: false, message: "Email provider keys are not configured." };
+  if (!hasSmtpConfig || !bookingEmailFrom) {
+    return { ok: false, message: "SMTP email settings are not configured." };
   }
 
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${resendApiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
+  try {
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpSecure,
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
+      },
+    });
+
+    await transporter.sendMail({
       from: bookingEmailFrom,
-      to: [toEmail],
+      to: toEmail,
       subject,
       html,
-    }),
-  });
+    });
 
-  if (!response.ok) {
-    const detail = await response.text().catch(() => "");
-    let parsedMessage = "";
-
-    if (detail) {
-      try {
-        const parsed = JSON.parse(detail) as { message?: string; error?: string };
-        parsedMessage = parsed.message || parsed.error || "";
-      } catch {
-        parsedMessage = detail;
-      }
-    }
-
-    return {
-      ok: false,
-      message: parsedMessage || `Resend rejected request (${response.status} ${response.statusText}).`,
-    };
+    return { ok: true };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "SMTP send failed.";
+    return { ok: false, message };
   }
-
-  return { ok: true };
 };
 
 const insertQueueHistory = async (queueEntryId: string, action: string, notes: string) => {
