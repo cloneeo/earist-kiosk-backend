@@ -215,14 +215,14 @@ export default function Home() {
   const minutesLeft = getRemainingTime(currentServing?.called_at || null);
 
   return (
-    <div className="min-h-screen bg-[#FFFCEF] font-sans flex flex-col">
-      <nav className="bg-white border-b border-[#659BB9] px-8 py-4 sticky top-0 z-30 flex justify-between items-center shadow-sm">
+    <div className="min-h-screen bg-[#E8E6EB] font-sans flex flex-col">
+      <nav className="bg-white border-b border-[#E8E6EB] px-8 py-4 sticky top-0 z-30 flex justify-between items-center shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-[#659BB9] rounded-xl flex items-center justify-center shadow-md text-white font-black text-xs">EQ</div>
-          <h1 className="text-xl font-black text-[#659BB9] uppercase tracking-tight">EARIST Kiosk</h1>
+          <div className="w-10 h-10 bg-[#024059] rounded-xl flex items-center justify-center shadow-md text-white font-black text-xs">EQ</div>
+          <h1 className="text-xl font-black text-[#024059] uppercase tracking-tight">EARIST Kiosk</h1>
         </div>
         {isAuthenticated && (
-          <Button variant="ghost" onClick={() => signOut()} className="text-[#659BB9]/60 hover:text-[#659BB9] uppercase text-[10px] font-black tracking-widest">
+          <Button variant="ghost" onClick={() => signOut()} className="text-[#024059]/65 hover:text-[#024059] uppercase text-[10px] font-black tracking-widest">
             <LogOut size={16} className="mr-2" /> Sign Out
           </Button>
         )}
@@ -233,16 +233,16 @@ export default function Home() {
         {/* LEFT COLUMN: REGISTRATION */}
         <div className="lg:w-1/3">
           <Card className="border-0 shadow-2xl rounded-[48px] overflow-hidden bg-white sticky top-24">
-            <div className="bg-[#659BB9] p-10 text-center text-white">
+            <div className="bg-[#024059] p-10 text-center text-white">
               <h2 className="text-3xl font-black uppercase leading-none tracking-tighter">Get Started</h2>
-              <p className="text-[#FFFCEF] mt-3 text-sm font-medium">Scan Student ID to book</p>
+              <p className="text-[#E8E6EB] mt-3 text-sm font-medium">Scan Student ID to book</p>
             </div>
             <CardContent className="p-10 text-center">
-              <div className="mb-10 p-8 rounded-[32px] bg-[#659BB9]/30 border-2 border-dashed border-[#659BB9] flex flex-col items-center">
-                 <QrCode className="w-16 h-16 text-[#659BB9] mb-4" />
-                 <h3 className="font-black text-[#659BB9] uppercase tracking-[0.2em] text-[10px]">Scanner Active</h3>
+              <div className="mb-10 p-8 rounded-[32px] bg-[#E8E6EB]/60 border-2 border-dashed border-[#E8E6EB] flex flex-col items-center">
+                 <QrCode className="w-16 h-16 text-[#024059] mb-4" />
+                 <h3 className="font-black text-slate-800 uppercase tracking-[0.2em] text-[10px]">Scanner Active</h3>
               </div>
-              <Button onClick={() => setLocation("/kiosk")} className="w-full bg-[#659BB9] hover:bg-[#659BB9] h-20 rounded-[32px] font-black uppercase text-white shadow-xl shadow-[#659BB9]/20 text-lg transition-transform active:scale-95">
+              <Button onClick={() => setLocation("/kiosk")} className="w-full bg-[#024059] hover:bg-[#024059] h-20 rounded-[32px] font-black uppercase text-white shadow-xl shadow-[#024059]/20 text-lg transition-transform active:scale-95">
                 Start Booking
               </Button>
             </CardContent>
@@ -253,18 +253,18 @@ export default function Home() {
         <div className="lg:w-2/3 grid grid-cols-1 md:grid-cols-2 gap-8">
           
           {/* BUBBLE 1: LIVE MONITOR */}
-          <Card className="border-0 shadow-xl rounded-[48px] bg-white overflow-hidden border-t-8 border-[#659BB9] flex flex-col">
+          <Card className="border-0 shadow-xl rounded-[48px] bg-white overflow-hidden border-t-8 border-[#024059] flex flex-col">
             <CardContent className="p-10 flex-1 flex flex-col">
               <div className="flex justify-between items-center mb-8">
-                <h3 className="font-black text-[#659BB9] uppercase text-xl flex items-center gap-3 tracking-tighter">
-                  <Monitor size={24} className="text-[#659BB9]"/> Live Monitor
+                <h3 className="font-black text-slate-800 uppercase text-xl flex items-center gap-3 tracking-tighter">
+                  <Monitor size={24} className="text-[#024059]"/> Live Monitor
                 </h3>
                 
                 {/* Professor Dropdown Selection */}
                 <div className="relative">
                   <button 
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)} 
-                    className="bg-slate-50 border border-slate-100 px-4 py-2.5 rounded-2xl flex items-center gap-2 text-[10px] font-black text-[#659BB9]/75 uppercase transition-all hover:border-[#659BB9]"
+                    className="bg-slate-50 border border-slate-100 px-4 py-2.5 rounded-2xl flex items-center gap-2 text-[10px] font-black text-slate-600 uppercase transition-all hover:border-[#024059]"
                   >
                     Prof. {selectedFaculty?.name || "Loading..."} <ChevronDown size={14}/>
                   </button>
@@ -274,7 +274,7 @@ export default function Home() {
                         <button 
                           key={f.id} 
                           onClick={() => { setSelectedMonitorProf(f.id); setIsDropdownOpen(false); }} 
-                          className="w-full text-left px-5 py-4 hover:bg-[#659BB9]/30 text-xs font-black text-[#659BB9]/85 border-b border-slate-50 last:border-0 uppercase transition-colors"
+                          className="w-full text-left px-5 py-4 hover:bg-[#E8E6EB]/60 text-xs font-black text-slate-700 border-b border-slate-50 last:border-0 uppercase transition-colors"
                         >
                           {f.name}
                         </button>
@@ -285,25 +285,25 @@ export default function Home() {
               </div>
 
               <div className="bg-slate-50 rounded-[40px] p-8 text-center border border-slate-100 mb-8 shadow-inner">
-                <Badge className="bg-[#659BB9]/30 text-[#659BB9] border-0 text-[10px] font-black mb-3 uppercase tracking-widest px-4 py-1.5 rounded-full">
+                <Badge className="bg-[#E8E6EB]/60 text-[#024059] border-0 text-[10px] font-black mb-3 uppercase tracking-widest px-4 py-1.5 rounded-full">
                    Now Consulting
                 </Badge>
-                <h4 className="text-6xl font-black text-[#659BB9] tracking-tighter uppercase leading-none">
+                <h4 className="text-6xl font-black text-slate-800 tracking-tighter uppercase leading-none">
                   {currentServing ? currentServing.student_display_name : "IDLE"}
                 </h4>
                 {currentServing && (
-                  <p className="text-[10px] font-black text-[#659BB9] mt-6 uppercase tracking-widest flex items-center justify-center gap-2">
+                  <p className="text-[10px] font-black text-[#024059] mt-6 uppercase tracking-widest flex items-center justify-center gap-2">
                     <Clock size={12} /> ~{minutesLeft} mins remaining
                   </p>
                 )}
               </div>
 
               <div className="space-y-3 mb-10 flex-grow">
-                <p className="text-[10px] font-black text-[#659BB9]/60 uppercase tracking-widest pl-2 mb-2">Upcoming Tickets:</p>
+                <p className="text-[10px] font-black text-[#024059]/65 uppercase tracking-widest pl-2 mb-2">Upcoming Tickets:</p>
                 {upNextQueue.length > 0 ? upNextQueue.slice(0, 3).map((s, idx) => (
-                  <div key={s.id} className="bg-white p-5 rounded-2xl border border-slate-100 flex justify-between items-center shadow-sm hover:border-[#659BB9] transition-colors">
-                    <span className="text-sm font-black text-[#659BB9]/85 tracking-tight">{s.student_display_name}</span>
-                    <Badge className="bg-[#659BB9]/30 text-[#659BB9] border-0 text-[9px] font-black px-3 py-1 uppercase tracking-tighter">
+                  <div key={s.id} className="bg-white p-5 rounded-2xl border border-slate-100 flex justify-between items-center shadow-sm hover:border-[#024059] transition-colors">
+                    <span className="text-sm font-black text-slate-700 tracking-tight">{s.student_display_name}</span>
+                    <Badge className="bg-[#E8E6EB]/60 text-[#024059] border-0 text-[9px] font-black px-3 py-1 uppercase tracking-tighter">
                       +{ (idx + 1) * 15 }m wait
                     </Badge>
                   </div>
@@ -317,16 +317,16 @@ export default function Home() {
               {/* Status Quick Search */}
               <form onSubmit={handleQuickSearch} className="pt-6 border-t border-slate-100 mt-auto flex items-center gap-3">
                 <div className="relative flex-1">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#659BB9]/60" size={16} />
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#024059]/55" size={16} />
                   <input 
                     type="text" 
                     placeholder="Enter Ticket ID to check status..." 
-                    className="w-full bg-slate-50 border-transparent focus:ring-2 focus:ring-[#659BB9] focus:bg-white rounded-[20px] py-4 pl-12 text-[10px] font-black uppercase tracking-widest transition-all" 
+                    className="w-full bg-slate-50 border-transparent focus:ring-2 focus:ring-[#E8E6EB] focus:bg-white rounded-[20px] py-4 pl-12 text-[10px] font-black uppercase tracking-widest transition-all" 
                     value={statusInput} 
                     onChange={(e) => setStatusInput(e.target.value)} 
                   />
                 </div>
-                <button type="submit" className="bg-[#659BB9] text-white p-4 rounded-[20px] shadow-lg transition-all hover:bg-[#659BB9] active:scale-95 flex items-center justify-center">
+                <button type="submit" className="bg-[#024059] text-white p-4 rounded-[20px] shadow-lg transition-all hover:bg-[#024059] active:scale-95 flex items-center justify-center">
                   <ArrowRight size={18} />
                 </button>
               </form>
@@ -337,32 +337,32 @@ export default function Home() {
           <Card className="border-0 shadow-xl rounded-[48px] bg-white overflow-hidden flex flex-col">
             <CardContent className="p-10 flex-1 flex flex-col">
               <div className="flex items-center gap-5 mb-10">
-                <div className="w-16 h-16 bg-[#659BB9]/30 rounded-[28px] flex items-center justify-center text-[#659BB9] shadow-inner">
+                <div className="w-16 h-16 bg-[#E8E6EB]/60 rounded-[28px] flex items-center justify-center text-[#024059] shadow-inner">
                   <Calendar size={32} />
                 </div>
                 <div>
-                  <h3 className="font-black text-[#659BB9] uppercase text-2xl leading-none tracking-tighter">Schedule</h3>
-                  <p className="text-[10px] font-black text-[#659BB9]/60 uppercase tracking-widest mt-1">Available Hours</p>
+                  <h3 className="font-black text-slate-800 uppercase text-2xl leading-none tracking-tighter">Schedule</h3>
+                  <p className="text-[10px] font-black text-[#024059]/65 uppercase tracking-widest mt-1">Available Hours</p>
                 </div>
               </div>
 
               <div className="space-y-6 flex-1">
                 <div className="p-8 bg-slate-50 rounded-[40px] border border-slate-100 transition-all hover:bg-white hover:shadow-md">
-                  <p className="text-[10px] font-black text-[#659BB9]/60 uppercase tracking-widest mb-4">Consultation Windows</p>
-                  <p className="text-sm font-black text-[#659BB9]/85 leading-relaxed uppercase whitespace-pre-line">
+                  <p className="text-[10px] font-black text-[#024059]/55 uppercase tracking-widest mb-4">Consultation Windows</p>
+                  <p className="text-sm font-black text-slate-700 leading-relaxed uppercase whitespace-pre-line">
                     {selectedFaculty?.schedule || "No official hours posted yet."}
                   </p>
                 </div>
                 
                 <div className="p-8 bg-slate-50 rounded-[40px] border border-slate-100 flex flex-col items-center text-center transition-all hover:bg-white hover:shadow-md">
-                  <p className="text-[10px] font-black text-[#659BB9]/60 uppercase tracking-widest mb-4">Meeting Preference</p>
-                  <div className="flex items-center gap-3 bg-white px-8 py-4 rounded-[24px] shadow-sm border border-[#659BB9]">
-                    {isOnline ? <Globe size={24} className="text-[#659BB9]" /> : <UserCheck size={24} className="text-[#659BB9]" />}
-                    <span className="text-sm font-black text-[#659BB9] uppercase tracking-widest">
+                  <p className="text-[10px] font-black text-[#024059]/55 uppercase tracking-widest mb-4">Meeting Preference</p>
+                  <div className="flex items-center gap-3 bg-white px-8 py-4 rounded-[24px] shadow-sm border border-[#E8E6EB]">
+                    {isOnline ? <Globe size={24} className="text-[#024059]" /> : <UserCheck size={24} className="text-[#024059]" />}
+                    <span className="text-sm font-black text-slate-900 uppercase tracking-widest">
                        {meetingMethod.replace(/_/g, " ")}
                     </span>
                   </div>
-                  <p className="text-[9px] font-bold text-[#659BB9]/60 mt-4 uppercase tracking-widest">
+                  <p className="text-[9px] font-bold text-[#024059]/65 mt-4 uppercase tracking-widest">
                     {isOnline ? "A Google Meet link will be provided." : "Please proceed to the faculty office."}
                   </p>
                 </div>
@@ -370,7 +370,7 @@ export default function Home() {
 
               <button 
                 onClick={() => setLocation("/login")} 
-                className="mt-12 text-[10px] font-black text-[#659BB9]/60 hover:text-[#659BB9] uppercase tracking-[0.4em] text-center w-full transition-colors border-t border-slate-50 pt-8"
+                className="mt-12 text-[10px] font-black text-[#024059]/55 hover:text-[#024059] uppercase tracking-[0.4em] text-center w-full transition-colors border-t border-slate-50 pt-8"
               >
                 Faculty & Admin Portal
               </button>
@@ -381,7 +381,7 @@ export default function Home() {
       </main>
 
       <footer className="mt-auto px-12 py-10 bg-white border-t border-slate-50 text-center">
-        <p className="text-[10px] font-black text-[#659BB9]/55 uppercase tracking-[0.6em] leading-none">
+        <p className="text-[10px] font-black text-slate-200 uppercase tracking-[0.6em] leading-none">
           EARIST QUEUE MANAGEMENT SYSTEM © 2026
         </p>
       </footer>

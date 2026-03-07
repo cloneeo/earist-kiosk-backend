@@ -33,20 +33,20 @@ const consultations = [
 // Helper to get priority color based on name
 const getPriorityStyles = (priority: string) => {
   switch (priority) {
-    case "URGENT": return "border-[#659BB9] text-[#659BB9] bg-[#659BB9]/30";
+    case "URGENT": return "border-[#024059] text-[#024059] bg-[#E8E6EB]/60";
     case "MODERATE PRIORITY": return "border-orange-500 text-orange-700 bg-orange-50";
-    default: return "border-[#659BB9] text-[#659BB9] bg-[#659BB9]/30";
+    default: return "border-[#024059] text-[#024059] bg-[#E8E6EB]/60";
   }
 };
 
 export default function ConsultationList() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-[#659BB9]/35 p-6">
+    <div className="min-h-screen bg-gradient-to-b from-white to-[#E8E6EB]/35 p-6">
       
       {/* Header and Add Button */}
-      <div className="flex items-center justify-between mb-8 pb-4 border-b border-[#659BB9]">
-        <h1 className="text-3xl font-bold text-[#659BB9]">Queue & Consultations</h1>
-        <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#659BB9] hover:bg-[#659BB9] text-white transition-colors">
+      <div className="flex items-center justify-between mb-8 pb-4 border-b border-[#E8E6EB]">
+        <h1 className="text-3xl font-bold text-[#024059]">Queue & Consultations</h1>
+        <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#024059] hover:bg-[#024059] text-white transition-colors">
           <PlusCircle className="w-5 h-5" />
           Add New Queue
         </button>
@@ -58,7 +58,7 @@ export default function ConsultationList() {
           const priorityStyles = getPriorityStyles(consult.priority);
           
           return (
-            <Card key={consult.id} className="relative w-full shadow-md border-slate-100 hover:border-[#659BB9] transition-all">
+            <Card key={consult.id} className="relative w-full shadow-md border-slate-100 hover:border-[#E8E6EB] transition-all">
               
               {/* Colored Priority Banner (Top Indicator) */}
               <div className={`absolute top-0 left-0 right-0 h-1 rounded-t-lg ${priorityStyles.split(' ')[0].replace('border','bg')}`}></div>
@@ -73,12 +73,12 @@ export default function ConsultationList() {
                 </div>
 
                 {/* Consultation Title */}
-                <CardTitle className="text-lg font-semibold text-[#659BB9] leading-tight">
+                <CardTitle className="text-lg font-semibold text-slate-900 leading-tight">
                   {consult.title}
                 </CardTitle>
                 
                 {/* Faculty Name */}
-                <p className="text-xs text-[#659BB9] mt-1">Faculty: {consult.facultyName}</p>
+                <p className="text-xs text-[#024059] mt-1">Faculty: {consult.facultyName}</p>
               </CardHeader>
 
               <CardContent className="space-y-4">
@@ -91,7 +91,7 @@ export default function ConsultationList() {
                       <AvatarFallback>{consult.studentName[0]}</AvatarFallback>
                     </Avatar>
                   </div>
-                  <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-md font-medium text-xs">
+                  <Badge className="bg-[#E8E6EB] text-[#024059] hover:bg-[#E8E6EB] rounded-md font-medium text-xs">
                     {consult.status}
                   </Badge>
                 </div>
@@ -100,7 +100,7 @@ export default function ConsultationList() {
                 <div className="border-t border-slate-100"></div>
 
                 {/* Footer Info (mock stats) */}
-                <div className="flex items-center justify-between text-[#659BB9]/70 text-sm">
+                <div className="flex items-center justify-between text-slate-500 text-sm">
                   <div className="flex items-center gap-1.5">
                     <MessageSquareText className="w-4 h-4" /> 8
                   </div>

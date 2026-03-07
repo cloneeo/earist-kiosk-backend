@@ -37,7 +37,7 @@
  * ```tsx
  * <Markdown
  *   components={{
- *     h1: ({ children }) => <h1 className="text-5xl text-blue-500">{children}</h1>,
+ *     h1: ({ children }) => <h1 className="text-5xl text-[#024059]">{children}</h1>,
  *     a: ({ href, children }) => <a href={href} className="text-pink-500">{children}</a>
  *   }}
  * >

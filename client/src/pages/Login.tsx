@@ -48,7 +48,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#FFFCEF] p-4 font-sans">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#E8E6EB] p-4 font-sans">
       {/* Back to Kiosk Button */}
       <motion.div
         initial={{ opacity: 0, x: -20 }}
@@ -57,7 +57,7 @@ export default function Login() {
       >
         <button 
           onClick={() => setLocation("/kiosk")}
-          className="flex items-center gap-2 text-[10px] font-black text-[#659BB9]/60 hover:text-[#659BB9] transition-colors uppercase tracking-[0.2em]"
+          className="flex items-center gap-2 text-[10px] font-black text-[#024059]/65 hover:text-[#024059] transition-colors uppercase tracking-[0.2em]"
         >
           <ArrowLeft size={14} /> Back to Kiosk
         </button>
@@ -71,27 +71,27 @@ export default function Login() {
         >
           <Card className="border-0 shadow-[0_30px_60px_rgba(0,0,0,0.08)] bg-white rounded-[48px] overflow-hidden">
             {/* Top Branding Strip */}
-            <div className="pt-14 pb-8 text-center border-t-[12px] border-[#659BB9]">
-              <div className="w-20 h-20 bg-[#659BB9]/30 text-[#659BB9] rounded-[28px] flex items-center justify-center mx-auto mb-6 shadow-inner">
+            <div className="pt-14 pb-8 text-center border-t-[12px] border-[#024059]">
+              <div className="w-20 h-20 bg-[#E8E6EB]/60 text-[#024059] rounded-[28px] flex items-center justify-center mx-auto mb-6 shadow-inner">
                 <ShieldCheck size={40} />
               </div>
-              <h1 className="text-4xl font-black text-[#659BB9] tracking-tight uppercase">Staff Portal</h1>
-              <p className="text-[#659BB9]/60 font-bold text-[10px] uppercase tracking-[0.3em] mt-2 opacity-60">Authorized EARIST Personnel Only</p>
+              <h1 className="text-4xl font-black text-slate-900 tracking-tight uppercase">Staff Portal</h1>
+              <p className="text-[#024059]/65 font-bold text-[10px] uppercase tracking-[0.3em] mt-2 opacity-60">Authorized EARIST Personnel Only</p>
             </div>
 
             <CardContent className="px-10 pb-14">
               <form onSubmit={handleSubmit} className="space-y-6">
                 {error && (
-                  <Alert variant="destructive" className="bg-[#659BB9]/30 border-0 text-[#659BB9] rounded-2xl p-4">
+                  <Alert variant="destructive" className="bg-[#E8E6EB]/60 border-0 text-[#024059] rounded-2xl p-4">
                     <AlertCircle className="h-5 w-5" />
                     <AlertDescription className="font-bold text-xs">{error}</AlertDescription>
                   </Alert>
                 )}
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-[#659BB9]/60 uppercase tracking-widest ml-2">Work Email</label>
+                  <label className="text-[10px] font-black text-[#024059]/65 uppercase tracking-widest ml-2">Work Email</label>
                   <div className="relative group">
-                    <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-[#659BB9]/60 group-focus-within:text-[#659BB9] transition-colors" size={20} />
+                    <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-[#024059]/55 group-focus-within:text-[#024059] transition-colors" size={20} />
                     <Input
                       type="email"
                       placeholder="name@earist.edu.ph"
@@ -99,15 +99,15 @@ export default function Login() {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       disabled={loading}
-                      className="w-full pl-14 pr-8 py-8 bg-slate-50 border-transparent focus-visible:ring-4 focus-visible:ring-[#659BB9] focus-visible:border-[#659BB9] rounded-[24px] font-bold text-[#659BB9]/85 transition-all"
+                      className="w-full pl-14 pr-8 py-8 bg-slate-50 border-transparent focus-visible:ring-4 focus-visible:ring-[#E8E6EB] focus-visible:border-[#024059] rounded-[24px] font-bold text-slate-700 transition-all"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-[#659BB9]/60 uppercase tracking-widest ml-2">Password</label>
+                  <label className="text-[10px] font-black text-[#024059]/65 uppercase tracking-widest ml-2">Password</label>
                   <div className="relative group">
-                    <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-[#659BB9]/60 group-focus-within:text-[#659BB9] transition-colors" size={20} />
+                    <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-[#024059]/55 group-focus-within:text-[#024059] transition-colors" size={20} />
                     <Input
                       type="password"
                       placeholder="••••••••"
@@ -115,14 +115,14 @@ export default function Login() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       disabled={loading}
-                      className="w-full pl-14 pr-8 py-8 bg-slate-50 border-transparent focus-visible:ring-4 focus-visible:ring-[#659BB9] focus-visible:border-[#659BB9] rounded-[24px] font-bold text-[#659BB9]/85 transition-all"
+                      className="w-full pl-14 pr-8 py-8 bg-slate-50 border-transparent focus-visible:ring-4 focus-visible:ring-[#E8E6EB] focus-visible:border-[#024059] rounded-[24px] font-bold text-slate-700 transition-all"
                     />
                   </div>
                 </div>
 
                 <Button 
                   type="submit" 
-                  className="w-full bg-[#659BB9] hover:bg-[#659BB9] text-white font-black tracking-[0.2em] uppercase rounded-[24px] h-16 mt-6 transition-all shadow-xl shadow-[#659BB9]/20 flex items-center justify-center gap-3" 
+                  className="w-full bg-[#024059] hover:bg-[#024059] text-white font-black tracking-[0.2em] uppercase rounded-[24px] h-16 mt-6 transition-all shadow-xl shadow-[#024059]/20 flex items-center justify-center gap-3" 
                   disabled={loading}
                 >
                   {loading ? (
@@ -134,7 +134,7 @@ export default function Login() {
               </form>
 
               <div className="mt-10 pt-8 border-t border-slate-50 text-center">
-                <p className="text-[10px] font-black text-[#659BB9]/60 uppercase tracking-widest">
+                <p className="text-[10px] font-black text-[#024059]/55 uppercase tracking-widest">
                   Forgot password? Contact EARIST IT Support
                 </p>
               </div>

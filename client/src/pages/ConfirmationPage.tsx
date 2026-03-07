@@ -45,8 +45,8 @@ export default function ConfirmationPage() {
             <CheckCircle2 className="w-10 h-10 text-emerald-500" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-[#659BB9]">Your ticket is ready!</h2>
-            <p className="text-[#659BB9]/70 text-sm leading-relaxed px-4">
+            <h2 className="text-2xl font-bold text-slate-900">Your ticket is ready!</h2>
+            <p className="text-slate-500 text-sm leading-relaxed px-4">
               We've sent your entry to the faculty monitor. Please wait for your number to be called.
             </p>
           </div>
@@ -59,7 +59,7 @@ export default function ConfirmationPage() {
             </Button>
             <Button 
               variant="ghost" 
-              className="w-full text-[#659BB9]/60 text-xs"
+              className="w-full text-[#024059]/65 text-xs"
               onClick={() => setLocation("/kiosk")}
             >
               Submit another ticket
@@ -69,29 +69,29 @@ export default function ConfirmationPage() {
 
         {/* Right Panel: Ticket Details (Split Sidebar Style) */}
         <div className="w-full md:w-[320px] bg-slate-50 p-8 border-l border-slate-100 flex flex-col">
-          <h3 className="text-[#659BB9] font-bold mb-8 flex items-center gap-2">
-            <Clock className="w-4 h-4 text-blue-500" /> Ticket Summary
+          <h3 className="text-slate-900 font-bold mb-8 flex items-center gap-2">
+            <Clock className="w-4 h-4 text-[#024059]" /> Ticket Summary
           </h3>
           
           <div className="space-y-6 flex-1">
             <div className="space-y-1">
-              <p className="text-[10px] uppercase tracking-wider font-bold text-[#659BB9]/60">Professor</p>
-              <p className="text-sm font-semibold text-[#659BB9]/85">{entry.faculty?.name || "Professor"}</p>
+              <p className="text-[10px] uppercase tracking-wider font-bold text-[#024059]/65">Professor</p>
+              <p className="text-sm font-semibold text-slate-700">{entry.faculty?.name || "Professor"}</p>
             </div>
 
             <div className="space-y-1">
-              <p className="text-[10px] uppercase tracking-wider font-bold text-[#659BB9]/60">Student ID</p>
-              <p className="text-sm font-semibold text-[#659BB9]/85 font-mono tracking-tighter">{entry.student_number}</p>
+              <p className="text-[10px] uppercase tracking-wider font-bold text-[#024059]/65">Student ID</p>
+              <p className="text-sm font-semibold text-slate-700 font-mono tracking-tighter">{entry.student_number}</p>
             </div>
 
             <div className="pt-6 border-t border-slate-200 space-y-3">
               <div className="flex justify-between items-center text-xs">
-                <span className="text-[#659BB9]/60">{new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                <span className="font-bold text-[#659BB9]/75 uppercase tracking-tighter">{entry.consultation_type.replace('_', ' ')}</span>
+                <span className="text-[#024059]/65">{new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                <span className="font-bold text-slate-600 uppercase tracking-tighter">{entry.consultation_type.replace('_', ' ')}</span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="text-[#659BB9]/60">Time Logged</span>
-                <span className="font-bold text-[#659BB9]/75">
+                <span className="text-[#024059]/65">Time Logged</span>
+                <span className="font-bold text-slate-600">
                   {new Date(entry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
@@ -101,13 +101,13 @@ export default function ConfirmationPage() {
           {/* Position & QR Section */}
           <div className="mt-8 pt-6 border-t border-slate-200 space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-[#659BB9]/70 font-medium">Status</span>
+              <span className="text-sm text-slate-500 font-medium">Status</span>
               <span className="text-xl font-black text-emerald-600">ACTIVE</span>
             </div>
             <div className="bg-white p-3 rounded-2xl border border-slate-200 flex items-center justify-center shadow-sm">
-               <QrCode className="w-24 h-24 text-[#659BB9]" />
+               <QrCode className="w-24 h-24 text-slate-800" />
             </div>
-            <p className="text-[9px] text-center text-[#659BB9]/60 font-bold uppercase tracking-[0.2em]">
+            <p className="text-[9px] text-center text-[#024059]/65 font-bold uppercase tracking-[0.2em]">
               Scan at Kiosk Monitor
             </p>
           </div>

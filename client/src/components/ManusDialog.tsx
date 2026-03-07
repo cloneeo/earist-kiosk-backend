@@ -51,10 +51,10 @@ export function ManusDialog({
       open={onOpenChange ? open : internalOpen}
       onOpenChange={handleOpenChange}
     >
-      <DialogContent className="py-5 bg-[#FFFCEF] rounded-[20px] w-[400px] shadow-[0px_4px_11px_0px_rgba(0,0,0,0.08)] border border-[#D7E6EF] backdrop-blur-2xl p-0 gap-0 text-center">
+      <DialogContent className="py-5 bg-[#f8f8f7] rounded-[20px] w-[400px] shadow-[0px_4px_11px_0px_rgba(0,0,0,0.08)] border border-[rgba(0,0,0,0.08)] backdrop-blur-2xl p-0 gap-0 text-center">
         <div className="flex flex-col items-center gap-2 p-5 pt-12">
           {logo ? (
-            <div className="w-16 h-16 bg-white rounded-xl border border-[#D7E6EF] flex items-center justify-center">
+            <div className="w-16 h-16 bg-white rounded-xl border border-[rgba(0,0,0,0.08)] flex items-center justify-center">
               <img
                 src={logo}
                 alt="Dialog graphic"
@@ -65,11 +65,11 @@ export function ManusDialog({
 
           {/* Title and subtitle */}
           {title ? (
-            <DialogTitle className="text-xl font-semibold text-[#659BB9] leading-[26px] tracking-[-0.44px]">
+            <DialogTitle className="text-xl font-semibold text-[#34322d] leading-[26px] tracking-[-0.44px]">
               {title}
             </DialogTitle>
           ) : null}
-          <DialogDescription className="text-sm text-[#659BB9] leading-5 tracking-[-0.154px] opacity-80">
+          <DialogDescription className="text-sm text-[#858481] leading-5 tracking-[-0.154px]">
             Please login with Manus to continue
           </DialogDescription>
         </div>
@@ -78,7 +78,7 @@ export function ManusDialog({
           {/* Login button */}
           <Button
             onClick={onLogin}
-            className="w-full h-10 bg-[#659BB9] hover:bg-[#659BB9]/90 text-white rounded-[10px] text-sm font-medium leading-5 tracking-[-0.154px]"
+            className="w-full h-10 bg-[#1a1a19] hover:bg-[#1a1a19]/90 text-white rounded-[10px] text-sm font-medium leading-5 tracking-[-0.154px]"
           >
             Login with Manus
           </Button>
