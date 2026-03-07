@@ -111,6 +111,18 @@ export default function FacultyDashboard() {
   const [officeLocation, setOfficeLocation] = useState("");
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [keyboardField, setKeyboardField] = useState<"meetingLink" | "officeLocation" | null>(null);
+  const [activePanel, setActivePanel] = useState<"queue" | "recordings">("queue");
+  const [recordings, setRecordings] = useState<Array<{
+    id: string;
+    queueEntryId: string;
+    studentNumber: string;
+    mimeType: string;
+    sizeBytes: number;
+    durationSeconds: number | null;
+    createdAt: string;
+    audioUrl: string;
+  }>>([]);
+  const [recordingsLoading, setRecordingsLoading] = useState(false);
   
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -178,10 +190,29 @@ export default function FacultyDashboard() {
       setMeetingLink(parsedSchedule.meetingLink);
       setOfficeLocation(parsedSchedule.officeLocation);
       await fetchQueue(fac.id);
+      await loadRecordings(fac.id);
     } catch (err) {
       console.error("Failed to load data", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadRecordings = async (facultyId: string) => {
+    if (!facultyId) return;
+    setRecordingsLoading(true);
+    try {
+      const response = await fetch(`/api/consultations/recordings?scope=faculty&facultyId=${encodeURIComponent(facultyId)}`);
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || !payload?.ok) {
+        throw new Error(payload?.message || "Failed to load recordings.");
+      }
+      setRecordings(Array.isArray(payload.recordings) ? payload.recordings : []);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to load recordings.";
+      toast.error(message);
+    } finally {
+      setRecordingsLoading(false);
     }
   };
 
@@ -225,6 +256,14 @@ export default function FacultyDashboard() {
     return () => {
       subscription.unsubscribe();
     };
+  }, [faculty?.id]);
+
+  useEffect(() => {
+    if (!faculty?.id) return;
+    const interval = window.setInterval(() => {
+      void loadRecordings(faculty.id);
+    }, 30000);
+    return () => window.clearInterval(interval);
   }, [faculty?.id]);
 
   const fetchQueue = async (facultyId: string) => {
@@ -850,6 +889,63 @@ export default function FacultyDashboard() {
         </div>
 
         <div className="lg:col-span-3 space-y-8">
+          <div className="flex items-center justify-end">
+            <div className="flex gap-2 bg-white p-1 rounded-xl border border-slate-100">
+              <Button
+                variant={activePanel === "queue" ? "default" : "ghost"}
+                className={activePanel === "queue" ? "bg-[#024059] text-white rounded-lg h-8 px-4 text-[10px] font-black uppercase" : "rounded-lg h-8 px-4 text-[10px] font-black uppercase text-slate-500"}
+                onClick={() => setActivePanel("queue")}
+              >
+                Queue
+              </Button>
+              <Button
+                variant={activePanel === "recordings" ? "default" : "ghost"}
+                className={activePanel === "recordings" ? "bg-[#024059] text-white rounded-lg h-8 px-4 text-[10px] font-black uppercase" : "rounded-lg h-8 px-4 text-[10px] font-black uppercase text-slate-500"}
+                onClick={() => {
+                  setActivePanel("recordings");
+                  if (faculty?.id) void loadRecordings(faculty.id);
+                }}
+              >
+                Recordings
+              </Button>
+            </div>
+          </div>
+
+          {activePanel === "recordings" ? (
+            <Card className="border-0 shadow-sm rounded-[32px] bg-white overflow-hidden">
+              <CardHeader className="bg-slate-50 px-8 py-6 border-b border-slate-100 flex flex-row justify-between items-center">
+                <CardTitle className="text-slate-800 font-black uppercase tracking-widest text-xs">Recent Recordings (48h)</CardTitle>
+                <Badge className="bg-slate-200 text-slate-600 font-black px-3 py-1 rounded-lg text-[10px]">{recordings.length}</Badge>
+              </CardHeader>
+              <CardContent className="p-6 space-y-4">
+                {recordingsLoading && <p className="text-xs font-bold text-slate-500">Loading recordings...</p>}
+                {!recordingsLoading && recordings.length === 0 && (
+                  <p className="text-xs font-bold text-slate-500">No recordings available. Items older than 48 hours are auto-deleted.</p>
+                )}
+                {!recordingsLoading && recordings.map((item) => (
+                  <div key={item.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4 space-y-3">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-black text-slate-800">{item.studentNumber}</p>
+                        <p className="text-[10px] font-bold text-[#024059]/65 uppercase tracking-widest">
+                          {new Date(item.createdAt).toLocaleString()} • {item.durationSeconds ? `${item.durationSeconds}s` : "Duration N/A"}
+                        </p>
+                      </div>
+                      <Badge className="bg-white text-[#024059] border border-[#E8E6EB] font-black text-[10px]">
+                        {(item.sizeBytes / (1024 * 1024)).toFixed(2)} MB
+                      </Badge>
+                    </div>
+                    {item.audioUrl ? (
+                      <audio controls className="w-full" src={item.audioUrl} preload="none" />
+                    ) : (
+                      <p className="text-xs font-bold text-slate-500">Audio link unavailable.</p>
+                    )}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          ) : (
+            <>
           <div className="relative">
             <div className="absolute -top-4 left-6 right-6 bg-[#024059] rounded-t-[40px] h-24 shadow-inner opacity-40"></div>
             <Card className="relative z-10 border-0 shadow-2xl rounded-[40px] bg-white overflow-hidden min-h-[450px] flex flex-col">
@@ -966,6 +1062,8 @@ export default function FacultyDashboard() {
                 {pending.length === 0 && <div className="col-span-2 py-16 text-center text-slate-200 font-black uppercase tracking-[0.5em] text-[10px]">No pending requests</div>}
              </CardContent>
           </Card>
+            </>
+          )}
         </div>
       </div>
 

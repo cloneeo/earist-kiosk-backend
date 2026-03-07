@@ -15,8 +15,6 @@ type FacultyRow = {
 
 type StudentRow = {
   full_name?: string | null;
-  student_name?: string | null;
-  name?: string | null;
   email?: string | null;
   student_email?: string | null;
 };
@@ -75,8 +73,6 @@ const supabaseFetch = async <T>(path: string): Promise<SupabaseListResponse<T>> 
 const resolveStudentName = (student: StudentRow | null, fallbackStudentNumber: string): string => {
   const value =
     student?.full_name?.trim() ||
-    student?.student_name?.trim() ||
-    student?.name?.trim() ||
     fallbackStudentNumber;
 
   return value;
@@ -191,7 +187,7 @@ export function registerBookingEmailRoutes(app: Express) {
 
       const [studentResponse, facultyResponse] = await Promise.all([
         supabaseFetch<StudentRow>(
-          `students?select=full_name,name,email,student_email&student_number=eq.${studentNumber}&limit=1`
+          `students?select=full_name,email,student_email&student_number=eq.${studentNumber}&limit=1`
         ),
         supabaseFetch<FacultyRow>(
           `faculty?select=id,name&id=eq.${queueEntry.faculty_id}&limit=1`

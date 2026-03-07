@@ -19,18 +19,31 @@ type Department = Database["public"]["Tables"]["departments"]["Row"];
 type Faculty = Database["public"]["Tables"]["faculty"]["Row"];
 type AdminTable = "colleges" | "departments" | "faculty";
 
+type RecordingItem = {
+  id: string;
+  queueEntryId: string;
+  facultyId: string | null;
+  studentNumber: string;
+  mimeType: string;
+  sizeBytes: number;
+  durationSeconds: number | null;
+  createdAt: string;
+  audioUrl: string;
+};
+
 export default function AdminDashboard() {
   const [, setLocation] = useLocation();
   const { signOut, userRole } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"consultations" | "colleges" | "departments" | "faculty">("consultations");
+  const [activeTab, setActiveTab] = useState<"consultations" | "colleges" | "departments" | "faculty" | "recordings">("consultations");
 
   const [colleges, setColleges] = useState<College[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [faculties, setFaculties] = useState<Faculty[]>([]);
   const [liveQueue, setLiveQueue] = useState<any[]>([]);
+  const [recordings, setRecordings] = useState<RecordingItem[]>([]);
 
   // Modal States
   const [isCollegeModalOpen, setIsCollegeModalOpen] = useState(false);
@@ -71,6 +84,12 @@ export default function AdminDashboard() {
       setDepartments(departmentsRes.data || []);
       setFaculties(facultiesRes.data || []);
       setLiveQueue(queueRes.data || []);
+
+      const recordingsResponse = await fetch("/api/consultations/recordings?scope=admin");
+      const recordingsPayload = await recordingsResponse.json().catch(() => null);
+      if (recordingsResponse.ok && recordingsPayload?.ok) {
+        setRecordings(Array.isArray(recordingsPayload.recordings) ? recordingsPayload.recordings : []);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load data");
     } finally {
@@ -223,6 +242,7 @@ export default function AdminDashboard() {
               { id: "colleges", label: "Colleges", icon: Building2 },
               { id: "departments", label: "Depts", icon: Building2 },
               { id: "faculty", label: "Faculty", icon: Users },
+              { id: "recordings", label: "Recordings", icon: Clock },
             ].map((tab) => (
               <Button key={tab.id} variant={activeTab === tab.id ? "default" : "ghost"} className={activeTab === tab.id ? "bg-[#024059] hover:bg-[#024059] text-white rounded-xl" : "rounded-xl text-slate-500"} onClick={() => setActiveTab(tab.id as any)}>
                 <tab.icon className="w-4 h-4 mr-2" /> {tab.label}
@@ -249,21 +269,48 @@ export default function AdminDashboard() {
         ) : (
           <Card className="rounded-3xl border-0 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between border-b px-8 py-6">
-              <CardTitle className="uppercase text-xs font-black text-slate-800">{activeTab} Registry</CardTitle>
+              <CardTitle className="uppercase text-xs font-black text-slate-800">{activeTab === "recordings" ? "Recordings" : `${activeTab} Registry`}</CardTitle>
               {/* FIXED ADD BUTTON FOR ALL TABS */}
-              <Button 
-                className="bg-[#024059] hover:bg-[#024059] text-white text-xs font-bold px-6 rounded-xl shadow-md transition-all" 
-                onClick={() => {
-                  if (activeTab === "colleges") setIsCollegeModalOpen(true);
-                  else if (activeTab === "departments") setIsDeptModalOpen(true);
-                  else if (activeTab === "faculty") setIsFacultyModalOpen(true);
-                }}
-                disabled={activeTab === "departments" && colleges.length === 0 || activeTab === "faculty" && departments.length === 0}
-              >
-                <Plus className="w-4 h-4 mr-2" /> Add {activeTab === "faculty" ? "Faculty" : activeTab.slice(0, -1)}
-              </Button>
+              {activeTab !== "recordings" && (
+                <Button 
+                  className="bg-[#024059] hover:bg-[#024059] text-white text-xs font-bold px-6 rounded-xl shadow-md transition-all" 
+                  onClick={() => {
+                    if (activeTab === "colleges") setIsCollegeModalOpen(true);
+                    else if (activeTab === "departments") setIsDeptModalOpen(true);
+                    else if (activeTab === "faculty") setIsFacultyModalOpen(true);
+                  }}
+                  disabled={activeTab === "departments" && colleges.length === 0 || activeTab === "faculty" && departments.length === 0}
+                >
+                  <Plus className="w-4 h-4 mr-2" /> Add {activeTab === "faculty" ? "Faculty" : activeTab.slice(0, -1)}
+                </Button>
+              )}
             </CardHeader>
             <CardContent className="p-0">
+               {activeTab === "recordings" && (
+                 <div className="p-6 space-y-4">
+                   {recordings.length === 0 && <p className="text-sm font-bold text-slate-500">No recordings available. Items older than 48 hours are auto-deleted.</p>}
+                   {recordings.map((item) => (
+                     <div key={item.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4 space-y-3">
+                       <div className="flex flex-wrap items-center justify-between gap-3">
+                         <div>
+                           <p className="text-sm font-black text-slate-800">Student #{item.studentNumber}</p>
+                           <p className="text-[10px] font-bold text-[#024059]/65 uppercase tracking-widest">
+                             {new Date(item.createdAt).toLocaleString()} • {item.durationSeconds ? `${item.durationSeconds}s` : "Duration N/A"}
+                           </p>
+                         </div>
+                         <Badge className="bg-white text-[#024059] border border-[#E8E6EB] font-black text-[10px]">
+                           {(item.sizeBytes / (1024 * 1024)).toFixed(2)} MB
+                         </Badge>
+                       </div>
+                       {item.audioUrl ? (
+                         <audio controls className="w-full" src={item.audioUrl} preload="none" />
+                       ) : (
+                         <p className="text-xs font-bold text-slate-500">Audio link unavailable.</p>
+                       )}
+                     </div>
+                   ))}
+                 </div>
+               )}
                {activeTab === "colleges" && (
                  <table className="w-full text-sm">
                    <thead className="bg-slate-50"><tr><th className="text-left p-4">Name</th><th className="text-left p-4">Code</th><th className="text-right p-4">Actions</th></tr></thead>

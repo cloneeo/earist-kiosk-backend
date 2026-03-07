@@ -100,3 +100,48 @@ export async function storageGet(relKey: string): Promise<{ key: string; url: st
     url: await buildDownloadUrl(baseUrl, key, apiKey),
   };
 }
+
+export async function storageDelete(relKey: string): Promise<{ key: string; deleted: boolean }> {
+  const { baseUrl, apiKey } = getStorageConfig();
+  const key = normalizeKey(relKey);
+
+  const attempts: Array<() => Promise<Response>> = [
+    () => {
+      const url = new URL("v1/storage/delete", ensureTrailingSlash(baseUrl));
+      url.searchParams.set("path", key);
+      return fetch(url, {
+        method: "DELETE",
+        headers: buildAuthHeaders(apiKey),
+      });
+    },
+    () => {
+      const url = new URL("v1/storage/delete", ensureTrailingSlash(baseUrl));
+      return fetch(url, {
+        method: "POST",
+        headers: {
+          ...buildAuthHeaders(apiKey),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ path: key }),
+      });
+    },
+  ];
+
+  let lastError = "";
+  for (const request of attempts) {
+    const response = await request().catch((error) => {
+      lastError = error instanceof Error ? error.message : String(error);
+      return null;
+    });
+
+    if (response && response.ok) {
+      return { key, deleted: true };
+    }
+
+    if (response) {
+      lastError = await response.text().catch(() => response.statusText);
+    }
+  }
+
+  throw new Error(`Storage delete failed for ${key}: ${lastError || "Unknown error"}`);
+}
