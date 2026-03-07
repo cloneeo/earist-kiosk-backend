@@ -150,6 +150,23 @@ const insertQueueHistory = async (queueEntryId: string, action: string, notes: s
 };
 
 export function registerBookingEmailRoutes(app: Express) {
+  app.get("/api/booking/email/health", (_req, res) => {
+    const missing: string[] = [];
+    if (!supabaseUrl) missing.push("VITE_SUPABASE_URL");
+    if (!supabaseRestKey) missing.push("SUPABASE_SERVICE_ROLE_KEY or VITE_SUPABASE_ANON_KEY");
+    if (!sendGridApiKey) missing.push("SENDGRID_API_KEY");
+    if (!sendGridFrom) missing.push("SENDGRID_FROM or BOOKING_EMAIL_FROM");
+
+    const ok = missing.length === 0;
+    return res.status(ok ? 200 : 503).json({
+      ok,
+      provider: "sendgrid",
+      supabaseConfigured: hasSupabaseConfig,
+      sendgridConfigured: hasSendGridConfig,
+      missing,
+    });
+  });
+
   app.post("/api/booking/email", async (req, res) => {
     try {
       const queueId = String(req.body?.queueId || "").trim();
