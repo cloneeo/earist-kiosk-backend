@@ -191,7 +191,7 @@ export function registerBookingEmailRoutes(app: Express) {
 
       const [studentResponse, facultyResponse] = await Promise.all([
         supabaseFetch<StudentRow>(
-          `students?select=full_name,student_name,name,email,student_email&student_number=eq.${studentNumber}&limit=1`
+          `students?select=full_name,name,email,student_email&student_number=eq.${studentNumber}&limit=1`
         ),
         supabaseFetch<FacultyRow>(
           `faculty?select=id,name&id=eq.${queueEntry.faculty_id}&limit=1`
