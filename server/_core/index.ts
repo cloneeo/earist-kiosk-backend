@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
 import net from "net";
+import os from "os";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { registerChatRoutes } from "./chat";
@@ -61,14 +62,27 @@ async function startServer() {
   }
 
   const preferredPort = parseInt(process.env.PORT || "3000");
+  const host = String(process.env.HOST || "0.0.0.0").trim() || "0.0.0.0";
   const port = await findAvailablePort(preferredPort);
 
   if (port !== preferredPort) {
     console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
   }
 
-  server.listen(port, () => {
+  server.listen(port, host, () => {
+    const networkUrls = Object.values(os.networkInterfaces())
+      .flat()
+      .filter((address): address is NonNullable<typeof address> => !!address)
+      .filter((address) => address.family === "IPv4" && !address.internal)
+      .map((address) => `http://${address.address}:${port}/`);
+
     console.log(`Server running on http://localhost:${port}/`);
+    if (host === "0.0.0.0" && networkUrls.length > 0) {
+      console.log("LAN URLs:");
+      for (const url of networkUrls) {
+        console.log(`  ${url}`);
+      }
+    }
   });
 }
 
