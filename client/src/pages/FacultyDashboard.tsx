@@ -14,6 +14,7 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { format, differenceInSeconds, addMinutes, parse } from "date-fns";
+import { OnScreenKeyboard } from "@/components/OnScreenKeyboard";
 
 type ConsultationType = "face_to_face" | "google_meet";
 type SlotConfig = { time: string; method: ConsultationType };
@@ -108,10 +109,33 @@ export default function FacultyDashboard() {
   const [slotOptions, setSlotOptions] = useState<SlotConfig[]>([{ time: "09:00", method: "face_to_face" }]);
   const [meetingLink, setMeetingLink] = useState("");
   const [officeLocation, setOfficeLocation] = useState("");
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [keyboardField, setKeyboardField] = useState<"meetingLink" | "officeLocation" | null>(null);
   
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const meetWatcherRef = useRef<number | null>(null);
+
+  const shouldUseOnScreenKeyboard =
+    typeof window !== "undefined" &&
+    (window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 1024);
+
+  const openKeyboardFor = (field: "meetingLink" | "officeLocation") => {
+    if (!shouldUseOnScreenKeyboard) return;
+    setKeyboardField(field);
+    setKeyboardVisible(true);
+  };
+
+  const getKeyboardValue = () => {
+    if (keyboardField === "meetingLink") return meetingLink;
+    if (keyboardField === "officeLocation") return officeLocation;
+    return "";
+  };
+
+  const updateKeyboardValue = (next: string) => {
+    if (keyboardField === "meetingLink") setMeetingLink(next);
+    if (keyboardField === "officeLocation") setOfficeLocation(next);
+  };
 
   const stats = {
     waiting: queue.filter(t => t.status === 'waiting').length,
@@ -485,7 +509,7 @@ export default function FacultyDashboard() {
   const faceToFaceLocation = parsedFacultySchedule.officeLocation || "Faculty office";
 
   return (
-    <div className="min-h-screen bg-[#E8E6EB] flex flex-col font-sans">
+    <div className={`min-h-screen bg-[#E8E6EB] flex flex-col font-sans ${keyboardVisible ? "pb-64 md:pb-72" : ""}`}>
       <nav className="bg-white border-b border-[#E8E6EB] px-8 py-4 flex justify-between items-center shadow-sm z-10">
         <div className="flex items-center gap-3">
           <div className="bg-[#024059] p-2 rounded-lg text-white shadow-md"><Users className="w-5 h-5" /></div>
@@ -573,6 +597,7 @@ export default function FacultyDashboard() {
                       type="url"
                       value={meetingLink}
                       onChange={(e) => setMeetingLink(e.target.value)}
+                      onFocus={() => openKeyboardFor("meetingLink")}
                       placeholder="https://meet.google.com/..."
                       className="w-full h-10 px-3 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8E6EB]"
                     />
@@ -583,6 +608,7 @@ export default function FacultyDashboard() {
                       type="text"
                       value={officeLocation}
                       onChange={(e) => setOfficeLocation(e.target.value)}
+                      onFocus={() => openKeyboardFor("officeLocation")}
                       placeholder="e.g. CE Dept Room 204"
                       className="w-full h-10 px-3 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8E6EB]"
                     />
@@ -789,6 +815,17 @@ export default function FacultyDashboard() {
           </Card>
         </div>
       </div>
+
+      {keyboardVisible && keyboardField && isEditingSchedule && (
+        <OnScreenKeyboard
+          title="Schedule Keyboard"
+          value={getKeyboardValue()}
+          onChange={updateKeyboardValue}
+          onEnter={() => setKeyboardVisible(false)}
+          onClose={() => setKeyboardVisible(false)}
+          mode={keyboardField === "meetingLink" ? "email" : "text"}
+        />
+      )}
     </div>
   );
 }
