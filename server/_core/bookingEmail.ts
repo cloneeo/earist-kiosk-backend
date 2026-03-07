@@ -39,6 +39,9 @@ const smtpUser = process.env.SMTP_USER || "";
 const smtpPass = process.env.SMTP_PASS || "";
 const smtpSecure = String(process.env.SMTP_SECURE || "").trim().toLowerCase() === "true" || smtpPort === 465;
 const bookingEmailFrom = process.env.BOOKING_EMAIL_FROM || "";
+const smtpConnectionTimeoutMs = Number(process.env.SMTP_CONNECTION_TIMEOUT_MS || 30000);
+const smtpGreetingTimeoutMs = Number(process.env.SMTP_GREETING_TIMEOUT_MS || 30000);
+const smtpSocketTimeoutMs = Number(process.env.SMTP_SOCKET_TIMEOUT_MS || 60000);
 
 const supabaseRestKey = supabaseServiceRoleKey || supabaseAnonKey;
 const hasSupabaseConfig = !!supabaseUrl && !!supabaseRestKey;
@@ -109,9 +112,9 @@ const sendBookingEmail = async (toEmail: string, subject: string, html: string):
       port: smtpPort,
       secure: smtpSecure,
       auth: { user: smtpUser, pass: smtpPass },
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 20000,
+      connectionTimeout: smtpConnectionTimeoutMs,
+      greetingTimeout: smtpGreetingTimeoutMs,
+      socketTimeout: smtpSocketTimeoutMs,
     },
   ];
 
@@ -122,16 +125,16 @@ const sendBookingEmail = async (toEmail: string, subject: string, html: string):
         port: 465,
         secure: true,
         auth: { user: smtpUser, pass: smtpPass },
-        connectionTimeout: 10000,
-        greetingTimeout: 10000,
-        socketTimeout: 20000,
+        connectionTimeout: smtpConnectionTimeoutMs,
+        greetingTimeout: smtpGreetingTimeoutMs,
+        socketTimeout: smtpSocketTimeoutMs,
       },
       {
         service: "gmail",
         auth: { user: smtpUser, pass: smtpPass },
-        connectionTimeout: 10000,
-        greetingTimeout: 10000,
-        socketTimeout: 20000,
+        connectionTimeout: smtpConnectionTimeoutMs,
+        greetingTimeout: smtpGreetingTimeoutMs,
+        socketTimeout: smtpSocketTimeoutMs,
       },
     );
   }
