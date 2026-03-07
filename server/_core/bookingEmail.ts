@@ -194,14 +194,12 @@ export function registerBookingEmailRoutes(app: Express) {
         ),
       ]);
 
+      let studentLookupWarning: string | null = null;
       if (studentResponse.error) {
-        return res.status(500).json({
-          ok: false,
-          message: `Unable to read student email: ${studentResponse.error.message || "unknown error"}`,
-        });
+        studentLookupWarning = `Unable to read student email: ${studentResponse.error.message || "unknown error"}`;
       }
 
-      const student = studentResponse.data?.[0] || null;
+      const student = studentResponse.error ? null : (studentResponse.data?.[0] || null);
       const faculty = facultyResponse.data?.[0] || null;
 
       let sharedMeetLink = "";
@@ -231,7 +229,7 @@ export function registerBookingEmailRoutes(app: Express) {
         return res.status(200).json({
           ok: false,
           skipped: true,
-          message: "No student email found for this booking.",
+          message: studentLookupWarning || "No student email found for this booking.",
         });
       }
 
@@ -273,7 +271,7 @@ export function registerBookingEmailRoutes(app: Express) {
 
       await insertQueueHistory(queueId, "booking_email_sent", `Delivered to ${recipientEmail}`);
 
-      return res.status(200).json({ ok: true, recipient: recipientEmail });
+      return res.status(200).json({ ok: true, recipient: recipientEmail, warning: studentLookupWarning || undefined });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown server error";
       return res.status(500).json({ ok: false, message: `Server email error: ${message}` });
