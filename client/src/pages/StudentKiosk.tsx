@@ -855,7 +855,10 @@ export default function StudentKiosk() {
                 </div>
               </div>
 
-              <div className="space-y-3 flex-1 overflow-y-auto pr-1">
+              <div
+                className="space-y-3 flex-1 max-h-[56vh] overflow-y-scroll pr-2"
+                style={{ scrollbarGutter: "stable" }}
+              >
                 {liveQueue.length > 0 ? (
                   liveQueue.map((ticket) => (
                     <div key={ticket.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4 space-y-3">

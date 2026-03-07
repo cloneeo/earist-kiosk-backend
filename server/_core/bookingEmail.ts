@@ -43,6 +43,7 @@ const bookingEmailFrom = process.env.BOOKING_EMAIL_FROM || "";
 const supabaseRestKey = supabaseServiceRoleKey || supabaseAnonKey;
 const hasSupabaseConfig = !!supabaseUrl && !!supabaseRestKey;
 const hasSmtpConfig = !!smtpHost && !!smtpPort && !!smtpUser && !!smtpPass;
+const isGmailHost = /gmail\.com$/i.test(smtpHost);
 
 const isUuid = (value: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -102,28 +103,60 @@ const sendBookingEmail = async (toEmail: string, subject: string, html: string):
     return { ok: false, message: "SMTP email settings are not configured." };
   }
 
-  try {
-    const transporter = nodemailer.createTransport({
+  const transportConfigs: any[] = [
+    {
       host: smtpHost,
       port: smtpPort,
       secure: smtpSecure,
-      auth: {
-        user: smtpUser,
-        pass: smtpPass,
+      auth: { user: smtpUser, pass: smtpPass },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 20000,
+    },
+  ];
+
+  if (isGmailHost) {
+    transportConfigs.push(
+      {
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
+        auth: { user: smtpUser, pass: smtpPass },
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 20000,
       },
-    });
+      {
+        service: "gmail",
+        auth: { user: smtpUser, pass: smtpPass },
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 20000,
+      },
+    );
+  }
 
-    await transporter.sendMail({
-      from: bookingEmailFrom,
-      to: toEmail,
-      subject,
-      html,
-    });
+  let lastErrorMessage = "SMTP send failed.";
 
-    return { ok: true };
+  try {
+    for (const config of transportConfigs) {
+      try {
+        const transporter = nodemailer.createTransport(config);
+        await transporter.sendMail({
+          from: bookingEmailFrom,
+          to: toEmail,
+          subject,
+          html,
+        });
+        return { ok: true };
+      } catch (error) {
+        lastErrorMessage = error instanceof Error ? error.message : "SMTP send failed.";
+      }
+    }
+    return { ok: false, message: lastErrorMessage };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "SMTP send failed.";
-    return { ok: false, message };
+    lastErrorMessage = error instanceof Error ? error.message : "SMTP send failed.";
+    return { ok: false, message: lastErrorMessage };
   }
 };
 
