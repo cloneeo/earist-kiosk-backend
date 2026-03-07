@@ -7,6 +7,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { registerChatRoutes } from "./chat";
 import { registerAdminRoutes } from "./adminRoutes";
 import { registerBookingEmailRoutes } from "./bookingEmail";
+import { registerConsultationRecordingRoutes } from "./consultationRecording";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -41,6 +42,7 @@ async function startServer() {
   registerChatRoutes(app);
   registerAdminRoutes(app);
   registerBookingEmailRoutes(app);
+  registerConsultationRecordingRoutes(app);
   
   app.use(
     "/api/trpc",

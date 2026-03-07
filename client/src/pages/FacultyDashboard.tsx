@@ -7,7 +7,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { 
   LogOut, Users, Clock, 
   CheckCircle2, Play, SkipForward, User,
-  Globe, UserCheck, Save, Edit3
+  Globe, UserCheck, Save, Edit3, Mic, Square
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -113,8 +113,15 @@ export default function FacultyDashboard() {
   const [keyboardField, setKeyboardField] = useState<"meetingLink" | "officeLocation" | null>(null);
   
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isUploadingRecording, setIsUploadingRecording] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const meetWatcherRef = useRef<number | null>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const recorderStreamRef = useRef<MediaStream | null>(null);
+  const recordingQueueIdRef = useRef<string | null>(null);
+  const recordingStartedAtRef = useRef<number | null>(null);
+  const recordingChunksRef = useRef<BlobPart[]>([]);
 
   const shouldUseOnScreenKeyboard =
     typeof window !== "undefined" &&
@@ -423,6 +430,10 @@ export default function FacultyDashboard() {
   };
 
   const handleComplete = async (id: string) => {
+    if (isRecording && recordingQueueIdRef.current === id) {
+      await handleStopRecording();
+    }
+
     const { error } = await supabase
       .from("queue_entries")
       .update({ status: "completed", completed_at: new Date().toISOString() })
@@ -432,6 +443,10 @@ export default function FacultyDashboard() {
   };
 
   const handleSkip = async (id: string) => {
+    if (isRecording && recordingQueueIdRef.current === id) {
+      await handleStopRecording();
+    }
+
     const { error } = await supabase
       .from("queue_entries")
       .update({ status: "waiting", called_at: null })
@@ -475,8 +490,130 @@ export default function FacultyDashboard() {
   useEffect(() => {
     return () => {
       clearMeetWatcher();
+      try {
+        recorderRef.current?.stop();
+      } catch {
+        // Ignore stop errors while unmounting.
+      }
+      recorderStreamRef.current?.getTracks().forEach((track) => track.stop());
     };
   }, []);
+
+  const blobToBase64 = (blob: Blob) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const value = String(reader.result || "");
+        const commaIndex = value.indexOf(",");
+        resolve(commaIndex >= 0 ? value.slice(commaIndex + 1) : value);
+      };
+      reader.onerror = () => reject(new Error("Failed to convert recording to base64."));
+      reader.readAsDataURL(blob);
+    });
+
+  const uploadRecording = async (queueEntryId: string, blob: Blob, durationSeconds: number) => {
+    setIsUploadingRecording(true);
+    try {
+      const base64Data = await blobToBase64(blob);
+      const response = await fetch("/api/consultations/recording", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          queueEntryId,
+          mimeType: blob.type || "audio/webm",
+          base64Data,
+          durationSeconds,
+        }),
+      });
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload?.ok) {
+        toast.error(payload?.message || "Recording upload failed.");
+        return;
+      }
+
+      if (payload?.metadataSaved === false && payload?.warning) {
+        toast(payload.warning, { icon: "ℹ️" });
+        return;
+      }
+
+      toast.success("Audio recording saved.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      toast.error(`Recording upload failed: ${message}`);
+    } finally {
+      setIsUploadingRecording(false);
+    }
+  };
+
+  const handleStartRecording = async (queueEntryId: string) => {
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      toast.error("Audio recording is not supported on this device/browser.");
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      recorderStreamRef.current = stream;
+
+      const preferredMimeTypes = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"];
+      const mimeType = preferredMimeTypes.find((type) => MediaRecorder.isTypeSupported(type));
+      const mediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+
+      recordingChunksRef.current = [];
+      recordingStartedAtRef.current = Date.now();
+      recordingQueueIdRef.current = queueEntryId;
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          recordingChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const startedAt = recordingStartedAtRef.current || Date.now();
+        const queueId = recordingQueueIdRef.current;
+        const chunks = recordingChunksRef.current;
+
+        const durationSeconds = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
+        const blob = new Blob(chunks, { type: mediaRecorder.mimeType || "audio/webm" });
+
+        recordingStartedAtRef.current = null;
+        recordingQueueIdRef.current = null;
+        recordingChunksRef.current = [];
+        recorderRef.current = null;
+        recorderStreamRef.current?.getTracks().forEach((track) => track.stop());
+        recorderStreamRef.current = null;
+
+        if (queueId && blob.size > 0) {
+          void uploadRecording(queueId, blob, durationSeconds);
+        }
+      };
+
+      mediaRecorder.start(1000);
+      recorderRef.current = mediaRecorder;
+      setIsRecording(true);
+      toast.success("Audio recording started.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      toast.error(`Unable to start recording: ${message}`);
+      recorderStreamRef.current?.getTracks().forEach((track) => track.stop());
+      recorderStreamRef.current = null;
+    }
+  };
+
+  const handleStopRecording = async () => {
+    if (!recorderRef.current || recorderRef.current.state === "inactive") {
+      setIsRecording(false);
+      return;
+    }
+
+    recorderRef.current.stop();
+    setIsRecording(false);
+    toast.success("Audio recording stopped.");
+  };
 
   const startTimer = (calledAt: string) => {
     stopTimer();
@@ -766,6 +903,22 @@ export default function FacultyDashboard() {
                         </div>
                       )}
                       <div className="flex gap-4 pt-4 max-w-sm mx-auto w-full">
+                        <Button
+                          className={`flex-1 h-16 rounded-2xl border-0 font-black uppercase tracking-widest text-[10px] shadow-sm ${
+                            isRecording ? "bg-[#024059] text-white hover:bg-[#024059]" : "bg-[#E8E6EB]/60 text-[#024059] hover:bg-[#E8E6EB]/70"
+                          }`}
+                          onClick={() => {
+                            if (isRecording) {
+                              void handleStopRecording();
+                              return;
+                            }
+                            void handleStartRecording(currentCalling.id);
+                          }}
+                          disabled={isUploadingRecording}
+                        >
+                          {isRecording ? <Square size={14} className="mr-2" /> : <Mic size={14} className="mr-2" />}
+                          {isRecording ? "Stop Rec" : "Record"}
+                        </Button>
                         <Button className="flex-1 h-16 bg-[#E8E6EB]/60 text-[#024059] hover:bg-[#E8E6EB]/70 rounded-2xl border-0 font-black uppercase tracking-widest text-[10px] shadow-sm" onClick={() => handleComplete(currentCalling.id)}>
                           Complete
                         </Button>
