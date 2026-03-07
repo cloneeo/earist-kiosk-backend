@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: consultationkiosk
+    env: node
+    plan: free
+    autoDeploy: true
+    buildCommand: npm install --legacy-peer-deps && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: BOOKING_EMAIL_FROM
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: OAUTH_SERVER_URL
+        sync: false
+      - key: OWNER_OPEN_ID
+        sync: false
