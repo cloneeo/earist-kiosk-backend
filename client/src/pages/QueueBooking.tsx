@@ -8,6 +8,7 @@ import { AlertCircle, ChevronLeft, Loader2, School, BookOpen, UserCircle, CheckC
 import { kioskSupabase } from "@/lib/supabaseKiosk";
 import type { Database } from "@/lib/supabase";
 import { buildApiUrl } from "@/lib/apiBase";
+import { OnScreenKeyboard } from "@/components/OnScreenKeyboard";
 
 type College = Database["public"]["Tables"]["colleges"]["Row"];
 type Department = Database["public"]["Tables"]["departments"]["Row"];
@@ -55,6 +56,11 @@ export default function QueueBooking() {
   const [consultationConcern, setConsultationConcern] = useState("");
   const [selectedSlotKey, setSelectedSlotKey] = useState<string | null>(null);
   const [selectedConsultationMethod, setSelectedConsultationMethod] = useState<ConsultationType | null>(null);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  const shouldUseOnScreenKeyboard =
+    typeof window !== "undefined" &&
+    (window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 1024);
 
   const maskStudentNumber = (studentId: string) => {
     const normalized = studentId.trim().toUpperCase();
@@ -350,9 +356,9 @@ export default function QueueBooking() {
   };
 
   return (
-    <div className="min-h-screen bg-[#E8E6EB] flex flex-col font-sans">
+    <div className={`min-h-screen bg-[#E8E6EB] flex flex-col font-sans ${keyboardVisible ? "pb-64 md:pb-72" : ""}`}>
       
-      <header className="px-10 py-8 flex justify-between items-center">
+      <header className="px-4 py-6 sm:px-10 sm:py-8 flex justify-between items-center gap-3">
         <button 
           onClick={handleBack} 
           disabled={step === "college" || loading}
@@ -377,7 +383,7 @@ export default function QueueBooking() {
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col items-center p-4">
+      <main className="flex-1 flex flex-col items-center p-4 sm:p-6">
         <div className="max-w-4xl w-full">
           
           <div className="relative mt-8">
@@ -389,15 +395,15 @@ export default function QueueBooking() {
                </div>
             </div>
 
-            <Card className="relative border-0 shadow-[0_30px_60px_rgba(0,0,0,0.06)] rounded-[48px] bg-white overflow-hidden z-10">
-              <CardHeader className="pt-16 pb-8 px-12 text-center">
+            <Card className="relative border-0 shadow-[0_30px_60px_rgba(0,0,0,0.06)] rounded-[32px] sm:rounded-[48px] bg-white overflow-hidden z-10">
+              <CardHeader className="pt-14 pb-6 px-6 text-center sm:pt-16 sm:pb-8 sm:px-12">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-[24px] bg-[#E8E6EB]/60 text-[#024059] mb-6">
                   {step === "college" && <School className="w-8 h-8" />}
                   {step === "department" && <BookOpen className="w-8 h-8" />}
                   {step === "faculty" && <UserCircle className="w-8 h-8" />}
                   {step === "type" && <CheckCircle2 className="w-8 h-8" />}
                 </div>
-                <CardTitle className="text-4xl font-black text-slate-800 tracking-tight leading-tight mb-2">
+                <CardTitle className="text-2xl font-black text-slate-800 tracking-tight leading-tight mb-2 sm:text-4xl">
                   {step === "college" && "Select Your College"}
                   {step === "department" && "Select Your Department"}
                   {step === "faculty" && "Choose Your Professor"}
@@ -408,7 +414,7 @@ export default function QueueBooking() {
                 </CardDescription>
               </CardHeader>
 
-              <CardContent className="px-12 pb-20 pt-4">
+              <CardContent className="px-6 pb-12 pt-4 sm:px-12 sm:pb-20">
                 {error && (
                   <Alert variant="destructive" className="mb-8 bg-[#E8E6EB]/60 border-0 text-[#024059] rounded-3xl p-5">
                     <AlertCircle className="h-5 w-5" />
@@ -542,6 +548,9 @@ export default function QueueBooking() {
                         <textarea
                           value={consultationConcern}
                           onChange={(e) => setConsultationConcern(e.target.value)}
+                          onFocus={() => {
+                            if (shouldUseOnScreenKeyboard) setKeyboardVisible(true);
+                          }}
                           placeholder="Write your concern so the professor can prepare before your consultation."
                           className="w-full min-h-[120px] rounded-2xl border border-slate-200 bg-white p-4 text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#E8E6EB]"
                           maxLength={500}
@@ -622,6 +631,17 @@ export default function QueueBooking() {
           </div>
           <p className="font-black text-[#024059] uppercase tracking-[0.4em] text-[10px] mt-8">Booking Ticket...</p>
         </div>
+      )}
+
+      {keyboardVisible && step === "type" && (
+        <OnScreenKeyboard
+          title="Consultation Keyboard"
+          value={consultationConcern}
+          onChange={setConsultationConcern}
+          onEnter={() => setKeyboardVisible(false)}
+          onClose={() => setKeyboardVisible(false)}
+          mode="text"
+        />
       )}
     </div>
   );
