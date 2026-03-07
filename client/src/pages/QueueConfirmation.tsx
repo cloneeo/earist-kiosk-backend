@@ -16,6 +16,17 @@ import { toast as sonnerToast } from "sonner";
 import { buildApiUrl } from "@/lib/apiBase";
 import { clearPendingBookingEmail, enqueuePendingBookingEmail, getPendingBookingEmails } from "@/lib/pendingBookingEmails";
 
+const getMeetingLinkFromSchedule = (scheduleRaw: unknown): string => {
+  const raw = String(scheduleRaw || "").trim();
+  if (!raw) return "";
+  try {
+    const parsed = JSON.parse(raw) as { meetingLink?: string };
+    return String(parsed.meetingLink || "").trim();
+  } catch {
+    return "";
+  }
+};
+
 export default function QueueConfirmation() {
   const [, setLocation] = useLocation();
   const search = useSearch();
@@ -51,7 +62,7 @@ export default function QueueConfirmation() {
           .from("queue_entries")
           .select(`
             *,
-            faculty:faculty(name)
+            faculty:faculty(name,schedule)
           `)
           .eq("id", queueId)
           .single();
@@ -81,10 +92,15 @@ export default function QueueConfirmation() {
 
     emailDispatchRef.current = true;
 
-    enqueuePendingBookingEmail(queueId, studentEmail);
+    const queueMeetLink = getMeetingLinkFromSchedule((queueData as any)?.faculty?.schedule);
+    enqueuePendingBookingEmail(queueId, studentEmail, queueMeetLink || undefined);
 
-    const sendOne = async (targetQueueId: string, targetEmail: string) => {
-      const payloadBody = JSON.stringify({ queueId: targetQueueId, studentEmail: targetEmail });
+    const sendOne = async (targetQueueId: string, targetEmail: string, targetMeetLink?: string) => {
+      const payloadBody = JSON.stringify({
+        queueId: targetQueueId,
+        studentEmail: targetEmail,
+        meetLink: targetMeetLink || undefined,
+      });
 
       for (let attempt = 0; attempt < 3; attempt += 1) {
         try {
@@ -140,13 +156,13 @@ export default function QueueConfirmation() {
     const flushPending = async () => {
       const pending = getPendingBookingEmails();
       for (const item of pending) {
-        await sendOne(item.queueId, item.studentEmail);
+        await sendOne(item.queueId, item.studentEmail, item.meetLink);
       }
     };
 
     const attemptDispatch = async () => {
       await flushPending();
-      const result = await sendOne(queueId, studentEmail);
+      const result = await sendOne(queueId, studentEmail, queueMeetLink || undefined);
       if (!result) {
         sonnerToast("Booking email queued. Please check inbox in a moment.", { icon: "ℹ" });
         return;

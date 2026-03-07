@@ -507,7 +507,7 @@ export default function FacultyDashboard() {
     if (!queueEntry || queueEntry.consultation_type !== "google_meet") return;
 
     const parsedSchedule = parseScheduleConfig(faculty?.schedule);
-    const meetUrl = String(queueEntry.meet_link || "").trim() || parsedSchedule.meetingLink || "https://meet.google.com/new";
+    const meetUrl = parsedSchedule.meetingLink || String(queueEntry.meet_link || "").trim() || "https://meet.google.com/new";
     const meetWindow = window.open(meetUrl, "_blank", "noopener,noreferrer");
 
     if (!meetWindow) {

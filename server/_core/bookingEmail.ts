@@ -97,6 +97,12 @@ const resolveFallbackEmail = (value: unknown): string | null => {
   return candidate;
 };
 
+const resolveMeetLink = (value: unknown): string => {
+  const candidate = String(value || "").trim();
+  if (!candidate) return "";
+  return /^https:\/\/meet\.google\.com\//i.test(candidate) ? candidate : "";
+};
+
 const sendBookingEmail = async (toEmail: string, subject: string, html: string): Promise<SendEmailResult> => {
   if (!hasSendGridConfig) {
     return { ok: false, message: "SendGrid is not configured (SENDGRID_API_KEY, SENDGRID_FROM)." };
@@ -176,6 +182,7 @@ export function registerBookingEmailRoutes(app: Express) {
     try {
       const queueId = String(req.body?.queueId || "").trim();
       const fallbackEmail = resolveFallbackEmail(req.body?.studentEmail);
+      const requestedMeetLink = resolveMeetLink(req.body?.meetLink);
 
       if (!queueId || !isUuid(queueId)) {
         return res.status(400).json({ ok: false, message: "Invalid queueId." });
@@ -223,14 +230,17 @@ export function registerBookingEmailRoutes(app: Express) {
 
       let sharedMeetLink = "";
       if (queueEntry.consultation_type === "google_meet") {
-        const meetLinkResponse = await supabaseFetch<{ notes?: string | null }>(
-          `queue_history?select=notes&queue_entry_id=eq.${queueId}&action=eq.google_meet_link_shared&order=created_at.desc&limit=1`
-        );
+        sharedMeetLink = requestedMeetLink || facultyScheduleMeetLink;
 
-        sharedMeetLink = String(meetLinkResponse.data?.[0]?.notes || "").trim();
+        if (!sharedMeetLink) {
+          const meetLinkResponse = await supabaseFetch<{ notes?: string | null }>(
+            `queue_history?select=notes&queue_entry_id=eq.${queueId}&action=eq.google_meet_link_shared&order=created_at.desc&limit=1`
+          );
 
-        if (!sharedMeetLink && facultyScheduleMeetLink) {
-          sharedMeetLink = facultyScheduleMeetLink;
+          sharedMeetLink = String(meetLinkResponse.data?.[0]?.notes || "").trim();
+        }
+
+        if (sharedMeetLink) {
           await insertQueueHistory(queueId, "google_meet_link_shared", sharedMeetLink);
         }
       }

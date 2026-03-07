@@ -298,9 +298,9 @@ export default function QueueBooking() {
   const slotOptions = selectedFacultyData ? parseSlotOptions(selectedFacultyData) : [];
   const selectedSlot = slotOptions.find((slot) => slot.key === selectedSlotKey) || null;
 
-  const dispatchBookingEmail = (queueId: string) => {
-    const payload = JSON.stringify({ queueId, studentEmail });
-    enqueuePendingBookingEmail(queueId, studentEmail);
+  const dispatchBookingEmail = (queueId: string, meetLink?: string) => {
+    const payload = JSON.stringify({ queueId, studentEmail, meetLink: meetLink || undefined });
+    enqueuePendingBookingEmail(queueId, studentEmail, meetLink);
 
     const attemptDispatch = async () => {
       for (let attempt = 0; attempt < 3; attempt += 1) {
@@ -422,7 +422,9 @@ export default function QueueBooking() {
       }
 
       // Attempt email dispatch immediately after booking so students receive updates faster.
-      dispatchBookingEmail(queueEntry.id);
+      const selectedFacultyData = faculties.find((faculty) => faculty.id === selectedFaculty);
+      const meetLinkForBooking = getMeetingLinkFromSchedule(selectedFacultyData?.schedule);
+      dispatchBookingEmail(queueEntry.id, meetLinkForBooking || undefined);
 
       const nameParam = studentName ? `&name=${encodeURIComponent(studentName)}` : "";
       const emailParam = studentEmail ? `&email=${encodeURIComponent(studentEmail)}` : "";

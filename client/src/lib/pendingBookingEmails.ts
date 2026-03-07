@@ -1,6 +1,7 @@
 type PendingBookingEmail = {
   queueId: string;
   studentEmail: string;
+  meetLink?: string;
   createdAt: number;
 };
 
@@ -29,9 +30,10 @@ function writeQueue(items: PendingBookingEmail[]) {
   }
 }
 
-export function enqueuePendingBookingEmail(queueId: string, studentEmail: string) {
+export function enqueuePendingBookingEmail(queueId: string, studentEmail: string, meetLink?: string) {
   const normalizedQueueId = String(queueId || "").trim();
   const normalizedEmail = String(studentEmail || "").trim().toLowerCase();
+  const normalizedMeetLink = String(meetLink || "").trim();
   if (!normalizedQueueId || !normalizedEmail) return;
 
   const current = readQueue();
@@ -41,6 +43,7 @@ export function enqueuePendingBookingEmail(queueId: string, studentEmail: string
   current.push({
     queueId: normalizedQueueId,
     studentEmail: normalizedEmail,
+    meetLink: normalizedMeetLink || undefined,
     createdAt: Date.now(),
   });
   writeQueue(current);
