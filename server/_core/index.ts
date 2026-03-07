@@ -50,9 +50,7 @@ async function startServer() {
     })
   );
 
-  // FIX: Force development mode to bypass Windows/Jupyter environment variable issues
-  // This ensures setupVite is always called so the server finds your React files
-  const isDev = true || process.env.NODE_ENV === "development"; 
+  const isDev = process.env.NODE_ENV === "development";
 
   if (isDev) {
     await setupVite(app, server);
