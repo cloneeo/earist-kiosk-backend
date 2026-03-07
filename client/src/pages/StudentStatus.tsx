@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { 
   Clock, Users, Loader2, RefreshCw, ChevronLeft, 
   Bell, Monitor, UserCheck, Share2, MapPin, QrCode, 
-  AlertCircle
+  AlertCircle, ExternalLink
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
@@ -27,6 +27,7 @@ export default function StudentStatus() {
   const [queueEntry, setQueueEntry] = useState<QueueEntry | null>(null);
   const [faculty, setFaculty] = useState<Faculty | null>(null);
   const [queuePosition, setQueuePosition] = useState<number | null>(null);
+  const [meetLink, setMeetLink] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState(new Date());
@@ -83,6 +84,17 @@ export default function StudentStatus() {
       const position = queueList?.findIndex((q) => q.id === queueId) ?? -1;
       setQueuePosition(position >= 0 ? position : null);
 
+      const { data: meetHistory } = await supabase
+        .from("queue_history")
+        .select("notes")
+        .eq("queue_entry_id", queueId)
+        .eq("action", "google_meet_link_shared")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      setMeetLink(String(meetHistory?.notes || "").trim());
+
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load status");
     } finally {
@@ -106,6 +118,7 @@ export default function StudentStatus() {
     const subscription = supabase
       .channel(`queue:${queueId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "queue_entries" }, () => loadQueueData())
+      .on("postgres_changes", { event: "*", schema: "public", table: "queue_history", filter: `queue_entry_id=eq.${queueId}` }, () => loadQueueData())
       .subscribe();
 
     const ticker = setInterval(() => setNow(new Date()), 1000);
@@ -255,6 +268,16 @@ export default function StudentStatus() {
                     <p className="text-lg font-black text-slate-800 uppercase tracking-tighter">{queueEntry.consultation_type?.replace('_', ' ')}</p>
                   </div>
                 </div>
+                {queueEntry.consultation_type === "google_meet" && meetLink && (
+                  <a
+                    href={meetLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-2xl border border-[#E8E6EB] bg-[#E8E6EB]/60 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-[#024059] hover:bg-[#E8E6EB]/70"
+                  >
+                    Join Google Meet <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
               </div>
               <button onClick={handleShare} className="w-full mt-8 py-4 bg-slate-50 hover:bg-[#E8E6EB]/60 hover:text-[#024059] text-[#024059]/65 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 border border-slate-100 transition-all">
                 <Share2 className="w-3 h-3" /> Share Live Status

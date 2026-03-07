@@ -23,6 +23,14 @@ type SlotOption = {
 
 const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
+const randomMeetChunk = (length: number) => {
+  const alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
+  return Array.from({ length }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
+};
+
+const createRandomGoogleMeetLink = () =>
+  `https://meet.google.com/${randomMeetChunk(3)}-${randomMeetChunk(4)}-${randomMeetChunk(3)}`;
+
 export default function QueueBooking() {
   const [, setLocation] = useLocation();
   const search = useSearch();
@@ -295,6 +303,14 @@ export default function QueueBooking() {
         action: "slot_selected",
         notes: `${selectedSlot.dateLabel} ${selectedSlot.timeLabel} | ${selectedConsultationMethod.replace(/_/g, " ")}`,
       });
+
+      if (selectedConsultationMethod === "google_meet") {
+        historyPayload.push({
+          queue_entry_id: queueEntry.id,
+          action: "google_meet_link_shared",
+          notes: createRandomGoogleMeetLink(),
+        });
+      }
 
       const { error: historyError } = await kioskSupabase.from("queue_history").insert(historyPayload);
       if (historyError) {

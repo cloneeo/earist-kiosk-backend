@@ -43,6 +43,14 @@ const hasSupabaseConfig = !!supabaseUrl && !!supabaseRestKey;
 const isUuid = (value: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 
+const randomMeetChunk = (length: number) => {
+  const alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
+  return Array.from({ length }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
+};
+
+const createRandomGoogleMeetLink = () =>
+  `https://meet.google.com/${randomMeetChunk(3)}-${randomMeetChunk(4)}-${randomMeetChunk(3)}`;
+
 const supabaseFetch = async <T>(path: string): Promise<SupabaseListResponse<T>> => {
   const response = await fetch(`${supabaseUrl}/rest/v1/${path}`, {
     headers: {
@@ -200,6 +208,20 @@ export function registerBookingEmailRoutes(app: Express) {
       const student = studentResponse.data?.[0] || null;
       const faculty = facultyResponse.data?.[0] || null;
 
+      let sharedMeetLink = "";
+      if (queueEntry.consultation_type === "google_meet") {
+        const meetLinkResponse = await supabaseFetch<{ notes?: string | null }>(
+          `queue_history?select=notes&queue_entry_id=eq.${queueId}&action=eq.google_meet_link_shared&order=created_at.desc&limit=1`
+        );
+
+        sharedMeetLink = String(meetLinkResponse.data?.[0]?.notes || "").trim();
+
+        if (!sharedMeetLink) {
+          sharedMeetLink = createRandomGoogleMeetLink();
+          await insertQueueHistory(queueId, "google_meet_link_shared", sharedMeetLink);
+        }
+      }
+
       const emailMarkerResponse = await supabaseFetch<{ id: string }>(
         `queue_history?select=id&queue_entry_id=eq.${queueId}&action=eq.booking_email_sent&limit=1`
       );
@@ -233,6 +255,9 @@ export function registerBookingEmailRoutes(app: Express) {
           <li><strong>Ticket ID:</strong> ${queueEntry.id}</li>
           <li><strong>Professor:</strong> ${faculty?.name || "TBA"}</li>
           <li><strong>Method:</strong> ${queueEntry.consultation_type.replace(/_/g, " ")}</li>
+          ${queueEntry.consultation_type === "google_meet" && sharedMeetLink
+            ? `<li><strong>Google Meet:</strong> <a href="${sharedMeetLink}">${sharedMeetLink}</a></li>`
+            : ""}
           <li><strong>Booked At:</strong> ${bookingDate}</li>
         </ul>
         <p>You can track your status here:</p>
