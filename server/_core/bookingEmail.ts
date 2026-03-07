@@ -18,7 +18,6 @@ type FacultyRow = {
 type StudentRow = {
   full_name?: string | null;
   email?: string | null;
-  student_email?: string | null;
 };
 
 type SupabaseListResponse<T> = {
@@ -42,7 +41,7 @@ const smtpUser = process.env.SMTP_USER || "";
 const smtpPass = process.env.SMTP_PASS || "";
 const smtpSecure = String(process.env.SMTP_SECURE || "").trim().toLowerCase() === "true" || smtpPort === 465;
 const bookingEmailFrom = process.env.BOOKING_EMAIL_FROM || "";
-const resendFrom = process.env.RESEND_FROM || bookingEmailFrom || "Acme <onboarding@resend.dev>";
+const resendFrom = process.env.RESEND_FROM || "Acme <onboarding@resend.dev>";
 const smtpConnectionTimeoutMs = Number(process.env.SMTP_CONNECTION_TIMEOUT_MS || 30000);
 const smtpGreetingTimeoutMs = Number(process.env.SMTP_GREETING_TIMEOUT_MS || 30000);
 const smtpSocketTimeoutMs = Number(process.env.SMTP_SOCKET_TIMEOUT_MS || 60000);
@@ -94,7 +93,7 @@ const resolveStudentName = (student: StudentRow | null, fallbackStudentNumber: s
 };
 
 const resolveStudentEmail = (student: StudentRow | null): string | null => {
-  const candidate = student?.email?.trim() || student?.student_email?.trim() || "";
+  const candidate = student?.email?.trim() || "";
   if (!candidate) return null;
   return candidate;
 };
@@ -251,7 +250,7 @@ export function registerBookingEmailRoutes(app: Express) {
 
       const [studentResponse, facultyResponse] = await Promise.all([
         supabaseFetch<StudentRow>(
-          `students?select=full_name,email,student_email&student_number=eq.${studentNumber}&limit=1`
+          `students?select=full_name,email&student_number=eq.${studentNumber}&limit=1`
         ),
         supabaseFetch<FacultyRow>(
           `faculty?select=id,name&id=eq.${queueEntry.faculty_id}&limit=1`
