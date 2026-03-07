@@ -9,6 +9,7 @@ import { kioskSupabase } from "@/lib/supabaseKiosk";
 import type { Database } from "@/lib/supabase";
 import { buildApiUrl } from "@/lib/apiBase";
 import { OnScreenKeyboard } from "@/components/OnScreenKeyboard";
+import { clearPendingBookingEmail, enqueuePendingBookingEmail } from "@/lib/pendingBookingEmails";
 
 type College = Database["public"]["Tables"]["colleges"]["Row"];
 type Department = Database["public"]["Tables"]["departments"]["Row"];
@@ -256,11 +257,12 @@ export default function QueueBooking() {
 
   const dispatchBookingEmail = (queueId: string) => {
     const payload = JSON.stringify({ queueId, studentEmail });
+    enqueuePendingBookingEmail(queueId, studentEmail);
 
     const attemptDispatch = async () => {
       for (let attempt = 0; attempt < 3; attempt += 1) {
         try {
-          await fetch(bookingEmailUrl, {
+          const response = await fetch(bookingEmailUrl, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -269,6 +271,13 @@ export default function QueueBooking() {
             keepalive: true,
             body: payload,
           });
+
+          if (response.ok) {
+            const parsed = await response.json().catch(() => ({} as { ok?: boolean; deduped?: boolean }));
+            if (parsed?.ok || parsed?.deduped) {
+              clearPendingBookingEmail(queueId);
+            }
+          }
           return;
         } catch (dispatchError) {
           if (attempt < 2) {
@@ -281,7 +290,8 @@ export default function QueueBooking() {
           if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
             try {
               const beaconPayload = new Blob([payload], { type: "application/json" });
-              navigator.sendBeacon(bookingEmailUrl, beaconPayload);
+              const queued = navigator.sendBeacon(bookingEmailUrl, beaconPayload);
+              if (queued) return;
             } catch (beaconError) {
               console.warn("Booking email beacon fallback failed:", beaconError);
             }

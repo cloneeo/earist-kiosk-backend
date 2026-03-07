@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { addActiveTicketId } from "@/lib/activeTickets";
 import { toast as sonnerToast } from "sonner";
 import { buildApiUrl } from "@/lib/apiBase";
+import { clearPendingBookingEmail, enqueuePendingBookingEmail, getPendingBookingEmails } from "@/lib/pendingBookingEmails";
 
 export default function QueueConfirmation() {
   const [, setLocation] = useLocation();
@@ -80,14 +81,14 @@ export default function QueueConfirmation() {
 
     emailDispatchRef.current = true;
 
-    const payloadBody = JSON.stringify({ queueId, studentEmail });
+    enqueuePendingBookingEmail(queueId, studentEmail);
 
-    const attemptDispatch = async () => {
-      let response: Response | null = null;
+    const sendOne = async (targetQueueId: string, targetEmail: string) => {
+      const payloadBody = JSON.stringify({ queueId: targetQueueId, studentEmail: targetEmail });
 
       for (let attempt = 0; attempt < 3; attempt += 1) {
         try {
-          response = await fetch(bookingEmailUrl, {
+          const response = await fetch(bookingEmailUrl, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -95,46 +96,63 @@ export default function QueueConfirmation() {
             keepalive: true,
             body: payloadBody,
           });
-          break;
-        } catch (dispatchError) {
+
+          const raw = await response.text().catch(() => "");
+          let payload = {} as {
+            ok?: boolean;
+            message?: string;
+            deduped?: boolean;
+          };
+
+          if (raw) {
+            try {
+              payload = JSON.parse(raw) as typeof payload;
+            } catch {
+              payload = { message: raw };
+            }
+          }
+
+          if (response.ok && (payload.ok || payload.deduped)) {
+            clearPendingBookingEmail(targetQueueId);
+          }
+
+          return { response, payload };
+        } catch {
           if (attempt < 2) {
             await new Promise((resolve) => window.setTimeout(resolve, 1200));
             continue;
           }
 
-          console.warn("Booking email dispatch failed:", dispatchError);
           if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
             try {
               const beaconPayload = new Blob([payloadBody], { type: "application/json" });
               navigator.sendBeacon(bookingEmailUrl, beaconPayload);
-              sonnerToast("Booking email queued. Please check inbox in a moment.", { icon: "ℹ" });
-              return;
-            } catch (beaconError) {
-              console.warn("Booking email beacon fallback failed:", beaconError);
+            } catch {
+              // Ignore beacon fallback errors.
             }
           }
-
-          sonnerToast.error("Booking email dispatch failed. Please try again in a few seconds.");
-          return;
         }
       }
 
-      if (!response) return;
+      return null;
+    };
 
-      const raw = await response.text().catch(() => "");
-      let payload = {} as {
-        ok?: boolean;
-        message?: string;
-        deduped?: boolean;
-      };
-
-      if (raw) {
-        try {
-          payload = JSON.parse(raw) as typeof payload;
-        } catch {
-          payload = { message: raw };
-        }
+    const flushPending = async () => {
+      const pending = getPendingBookingEmails();
+      for (const item of pending) {
+        await sendOne(item.queueId, item.studentEmail);
       }
+    };
+
+    const attemptDispatch = async () => {
+      await flushPending();
+      const result = await sendOne(queueId, studentEmail);
+      if (!result) {
+        sonnerToast("Booking email queued. Please check inbox in a moment.", { icon: "ℹ" });
+        return;
+      }
+
+      const { response, payload } = result;
 
       if (!response.ok) {
         if (response.status === 404) {
