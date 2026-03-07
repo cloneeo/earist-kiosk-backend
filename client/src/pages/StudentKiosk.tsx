@@ -796,9 +796,6 @@ export default function StudentKiosk() {
                 <h3 className="font-black text-slate-800 uppercase text-xl flex items-center gap-3 tracking-tight">
                   <Monitor size={22} className="text-[#024059]" /> Live Monitor
                 </h3>
-                <Badge className="bg-[#E8E6EB]/60 text-[#024059] border-0 text-[10px] font-black uppercase tracking-wider">
-                  Bubble 2
-                </Badge>
               </div>
 
               <div className="space-y-3">
@@ -914,9 +911,6 @@ export default function StudentKiosk() {
                 <h3 className="font-black text-slate-800 uppercase text-xl flex items-center gap-3 tracking-tight">
                   <Calendar size={22} className="text-[#024059]" /> Prof Schedules
                 </h3>
-                <Badge className="bg-[#E8E6EB]/60 text-[#024059] border-0 text-[10px] font-black uppercase tracking-wider">
-                  Bubble 3
-                </Badge>
               </div>
 
               <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 mb-4">
