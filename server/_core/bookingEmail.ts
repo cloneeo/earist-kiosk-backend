@@ -29,6 +29,7 @@ type SupabaseListResponse<T> = {
 type SendEmailResult = {
   ok: boolean;
   message?: string;
+  provider?: "resend" | "smtp";
 };
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -118,10 +119,10 @@ const sendViaResend = async (toEmail: string, subject: string, html: string): Pr
       subject,
       html,
     });
-    return { ok: true };
+    return { ok: true, provider: "resend" };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Resend send failed.";
-    return { ok: false, message };
+    return { ok: false, message, provider: "resend" };
   }
 };
 
@@ -183,7 +184,7 @@ const sendBookingEmail = async (toEmail: string, subject: string, html: string):
           subject,
           html,
         });
-        return { ok: true };
+        return { ok: true, provider: "smtp" };
       } catch (error) {
         lastErrorMessage = error instanceof Error ? error.message : "SMTP send failed.";
       }
@@ -332,9 +333,18 @@ export function registerBookingEmailRoutes(app: Express) {
         });
       }
 
-      await insertQueueHistory(queueId, "booking_email_sent", `Delivered to ${recipientEmail}`);
+      await insertQueueHistory(
+        queueId,
+        "booking_email_sent",
+        `Delivered to ${recipientEmail}${emailResult.provider ? ` via ${emailResult.provider}` : ""}`
+      );
 
-      return res.status(200).json({ ok: true, recipient: recipientEmail, warning: studentLookupWarning || undefined });
+      return res.status(200).json({
+        ok: true,
+        recipient: recipientEmail,
+        provider: emailResult.provider || "unknown",
+        warning: studentLookupWarning || undefined,
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown server error";
       return res.status(500).json({ ok: false, message: `Server email error: ${message}` });
