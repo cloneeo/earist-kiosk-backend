@@ -693,9 +693,9 @@ export default function StudentKiosk() {
           </Card>
         </div>
 
-        <div className="lg:w-[42%] grid grid-cols-1 gap-3 lg:gap-2.5">
+        <div className="lg:w-[42%] grid grid-cols-1 gap-2 lg:gap-2">
           <Card className="border-0 shadow-xl rounded-[26px] bg-white overflow-hidden">
-            <CardContent className="p-3.5 sm:p-4 h-full flex flex-col gap-2.5">
+            <CardContent className="p-3 sm:p-3.5 h-full flex flex-col gap-2">
               <div className="flex items-center justify-between">
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#c62828]/70">Live Monitor</p>
                 <Monitor size={18} className="text-[#c62828]" />
@@ -770,19 +770,19 @@ export default function StudentKiosk() {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-[#e4e9ef] bg-[#f8fbfd] p-2.5">
-                <p className="text-[10px] font-black uppercase tracking-widest text-[#c62828]/65 mb-1">In Session</p>
-                <p className="text-sm sm:text-base font-black text-slate-900 leading-tight">{currentServing ? currentServing.student_display_name : "No active consultation"}</p>
-                <p className="text-[10px] font-black text-[#c62828]/60 uppercase tracking-wide mt-1">{selectedFaculty?.name || "No assigned faculty"}</p>
-              </div>
-
-              <div className="rounded-xl bg-[#f5f8fa] border border-[#e6edf2] px-3 py-2 flex items-center justify-between">
-                <span className="text-[11px] font-black uppercase tracking-widest text-[#c62828]/70">Waiting</span>
-                <span className="text-lg font-black text-[#c62828]">{waitingQueue.length}</span>
+              <div className="grid grid-cols-2 gap-1.5">
+                <div className="rounded-xl border border-[#e4e9ef] bg-[#f8fbfd] px-3 py-2">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-[#c62828]/65">In Session</p>
+                  <p className="text-xs font-black text-slate-900 leading-tight line-clamp-1 mt-1">{currentServing ? currentServing.student_display_name : "None"}</p>
+                </div>
+                <div className="rounded-xl bg-[#f5f8fa] border border-[#e6edf2] px-3 py-2 flex items-center justify-between">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-[#c62828]/70">Waiting</span>
+                  <span className="text-base font-black text-[#c62828]">{waitingQueue.length}</span>
+                </div>
               </div>
 
               <div className="mt-1 space-y-2">
-                <p className="text-[9px] font-black uppercase tracking-wider text-[#c62828]">Tap "Check Status" to find students quickly</p>
+                <p className="text-[9px] font-black uppercase tracking-wider text-[#c62828]">View all professor queues</p>
                 <Button
                   type="button"
                   variant="outline"
@@ -796,13 +796,13 @@ export default function StudentKiosk() {
           </Card>
 
           <Card className="border-0 shadow-xl rounded-[26px] bg-white overflow-hidden">
-            <CardContent className="p-3.5 sm:p-4 h-full flex flex-col justify-between">
-              <div className="flex items-center justify-between mb-2">
+            <CardContent className="p-3 sm:p-3.5 h-full flex flex-col justify-between gap-2">
+              <div className="flex items-center justify-between">
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#c62828]/70">Prof Schedules</p>
                 <Calendar size={18} className="text-[#c62828]" />
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 mb-2">
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
                 <p className="text-[10px] font-black text-[#c62828]/65 uppercase tracking-widest mb-2">
                   Selected Professor
                 </p>
@@ -812,35 +812,16 @@ export default function StudentKiosk() {
                 <p className="text-[10px] font-bold text-[#c62828]/65 uppercase tracking-widest mt-1">
                   {selectedFaculty?.department?.name || "Department unavailable"}
                 </p>
-              </div>
-
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 mb-2">
-                <p className="text-[10px] font-black text-[#c62828]/65 uppercase tracking-widest mb-3">
-                  Consultation Hours
-                </p>
-                <p className="text-xs font-black text-slate-700 whitespace-pre-line line-clamp-2">
-                  {selectedFaculty?.schedule || "No official hours posted yet."}
-                </p>
-              </div>
-
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 mb-2">
-                <p className="text-[10px] font-black text-[#c62828]/65 uppercase tracking-widest mb-3">
-                  Meeting Preference
-                </p>
-                <div className="flex items-center gap-3">
-                  {isOnline ? (
-                    <Globe size={18} className="text-[#c62828]" />
-                  ) : (
-                    <UserCheck size={18} className="text-[#c62828]" />
-                  )}
-                  <span className="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-wider">
+                <div className="mt-2 flex items-center gap-2 text-[#c62828]">
+                  {isOnline ? <Globe size={16} /> : <UserCheck size={16} />}
+                  <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider">
                     {meetingMethod.replace(/_/g, " ")}
                   </span>
                 </div>
               </div>
 
               <div className="mt-1 space-y-2">
-                <p className="text-[9px] font-black uppercase tracking-wider text-[#c62828]">Use filters above for faculty-by-faculty lookup</p>
+                <p className="text-[9px] font-black uppercase tracking-wider text-[#c62828]">Open searchable faculty directory</p>
                 <Button
                   type="button"
                   variant="outline"
