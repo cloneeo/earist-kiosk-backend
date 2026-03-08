@@ -565,90 +565,60 @@ export default function StudentKiosk() {
   });
 
   return (
-    <div className={`min-h-screen bg-[#f3f1f6] flex flex-col font-sans ${keyboardVisible ? "pb-64 md:pb-72" : ""}`}>
-      <header className="px-8 py-8 lg:px-12 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+    <div className={`min-h-screen bg-[#f3f1f6] font-sans flex flex-col ${keyboardVisible ? "pb-64 md:pb-72" : ""}`}>
+      <header className="bg-white border-b border-[#E8E6EB] px-4 py-4 sm:px-8 sticky top-0 z-30 flex justify-between items-center shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-[#c62828] rounded-xl flex items-center justify-center shadow-lg shadow-[#c62828]/20">
-            <span className="text-white font-black text-xs">EQ</span>
-          </div>
-          <div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-none uppercase text-[#c62828]">
-              EARIST Kiosk
-            </h1>
-            <p className="text-[#c62828]/65 font-bold text-[10px] uppercase tracking-widest mt-1">
-              Consultation Management
-            </p>
-          </div>
+          <div className="w-10 h-10 bg-[#c62828] rounded-xl flex items-center justify-center shadow-md text-white font-black text-xs">EQ</div>
+          <h1 className="text-xl font-black text-[#c62828] uppercase tracking-tight">EARIST Kiosk</h1>
         </div>
-
-        <div className="bg-white px-6 py-3 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-6">
-          <div className="text-right">
-            <div className="text-xl font-black text-slate-800 tracking-tight leading-none">
-              {formattedTime}
-            </div>
-            <div className="text-[10px] font-bold text-[#c62828]/65 uppercase mt-1">{formattedDate}</div>
-          </div>
-          <div className="h-8 w-px bg-slate-100" />
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-[#c62828] animate-pulse" />
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Active</span>
-          </div>
+        <div className="text-right">
+          <p className="text-sm font-black text-slate-800 leading-none">{formattedTime}</p>
+          <p className="text-[10px] font-black text-[#c62828]/60 uppercase tracking-wide mt-1">{formattedDate}</p>
         </div>
       </header>
 
-      <main className="flex-1 px-8 pb-10 lg:px-12">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 xl:grid-cols-3 gap-8">
-          <Card className="border-0 shadow-[0_30px_60px_rgba(0,0,0,0.08)] rounded-[40px] overflow-hidden bg-white">
-            <div className="bg-[#c62828] pt-12 pb-8 px-8 text-center relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-full -mr-8 -mt-8" />
-              <h2 className="text-3xl font-black text-white relative z-10 tracking-tight uppercase">
-                Student Kiosk
-              </h2>
-              <p className="text-[#E8E6EB] font-medium mt-2 relative z-10 text-sm">
-                Scan Student ID to book
-              </p>
+      <main className="max-w-7xl mx-auto w-full px-4 py-6 sm:px-8 sm:py-10 flex flex-col lg:flex-row gap-6 sm:gap-8">
+        <div className="lg:w-[58%]">
+          <Card className="border-0 shadow-2xl rounded-[48px] overflow-hidden bg-white">
+            <div className="p-7 text-center sm:p-10 border-b border-[#f1e5e5]">
+              <h2 className="text-3xl font-black uppercase leading-none tracking-tighter sm:text-4xl text-[#c62828]">Student Registration</h2>
+              <p className="text-[#c62828] mt-3 text-sm font-black uppercase tracking-widest">Scan Student ID to Book Consultation</p>
             </div>
 
-            <CardContent className="px-8 py-8 space-y-6">
-              <div className="p-6 rounded-[28px] bg-[#f3f1f6]/65 border-2 border-dashed border-[#E8E6EB] text-center flex flex-col items-center">
-                <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-4">
-                  <ScanBarcode className="w-7 h-7 text-[#c62828] animate-pulse" />                </div>
-                <p className="text-[10px] text-[#c62828]/65 font-bold uppercase mt-1">
-                  Place ID in front of scanner
-                </p>              </div>
+            <CardContent className="p-8 sm:p-10 space-y-5">
+              <div className="w-full p-8 rounded-[36px] bg-[#fff5f5] border-2 border-dashed border-[#f1c4c4] flex flex-col items-center justify-center min-h-56 text-center">
+                <ScanBarcode className="w-16 h-16 text-[#c62828] mb-4" />
+                <p className="text-[#7a3030] text-sm font-black uppercase tracking-wider">Present your school ID on the scanner.</p>
+              </div>
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 {error && (
-                  <Alert variant="destructive" className="bg-[#f3f1f6]/60 border-0 text-[#c62828] rounded-2xl p-4">
+                  <Alert variant="destructive" className="bg-[#fff5f5] border-0 text-[#c62828] rounded-2xl p-4">
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription className="font-bold text-xs">{error}</AlertDescription>
                   </Alert>
                 )}
 
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-[#c62828]/65 uppercase tracking-[0.2em] ml-2">
-                    Manual Entry
-                  </label>
-                  <Input
-                    type="text"
-                    placeholder="e.g., 222-00000M"
-                    value={studentNumber}
-                    onChange={(e) => setStudentNumber(e.target.value.toUpperCase())}
-                    onFocus={() => openKeyboardFor("studentNumber")}
-                    disabled={loading}
-                    className="text-center font-mono h-14 border-slate-100 focus-visible:ring-4 focus-visible:ring-[#E8E6EB] focus-visible:border-[#c62828] rounded-[20px] text-lg bg-slate-50 font-bold"
-                  />
-                </div>
+                <Input
+                  type="text"
+                  placeholder="Type student number (e.g., 222-00000M)"
+                  value={studentNumber}
+                  onChange={(e) => setStudentNumber(e.target.value.toUpperCase())}
+                  onFocus={() => openKeyboardFor("studentNumber")}
+                  disabled={loading}
+                  className="text-center font-mono h-14 border-slate-200 focus-visible:ring-4 focus-visible:ring-[#f1c4c4] focus-visible:border-[#c62828] rounded-[20px] text-lg bg-slate-50 font-bold"
+                />
 
                 <Button
                   type="submit"
-                  className="w-full bg-[#c62828] hover:bg-[#c62828] text-white font-black h-14 text-base rounded-[20px] shadow-xl transition-all uppercase tracking-[0.1em]"
+                  className="w-full bg-[#c62828] hover:bg-[#b22222] text-white font-black h-16 text-base rounded-[28px] shadow-xl transition-all uppercase tracking-[0.1em]"
                   disabled={loading}
                 >
                   {loading ? (
                     <Loader2 className="animate-spin" />
                   ) : (
                     <>
-                      Continue <ArrowRight size={18} className="ml-2" />
+                      Start Booking <ArrowRight size={18} className="ml-2" />
                     </>
                   )}
                 </Button>
@@ -930,16 +900,17 @@ export default function StudentKiosk() {
               </div>
             </CardContent>
           </Card>
+        </div>
 
+        <div className="lg:w-[42%] grid grid-cols-1 gap-6">
           <Card className="border-0 shadow-xl rounded-[40px] bg-white overflow-hidden">
-            <CardContent className="p-8 h-full flex flex-col">
-              <div className="flex items-center justify-between mb-5">
-                <h3 className="font-black text-slate-800 uppercase text-xl flex items-center gap-3 tracking-tight">
-                  <Monitor size={22} className="text-[#c62828]" /> Live Monitor
-                </h3>
+            <CardContent className="p-6 sm:p-7 h-full flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#c62828]/70">Live Monitor</p>
+                <Monitor size={20} className="text-[#c62828]" />
               </div>
 
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <div>
                   <p className="text-[9px] font-black uppercase tracking-widest text-[#c62828]/65 mb-1.5">
                     College
@@ -964,7 +935,6 @@ export default function StudentKiosk() {
                     </SelectContent>
                   </Select>
                 </div>
-
                 <div>
                   <p className="text-[9px] font-black uppercase tracking-widest text-[#c62828]/65 mb-1.5">
                     Department
@@ -986,7 +956,6 @@ export default function StudentKiosk() {
                     </SelectContent>
                   </Select>
                 </div>
-
                 <div>
                   <p className="text-[9px] font-black uppercase tracking-widest text-[#c62828]/65 mb-1.5">
                     Professor
@@ -1010,79 +979,29 @@ export default function StudentKiosk() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3 my-5">
-                <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                  <p className="text-[9px] font-black uppercase text-[#c62828]/65">In Session</p>
-                  <p className="text-xl font-black text-[#c62828]">{currentServing ? 1 : 0}</p>
-                </div>
-                <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                  <p className="text-[9px] font-black uppercase text-[#c62828]/65">Waiting</p>
-                  <p className="text-xl font-black text-[#c62828]">{waitingQueue.length}</p>
-                </div>
-                <div className="bg-[#c62828] rounded-xl p-3 text-white">
-                  <p className="text-[9px] font-black uppercase opacity-70">Total</p>
-                  <p className="text-xl font-black">{liveQueue.length}</p>
-                </div>
+              <div className="rounded-2xl border border-[#e4e9ef] bg-[#f8fbfd] p-4">
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#c62828]/65 mb-1">In Session</p>
+                <p className="text-lg font-black text-slate-900">{currentServing ? currentServing.student_display_name : "No active consultation"}</p>
+                <p className="text-[10px] font-black text-[#c62828]/60 uppercase tracking-wide mt-1">{selectedFaculty?.name || "No assigned faculty"}</p>
               </div>
 
-              <div
-                className="space-y-3 flex-1 max-h-[56vh] overflow-y-scroll pr-2"
-                style={{ scrollbarGutter: "stable" }}
-              >
-                {liveQueue.length > 0 ? (
-                  liveQueue.map((ticket) => (
-                    <div key={ticket.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4 space-y-3">
-                      <div className="flex justify-between items-center">
-                        <Badge
-                          className={
-                            ticket.status === "called"
-                              ? "bg-[#f3f1f6]/60 text-[#c62828]"
-                              : "bg-[#f3f1f6]/60 text-[#c62828]"
-                          }
-                        >
-                          {ticket.status === "called" ? "IN SESSION" : "WAITING"}
-                        </Badge>
-                        <div className="flex items-center gap-1 text-[#c62828]/65 text-xs font-bold">
-                          <Clock size={12} />
-                          {new Date(ticket.created_at).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </div>
-                      </div>
-
-                      <p className="text-2xl font-black text-slate-800">{ticket.student_display_name}</p>
-                      <div className="p-3 rounded-xl bg-white border border-slate-100 flex items-center gap-3">
-                        <UserCheck className="w-4 h-4 text-[#c62828]" />
-                        <div>
-                          <p className="text-[10px] font-black text-[#c62828]/65 uppercase">Professor</p>
-                          <p className="text-xs font-bold text-slate-700">
-                            {selectedFaculty?.name || "Not selected"}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="h-full min-h-36 rounded-2xl border border-dashed border-slate-200 flex items-center justify-center text-center px-6">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-[#c62828]/65">
-                      No active queue for this professor.
-                    </p>
-                  </div>
-                )}
+              <div className="rounded-2xl bg-[#f5f8fa] border border-[#e6edf2] px-4 py-3 flex items-center justify-between">
+                <span className="text-[11px] font-black uppercase tracking-widest text-[#c62828]/70">Waiting</span>
+                <span className="text-xl font-black text-[#c62828]">{waitingQueue.length}</span>
               </div>
+
+              <p className="text-[10px] font-black uppercase tracking-wider text-[#c62828]">Tap "Check Status" to find students quickly</p>
             </CardContent>
           </Card>
 
           <Card className="border-0 shadow-xl rounded-[40px] bg-white overflow-hidden">
-            <CardContent className="p-8 h-full flex flex-col">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="font-black text-slate-800 uppercase text-xl flex items-center gap-3 tracking-tight">
-                  <Calendar size={22} className="text-[#c62828]" /> Prof Schedules
-                </h3>
+            <CardContent className="p-6 sm:p-7 h-full flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#c62828]/70">Prof Schedules</p>
+                <Calendar size={20} className="text-[#c62828]" />
               </div>
 
-              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 mb-4">
+              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 mb-3">
                 <p className="text-[10px] font-black text-[#c62828]/65 uppercase tracking-widest mb-2">
                   Selected Professor
                 </p>
@@ -1094,7 +1013,7 @@ export default function StudentKiosk() {
                 </p>
               </div>
 
-              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 mb-4">
+              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 mb-3">
                 <p className="text-[10px] font-black text-[#c62828]/65 uppercase tracking-widest mb-3">
                   Consultation Hours
                 </p>
@@ -1103,7 +1022,7 @@ export default function StudentKiosk() {
                 </p>
               </div>
 
-              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 mb-4">
+              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 mb-3">
                 <p className="text-[10px] font-black text-[#c62828]/65 uppercase tracking-widest mb-3">
                   Meeting Preference
                 </p>
@@ -1124,21 +1043,7 @@ export default function StudentKiosk() {
                 </p>
               </div>
 
-              <div className="mt-auto pt-5 border-t border-slate-100">
-                <p className="text-[10px] font-black text-[#c62828]/65 uppercase tracking-widest mb-2">
-                  Now Consulting 
-                </p>
-                <div className="flex items-center justify-between rounded-2xl bg-[#f3f1f6]/60 border border-[#E8E6EB] px-4 py-3">
-                  <span className="text-lg font-black text-[#c62828]">
-                    {currentServing ? currentServing.student_display_name : "IDLE"}
-                  </span>
-                  {currentServing && (
-                    <span className="text-[10px] font-black uppercase tracking-widest text-[#c62828]">
-                      ~{getRemainingTime(currentServing.called_at || null)} mins left
-                    </span>
-                  )}
-                </div>
-              </div>
+              <p className="text-[10px] font-black uppercase tracking-wider text-[#c62828]">Use filters above for faculty-by-faculty lookup</p>
             </CardContent>
           </Card>
         </div>

@@ -462,66 +462,68 @@ export default function QueueBooking() {
 
   return (
     <div className={`min-h-screen bg-[#f3f1f6] flex flex-col font-sans ${keyboardVisible ? "pb-64 md:pb-72" : ""}`}>
-      
-      <header className="px-4 py-6 sm:px-10 sm:py-8 flex justify-between items-center gap-3">
+      <header className="bg-white border-b border-[#E8E6EB] px-4 py-4 sm:px-8 sticky top-0 z-30 flex justify-between items-center gap-3 shadow-sm">
         <button 
           onClick={handleBack} 
           disabled={step === "college" || loading}
-          className={`flex items-center gap-2 font-bold uppercase text-[10px] tracking-[0.2em] transition-all ${step === "college" ? 'opacity-0' : 'text-[#c62828]/65 hover:text-[#c62828]'}`}
+          className={`flex items-center gap-2 font-black uppercase text-[10px] tracking-[0.2em] transition-all ${step === "college" ? "opacity-0 pointer-events-none" : "text-[#c62828]/65 hover:text-[#c62828]"}`}
         >
           <ChevronLeft className="w-4 h-4" /> Back
         </button>
 
         <div className="text-center">
-          <h1 className="text-sm font-black text-[#c62828] uppercase tracking-[0.3em]">Booking Portal</h1>
-          <p className="text-[#c62828]/65 font-bold text-[10px] mt-0.5 uppercase tracking-widest">
+          <h1 className="text-sm sm:text-base font-black text-[#c62828] uppercase tracking-[0.22em]">Booking Portal</h1>
+          <p className="text-[#c62828]/65 font-bold text-[10px] mt-0.5 uppercase tracking-wider">
             Student: <span className="text-slate-800">{studentName || "Verified Student"}</span>
           </p>
-          <p className="text-[#c62828]/55 font-bold text-[9px] mt-1 uppercase tracking-widest">
+          <p className="text-[#c62828]/55 font-bold text-[9px] mt-1 uppercase tracking-wider">
             ID: <span className="text-slate-500">{maskStudentNumber(studentNumber)}</span>
           </p>
         </div>
 
-        <div className="bg-white px-4 py-2 rounded-full border border-[#E8E6EB] shadow-sm flex items-center gap-2">
+        <div className="bg-[#f8fbfd] px-4 py-2 rounded-full border border-[#e6edf2] flex items-center gap-2">
           <div className="h-2 w-2 rounded-full bg-[#c62828] animate-pulse" />
           <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Active</span>
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col items-center p-4 sm:p-6">
-        <div className="max-w-4xl w-full">
-          
-          <div className="relative mt-8">
-            <div className="absolute -top-4 left-6 right-6 bg-[#fff9db] rounded-t-[40px] h-24 pt-3 text-center border-t border-x border-[#fef0b3] shadow-inner">
-               <div className="flex justify-center gap-8 mt-1">
-                  {[1,2,3,4].map(i => (
-                    <div key={i} className={`h-1.5 w-12 rounded-full transition-colors ${i <= (step === 'college' ? 1 : step === 'department' ? 2 : step === 'faculty' ? 3 : 4) ? 'bg-[#d4af37]' : 'bg-[#f0e3a8]'}`} />
-                  ))}
-               </div>
-            </div>
-
-            <Card className="relative border-0 shadow-[0_30px_60px_rgba(0,0,0,0.06)] rounded-[32px] sm:rounded-[48px] bg-white overflow-hidden z-10">
-              <CardHeader className="pt-14 pb-6 px-6 text-center sm:pt-16 sm:pb-8 sm:px-12">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-[24px] bg-[#f3f1f6]/60 text-[#c62828] mb-6">
+      <main className="flex-1 flex flex-col items-center p-4 sm:p-6 lg:p-8">
+        <div className="max-w-5xl w-full">
+          <Card className="border-0 shadow-[0_30px_60px_rgba(0,0,0,0.06)] rounded-[32px] sm:rounded-[48px] bg-white overflow-hidden mt-4">
+            <CardHeader className="pt-8 pb-6 px-6 text-center sm:pt-10 sm:pb-8 sm:px-12 border-b border-[#f1e5e5]">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-[24px] bg-[#fff5f5] text-[#c62828] mb-5">
                   {step === "college" && <School className="w-8 h-8" />}
                   {step === "department" && <BookOpen className="w-8 h-8" />}
                   {step === "faculty" && <UserCircle className="w-8 h-8" />}
                   {step === "type" && <CheckCircle2 className="w-8 h-8" />}
                 </div>
-                <CardTitle className="text-2xl font-black text-slate-800 tracking-tight leading-tight mb-2 sm:text-4xl">
+              <CardTitle className="text-2xl font-black text-[#c62828] tracking-tight leading-tight mb-2 sm:text-4xl uppercase">
                   {step === "college" && "Select Your College"}
                   {step === "department" && "Select Your Department"}
                   {step === "faculty" && "Choose Your Professor"}
                   {step === "type" && "Select Consultation Slot"}
                 </CardTitle>
-                <CardDescription className="text-[#c62828]/65 font-bold uppercase tracking-[0.1em] text-xs">
+              <CardDescription className="text-[#c62828]/65 font-bold uppercase tracking-[0.14em] text-xs">
                   Step {step === "college" ? "1" : step === "department" ? "2" : step === "faculty" ? "3" : "4"} of 4
                 </CardDescription>
-              </CardHeader>
 
-              <CardContent className="px-6 pb-12 pt-4 sm:px-12 sm:pb-20">
+              <div className="mt-5 flex items-center justify-center gap-2">
+                {[1, 2, 3, 4].map((i) => (
+                  <div
+                    key={i}
+                    className={`h-2 rounded-full transition-all ${
+                      i <= (step === "college" ? 1 : step === "department" ? 2 : step === "faculty" ? 3 : 4)
+                        ? "w-12 bg-[#c62828]"
+                        : "w-8 bg-[#f1c4c4]"
+                    }`}
+                  />
+                ))}
+              </div>
+            </CardHeader>
+
+            <CardContent className="px-6 pb-10 pt-6 sm:px-12 sm:pb-14">
                 {error && (
-                  <Alert variant="destructive" className="mb-8 bg-[#f3f1f6]/60 border-0 text-[#c62828] rounded-3xl p-5">
+                <Alert variant="destructive" className="mb-6 bg-[#fff5f5] border-0 text-[#c62828] rounded-3xl p-5">
                     <AlertCircle className="h-5 w-5" />
                     <AlertDescription className="font-bold ml-2">{error}</AlertDescription>
                   </Alert>
@@ -529,16 +531,16 @@ export default function QueueBooking() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {step === "college" && colleges.map((college) => (
-                    <button 
+                    <button
                       key={college.id} 
-                      className="group flex items-center justify-between p-7 bg-white border border-slate-100 hover:border-[#E8E6EB] hover:shadow-xl hover:shadow-[#c62828]/10 rounded-[32px] transition-all duration-300 text-left"
+                      className="group flex items-center justify-between p-7 bg-white border border-slate-200 hover:border-[#f1c4c4] hover:shadow-xl hover:shadow-[#c62828]/10 rounded-[30px] transition-all duration-300 text-left"
                       onClick={() => handleCollegeSelect(college.id)}
                     >
                       <div>
                         <div className="font-black text-[#c62828] text-[10px] tracking-widest uppercase mb-1.5">{college.code}</div>
                         <div className="font-bold text-slate-800 text-lg leading-tight group-hover:text-[#c62828] transition-colors">{college.name}</div>
                       </div>
-                      <div className="h-10 w-10 rounded-full bg-slate-50 group-hover:bg-[#f3f1f6]/60 flex items-center justify-center transition-colors">
+                      <div className="h-10 w-10 rounded-full bg-[#f8fbfd] group-hover:bg-[#fff5f5] flex items-center justify-center transition-colors">
                         <ChevronRight className="w-5 h-5 text-[#c62828]/55 group-hover:text-[#c62828]" />
                       </div>
                     </button>
@@ -551,16 +553,16 @@ export default function QueueBooking() {
                   )}
 
                   {step === "department" && departments.map((dept) => (
-                    <button 
+                    <button
                       key={dept.id} 
-                      className="group flex items-center justify-between p-7 bg-white border border-slate-100 hover:border-[#E8E6EB] hover:shadow-xl hover:shadow-[#c62828]/10 rounded-[32px] transition-all duration-300 text-left"
+                      className="group flex items-center justify-between p-7 bg-white border border-slate-200 hover:border-[#f1c4c4] hover:shadow-xl hover:shadow-[#c62828]/10 rounded-[30px] transition-all duration-300 text-left"
                       onClick={() => handleDepartmentSelect(dept.id)}
                     >
                       <div>
                         <div className="font-black text-[#c62828] text-[10px] tracking-widest uppercase mb-1.5">{dept.code}</div>
                         <div className="font-bold text-slate-800 text-lg leading-tight group-hover:text-[#c62828] transition-colors">{dept.name}</div>
                       </div>
-                      <div className="h-10 w-10 rounded-full bg-slate-50 group-hover:bg-[#f3f1f6]/60 flex items-center justify-center transition-colors">
+                      <div className="h-10 w-10 rounded-full bg-[#f8fbfd] group-hover:bg-[#fff5f5] flex items-center justify-center transition-colors">
                         <ChevronRight className="w-5 h-5 text-[#c62828]/55 group-hover:text-[#c62828]" />
                       </div>
                     </button>
@@ -579,11 +581,11 @@ export default function QueueBooking() {
                         return (
                           <button 
                             key={faculty.id} 
-                            className="group flex items-center justify-between p-6 bg-white border border-slate-100 hover:border-[#E8E6EB] hover:shadow-lg rounded-[32px] transition-all duration-300 text-left"
+                            className="group flex items-center justify-between p-6 bg-white border border-slate-200 hover:border-[#f1c4c4] hover:shadow-lg rounded-[30px] transition-all duration-300 text-left"
                             onClick={() => handleFacultySelect(faculty)}
                           >
                             <div className="flex items-center gap-6">
-                              <div className="h-14 w-14 rounded-2xl bg-[#f3f1f6]/60 flex items-center justify-center text-[#c62828] font-black text-xl shadow-sm">
+                              <div className="h-14 w-14 rounded-2xl bg-[#fff5f5] flex items-center justify-center text-[#c62828] font-black text-xl shadow-sm">
                                 {faculty.name[0]}
                               </div>
                               <div>
@@ -610,7 +612,7 @@ export default function QueueBooking() {
 
                   {step === "type" && (
                     <div className="md:col-span-2 space-y-5">
-                      <div className="rounded-[28px] border border-slate-100 bg-slate-50 p-6 text-left">
+                      <div className="rounded-[28px] border border-slate-200 bg-[#f8fbfd] p-6 text-left">
                         <p className="text-[10px] font-black text-[#c62828]/65 uppercase tracking-[0.2em] mb-3">
                           Consultation Mode
                         </p>
@@ -620,8 +622,8 @@ export default function QueueBooking() {
                             onClick={() => setSelectedConsultationMethod("face_to_face")}
                             className={`rounded-2xl border p-4 text-left transition-all ${
                               selectedConsultationMethod === "face_to_face"
-                                ? "border-[#c62828] bg-[#f3f1f6]/60"
-                                : "border-slate-200 bg-white hover:border-[#E8E6EB]"
+                                ? "border-[#c62828] bg-[#fff5f5]"
+                                : "border-slate-200 bg-white hover:border-[#f1c4c4]"
                             }`}
                           >
                             <p className="text-[10px] font-black uppercase tracking-widest text-[#c62828]/65">
@@ -634,8 +636,8 @@ export default function QueueBooking() {
                             onClick={() => setSelectedConsultationMethod("google_meet")}
                             className={`rounded-2xl border p-4 text-left transition-all ${
                               selectedConsultationMethod === "google_meet"
-                                ? "border-[#c62828] bg-[#f3f1f6]/60"
-                                : "border-slate-200 bg-white hover:border-[#E8E6EB]"
+                                ? "border-[#c62828] bg-[#fff5f5]"
+                                : "border-slate-200 bg-white hover:border-[#f1c4c4]"
                             }`}
                           >
                             <p className="text-[10px] font-black uppercase tracking-widest text-[#c62828]/65">
@@ -646,7 +648,7 @@ export default function QueueBooking() {
                         </div>
                       </div>
 
-                      <div className="rounded-[28px] border border-slate-100 bg-slate-50 p-6 text-left">
+                      <div className="rounded-[28px] border border-slate-200 bg-[#f8fbfd] p-6 text-left">
                         <p className="text-[10px] font-black text-[#c62828]/65 uppercase tracking-[0.2em] mb-3">
                           Consultation Concern (Required)
                         </p>
@@ -665,7 +667,7 @@ export default function QueueBooking() {
                         </p>
                       </div>
 
-                      <div className="rounded-[28px] border border-slate-100 bg-slate-50 p-6 text-left">
+                      <div className="rounded-[28px] border border-slate-200 bg-[#f8fbfd] p-6 text-left">
                         <p className="text-[10px] font-black text-[#c62828]/65 uppercase tracking-[0.2em] mb-3">
                           Available Time Slots
                         </p>
@@ -677,8 +679,8 @@ export default function QueueBooking() {
                               onClick={() => setSelectedSlotKey(slot.key)}
                               className={`rounded-2xl border p-4 text-left transition-all ${
                                 selectedSlotKey === slot.key
-                                  ? "border-[#c62828] bg-[#f3f1f6]/60"
-                                  : "border-slate-200 bg-white hover:border-[#E8E6EB]"
+                                  ? "border-[#c62828] bg-[#fff5f5]"
+                                  : "border-slate-200 bg-white hover:border-[#f1c4c4]"
                               }`}
                             >
                               <p className="text-[10px] font-black uppercase tracking-widest text-[#c62828]/65">
@@ -702,7 +704,7 @@ export default function QueueBooking() {
                         type="button"
                         onClick={handleSlotBooking}
                         disabled={loading || !consultationConcern.trim() || !selectedSlot || !selectedConsultationMethod}
-                        className="w-full h-16 bg-[#c62828] hover:bg-[#c62828] rounded-2xl font-black text-white uppercase tracking-[0.2em]"
+                        className="w-full h-16 bg-[#c62828] hover:bg-[#b22222] rounded-[26px] font-black text-white uppercase tracking-[0.2em]"
                       >
                         Confirm Booking
                       </Button>
@@ -710,9 +712,8 @@ export default function QueueBooking() {
                   )}
 
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+            </CardContent>
+          </Card>
           
           <div className="mt-8">
              <Button
