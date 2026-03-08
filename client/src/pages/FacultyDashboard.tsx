@@ -25,6 +25,15 @@ type ParsedScheduleConfig = {
   officeLocation: string;
 };
 
+type ConsultationAuditItem = {
+  id: string;
+  queue_entry_id: string;
+  student_number: string;
+  action: string;
+  notes: string;
+  created_at: string;
+};
+
 const normalizeDateOnly = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
 const parseScheduleConfig = (raw: unknown): ParsedScheduleConfig => {
@@ -159,6 +168,8 @@ export default function FacultyDashboard() {
     audioUrl: string;
   }>>([]);
   const [recordingsLoading, setRecordingsLoading] = useState(false);
+  const [consultationAudit, setConsultationAudit] = useState<ConsultationAuditItem[]>([]);
+  const queueEntryIdsRef = useRef<Set<string>>(new Set());
   
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -229,6 +240,7 @@ export default function FacultyDashboard() {
       setOfficeLocation(parsedSchedule.officeLocation);
       await fetchQueue(fac.id);
       await loadRecordings(fac.id);
+      await loadConsultationAudit(fac.id);
     } catch (err) {
       console.error("Failed to load data", err);
     } finally {
@@ -251,6 +263,61 @@ export default function FacultyDashboard() {
       toast.error(message);
     } finally {
       setRecordingsLoading(false);
+    }
+  };
+
+  const loadConsultationAudit = async (facultyId: string) => {
+    if (!facultyId) return;
+
+    const { data: entryRows } = await supabase
+      .from("queue_entries")
+      .select("id, student_number")
+      .eq("faculty_id", facultyId)
+      .order("created_at", { ascending: false })
+      .limit(120);
+
+    const entryList = entryRows || [];
+    const entryIds = entryList.map((entry) => entry.id);
+    queueEntryIdsRef.current = new Set(entryIds);
+
+    if (entryIds.length === 0) {
+      setConsultationAudit([]);
+      return;
+    }
+
+    const studentByEntryId = entryList.reduce((acc, entry) => {
+      acc[entry.id] = String((entry as any).student_number || "");
+      return acc;
+    }, {} as Record<string, string>);
+
+    const { data: historyRows } = await supabase
+      .from("queue_history")
+      .select("id, queue_entry_id, action, notes, created_at")
+      .in("queue_entry_id", entryIds)
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    const mapped = (historyRows || []).map((row: any) => ({
+      id: String(row.id || `${row.queue_entry_id}-${row.created_at}-${row.action}`),
+      queue_entry_id: String(row.queue_entry_id || ""),
+      student_number: studentByEntryId[String(row.queue_entry_id || "")] || "Unknown",
+      action: String(row.action || "updated"),
+      notes: String(row.notes || ""),
+      created_at: String(row.created_at || new Date().toISOString()),
+    }));
+
+    setConsultationAudit(mapped);
+  };
+
+  const appendQueueHistoryAction = async (queueEntryId: string, action: string, notes: string) => {
+    const { error } = await supabase.from("queue_history").insert({
+      queue_entry_id: queueEntryId,
+      action,
+      notes,
+    });
+
+    if (error) {
+      console.warn("Failed to append queue history action", error);
     }
   };
 
@@ -287,7 +354,24 @@ export default function FacultyDashboard() {
           table: "queue_entries",
           filter: `faculty_id=eq.${faculty.id}`,
         },
-        () => fetchQueue(faculty.id),
+        () => {
+          void fetchQueue(faculty.id);
+          void loadConsultationAudit(faculty.id);
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "queue_history",
+        },
+        (payload) => {
+          const row = payload.new as { queue_entry_id?: string };
+          const queueEntryId = String(row?.queue_entry_id || "");
+          if (!queueEntryId || !queueEntryIdsRef.current.has(queueEntryId)) return;
+          void loadConsultationAudit(faculty.id);
+        },
       )
       .subscribe();
 
@@ -300,6 +384,7 @@ export default function FacultyDashboard() {
     if (!faculty?.id) return;
     const interval = window.setInterval(() => {
       void loadRecordings(faculty.id);
+      void loadConsultationAudit(faculty.id);
     }, 30000);
     return () => window.clearInterval(interval);
   }, [faculty?.id]);
@@ -498,18 +583,28 @@ export default function FacultyDashboard() {
   const handleCallNext = async () => {
     const nextStudent = queue.find(q => q.status === 'waiting');
     if (!nextStudent) return;
-    
+
+    const calledAt = new Date().toISOString();
     const { error } = await supabase
       .from("queue_entries")
-      .update({ status: "called", called_at: new Date().toISOString() })
+      .update({ status: "called", called_at: calledAt })
       .eq("id", nextStudent.id);
-    
-    if (!error) {
-      const label = nextStudent.student_name
-        ? `${nextStudent.student_name} (${nextStudent.student_number})`
-        : nextStudent.student_number;
-      toast.success(`Calling ${label}`);
+
+    if (error) {
+      toast.error(`Failed to call student: ${error.message || "Unknown error"}`);
+      return;
     }
+
+    await appendQueueHistoryAction(nextStudent.id, "faculty_called_student", `Called by faculty at ${calledAt}`);
+    if (faculty?.id) {
+      await fetchQueue(faculty.id);
+      await loadConsultationAudit(faculty.id);
+    }
+
+    const label = nextStudent.student_name
+      ? `${nextStudent.student_name} (${nextStudent.student_number})`
+      : nextStudent.student_number;
+    toast.success(`Calling ${label}`);
   };
 
   const handleComplete = async (id: string) => {
@@ -517,12 +612,30 @@ export default function FacultyDashboard() {
       await handleStopRecording();
     }
 
+    const completedAt = new Date().toISOString();
     const { error } = await supabase
       .from("queue_entries")
-      .update({ status: "completed", completed_at: new Date().toISOString() })
+      .update({ status: "completed", completed_at: completedAt })
       .eq("id", id);
-    
-    if (!error) toast.success("Session Completed");
+
+    if (error) {
+      const fallback = await supabase
+        .from("queue_entries")
+        .update({ status: "completed" })
+        .eq("id", id);
+
+      if (fallback.error) {
+        toast.error(`Failed to complete session: ${fallback.error.message || error.message || "Unknown error"}`);
+        return;
+      }
+    }
+
+    await appendQueueHistoryAction(id, "faculty_completed_consultation", `Completed by faculty at ${completedAt}`);
+    if (faculty?.id) {
+      await fetchQueue(faculty.id);
+      await loadConsultationAudit(faculty.id);
+    }
+    toast.success("Session Completed");
   };
 
   const handleSkip = async (id: string) => {
@@ -534,8 +647,18 @@ export default function FacultyDashboard() {
       .from("queue_entries")
       .update({ status: "waiting", called_at: null })
       .eq("id", id);
-    
-    if (!error) toast("Student skipped and returned to queue", { icon: '⏭️' });
+
+    if (error) {
+      toast.error(`Failed to skip student: ${error.message || "Unknown error"}`);
+      return;
+    }
+
+    await appendQueueHistoryAction(id, "faculty_skipped_student", "Student returned to waiting queue by faculty");
+    if (faculty?.id) {
+      await fetchQueue(faculty.id);
+      await loadConsultationAudit(faculty.id);
+    }
+    toast("Student skipped and returned to queue", { icon: '⏭️' });
   };
 
   const clearMeetWatcher = () => {
@@ -764,6 +887,12 @@ export default function FacultyDashboard() {
   const pending = queue.filter(q => q.status === 'waiting');
   const parsedFacultySchedule = parseScheduleConfig(faculty?.schedule);
   const faceToFaceLocation = parsedFacultySchedule.officeLocation || "Faculty office";
+  const recentConsultationAudit = consultationAudit.slice(0, 20);
+
+  const formatAuditAction = (action: string) =>
+    action
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (match) => match.toUpperCase());
 
   return (
     <div className={`min-h-screen bg-[#f3f1f6] flex flex-col font-sans ${keyboardVisible ? "pb-64 md:pb-72" : ""}`}>
@@ -1153,6 +1282,36 @@ export default function FacultyDashboard() {
                 ))}
                 {pending.length === 0 && <div className="col-span-2 py-16 text-center text-slate-200 font-black uppercase tracking-[0.5em] text-[10px]">No pending requests</div>}
              </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-sm rounded-[32px] bg-white overflow-hidden">
+            <CardHeader className="bg-slate-50 px-8 py-6 border-b border-slate-100 flex flex-row justify-between items-center">
+              <CardTitle className="text-slate-800 font-black uppercase tracking-widest text-xs">Consultation Audit Log (Realtime)</CardTitle>
+              <Badge className="bg-slate-200 text-slate-600 font-black px-3 py-1 rounded-lg text-[10px]">{recentConsultationAudit.length}</Badge>
+            </CardHeader>
+            <CardContent className="p-6 space-y-3">
+              {recentConsultationAudit.length === 0 && (
+                <p className="text-xs font-bold text-slate-500">No consultation audit logs yet.</p>
+              )}
+              {recentConsultationAudit.map((item) => (
+                <div key={item.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-black text-[#c62828]">{item.student_number}</p>
+                      <p className="text-[10px] font-black text-[#c62828]/65 uppercase tracking-widest mt-1">
+                        {formatAuditAction(item.action)}
+                      </p>
+                    </div>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                      {new Date(item.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                  {item.notes && (
+                    <p className="mt-2 text-xs font-bold text-slate-600 leading-relaxed">{item.notes}</p>
+                  )}
+                </div>
+              ))}
+            </CardContent>
           </Card>
             </>
           )}

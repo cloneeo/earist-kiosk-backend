@@ -30,19 +30,30 @@ type RecordingItem = {
   audioUrl: string;
 };
 
+type AuditLogItem = {
+  id: string;
+  queueEntryId: string;
+  studentNumber: string;
+  facultyName: string;
+  action: string;
+  notes: string;
+  createdAt: string;
+};
+
 export default function AdminDashboard() {
   const [, setLocation] = useLocation();
   const { signOut, userRole } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"consultations" | "colleges" | "departments" | "faculty" | "recordings">("consultations");
+  const [activeTab, setActiveTab] = useState<"consultations" | "colleges" | "departments" | "faculty" | "recordings" | "audits">("consultations");
 
   const [colleges, setColleges] = useState<College[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [faculties, setFaculties] = useState<Faculty[]>([]);
   const [liveQueue, setLiveQueue] = useState<any[]>([]);
   const [recordings, setRecordings] = useState<RecordingItem[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
 
   // Modal States
   const [isCollegeModalOpen, setIsCollegeModalOpen] = useState(false);
@@ -89,12 +100,60 @@ export default function AdminDashboard() {
       if (recordingsResponse.ok && recordingsPayload?.ok) {
         setRecordings(Array.isArray(recordingsPayload.recordings) ? recordingsPayload.recordings : []);
       }
+
+      const { data: historyRows, error: historyError } = await supabase
+        .from("queue_history")
+        .select("id, queue_entry_id, action, notes, created_at")
+        .order("created_at", { ascending: false })
+        .limit(120);
+
+      if (historyError) throw historyError;
+
+      const queueEntryIds = Array.from(new Set((historyRows || []).map((row) => row.queue_entry_id).filter(Boolean)));
+      let queueEntryMap: Record<string, { studentNumber: string; facultyName: string }> = {};
+
+      if (queueEntryIds.length > 0) {
+        const { data: queueLookupRows, error: queueLookupError } = await supabase
+          .from("queue_entries")
+          .select("id, student_number, faculty:faculty_id(name)")
+          .in("id", queueEntryIds as string[]);
+
+        if (queueLookupError) throw queueLookupError;
+
+        queueEntryMap = (queueLookupRows || []).reduce((acc, row: any) => {
+          acc[String(row.id)] = {
+            studentNumber: String(row.student_number || "Unknown"),
+            facultyName: String(row.faculty?.name || "Unassigned"),
+          };
+          return acc;
+        }, {} as Record<string, { studentNumber: string; facultyName: string }>);
+      }
+
+      const mappedAuditLogs: AuditLogItem[] = (historyRows || []).map((row) => {
+        const queueInfo = queueEntryMap[String(row.queue_entry_id)] || { studentNumber: "Unknown", facultyName: "Unassigned" };
+        return {
+          id: String(row.id),
+          queueEntryId: String(row.queue_entry_id || ""),
+          studentNumber: queueInfo.studentNumber,
+          facultyName: queueInfo.facultyName,
+          action: String(row.action || "updated"),
+          notes: String(row.notes || ""),
+          createdAt: String(row.created_at || new Date().toISOString()),
+        };
+      });
+
+      setAuditLogs(mappedAuditLogs);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load data");
     } finally {
       setLoading(false);
     }
   };
+
+  const formatAuditAction = (action: string) =>
+    action
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (match) => match.toUpperCase());
 
   useEffect(() => {
     loadData();
@@ -240,6 +299,7 @@ export default function AdminDashboard() {
               { id: "departments", label: "Depts", icon: Building2 },
               { id: "faculty", label: "Faculty", icon: Users },
               { id: "recordings", label: "Recordings", icon: Clock },
+              { id: "audits", label: "Audit Logs", icon: AlertCircle },
             ].map((tab) => (
               <Button key={tab.id} variant={activeTab === tab.id ? "default" : "ghost"} className={activeTab === tab.id ? "bg-[#c62828] hover:bg-[#c62828] text-white rounded-xl" : "rounded-xl text-slate-500"} onClick={() => setActiveTab(tab.id as any)}>
                 <tab.icon className="w-4 h-4 mr-2" /> {tab.label}
@@ -266,9 +326,9 @@ export default function AdminDashboard() {
         ) : (
           <Card className="rounded-3xl border-0 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between border-b px-8 py-6">
-              <CardTitle className="uppercase text-xs font-black text-slate-800">{activeTab === "recordings" ? "Recordings" : `${activeTab} Registry`}</CardTitle>
+              <CardTitle className="uppercase text-xs font-black text-slate-800">{activeTab === "recordings" ? "Recordings" : activeTab === "audits" ? "Consultation Audit Logs" : `${activeTab} Registry`}</CardTitle>
               {/* FIXED ADD BUTTON FOR ALL TABS */}
-              {activeTab !== "recordings" && (
+              {activeTab !== "recordings" && activeTab !== "audits" && (
                 <Button 
                   className="bg-[#c62828] hover:bg-[#c62828] text-white text-xs font-bold px-6 rounded-xl shadow-md transition-all" 
                   onClick={() => {
@@ -325,6 +385,31 @@ export default function AdminDashboard() {
                    <thead className="bg-slate-50"><tr><th className="text-left p-4">Name</th><th className="text-left p-4">Email</th><th className="text-left p-4">Department</th><th className="text-right p-4">Actions</th></tr></thead>
                    <tbody>{faculties.map(f => (<tr key={f.id} className="border-t"><td className="p-4 font-bold">{f.name}</td><td className="p-4">{f.email}</td><td className="p-4">{departments.find(d => d.id === f.department_id)?.name}</td><td className="p-4 text-right"><Button variant="ghost" size="icon" onClick={() => handleDelete("faculty", f.id)}><Trash2 className="h-4 w-4 text-[#c62828]" /></Button></td></tr>))}</tbody>
                  </table>
+               )}
+               {activeTab === "audits" && (
+                 <div className="p-6 space-y-4">
+                   {auditLogs.length === 0 && <p className="text-sm font-bold text-slate-500">No consultation audit logs found.</p>}
+                   {auditLogs.map((log) => (
+                     <div key={log.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4 space-y-3">
+                       <div className="flex flex-wrap items-start justify-between gap-3">
+                         <div>
+                           <p className="text-sm font-black text-slate-800">{log.studentNumber}</p>
+                           <p className="text-[10px] font-bold text-[#c62828]/65 uppercase tracking-widest mt-1">
+                             {formatAuditAction(log.action)}
+                           </p>
+                         </div>
+                         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                           {new Date(log.createdAt).toLocaleString()}
+                         </p>
+                       </div>
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px] font-bold text-slate-600">
+                         <p>Faculty: <span className="text-slate-800">{log.facultyName}</span></p>
+                         <p>Queue ID: <span className="text-slate-800">{log.queueEntryId || "N/A"}</span></p>
+                       </div>
+                       {log.notes && <p className="text-xs font-bold text-slate-600 leading-relaxed">{log.notes}</p>}
+                     </div>
+                   ))}
+                 </div>
                )}
             </CardContent>
           </Card>
