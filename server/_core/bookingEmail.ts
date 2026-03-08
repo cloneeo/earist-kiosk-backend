@@ -338,6 +338,7 @@ export function registerBookingEmailRoutes(app: Express) {
       const queueId = String(req.body?.queueId || "").trim();
       const fallbackEmail = resolveFallbackEmail(req.body?.studentEmail);
       const requestedMeetLink = resolveMeetLink(req.body?.meetLink);
+      const forceResend = req.body?.forceResend === true || req.body?.forceResend === "true";
 
       if (!queueId || !isUuid(queueId)) {
         return res.status(400).json({ ok: false, message: "Invalid queueId." });
@@ -427,12 +428,14 @@ export function registerBookingEmailRoutes(app: Express) {
         }
       }
 
-      const emailMarkerResponse = await supabaseFetch<{ id: string }>(
-        `queue_history?select=id&queue_entry_id=eq.${queueId}&action=eq.booking_email_sent&limit=1`
-      );
+      if (!forceResend) {
+        const emailMarkerResponse = await supabaseFetch<{ id: string }>(
+          `queue_history?select=id&queue_entry_id=eq.${queueId}&action=eq.booking_email_sent&limit=1`
+        );
 
-      if ((emailMarkerResponse.data || []).length > 0) {
-        return res.status(200).json({ ok: true, deduped: true, message: "Booking email already sent." });
+        if ((emailMarkerResponse.data || []).length > 0) {
+          return res.status(200).json({ ok: true, deduped: true, message: "Booking email already sent." });
+        }
       }
 
       const subject = "EARIST Booking Confirmation";
@@ -475,13 +478,15 @@ export function registerBookingEmailRoutes(app: Express) {
 
       await insertQueueHistory(
         queueId,
-        "booking_email_sent",
-        `Delivered to ${recipientEmail}${emailResult.provider ? ` via ${emailResult.provider}` : ""}`
+        forceResend ? "booking_email_resent" : "booking_email_sent",
+        `${forceResend ? "Resent" : "Delivered"} to ${recipientEmail}${emailResult.provider ? ` via ${emailResult.provider}` : ""}`
       );
 
       return res.status(200).json({
         ok: true,
+        resent: forceResend,
         recipient: recipientEmail,
+        meetLink: sharedMeetLink || undefined,
         provider: emailResult.provider || "unknown",
         warning: meetLinkWarning || studentLookupWarning || undefined,
       });

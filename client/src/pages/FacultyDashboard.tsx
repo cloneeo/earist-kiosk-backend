@@ -683,8 +683,32 @@ export default function FacultyDashboard() {
       return;
     }
 
+    // Resend booking email with Meet link when we have a stable room URL.
+    if (!/^https:\/\/meet\.google\.com\/new(?:[/?#]|$)/i.test(meetUrl) && queueEntry.id) {
+      void fetch("/api/booking/email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          queueId: queueEntry.id,
+          meetLink: meetUrl,
+          forceResend: true,
+        }),
+      })
+        .then((response) => response.json().catch(() => null))
+        .then((payload) => {
+          if (payload?.ok) {
+            toast.success("Meet link emailed to student.");
+          }
+        })
+        .catch(() => {
+          // Ignore resend failures here; booking email flow still retries from student side.
+        });
+    }
+
     if (!queueMeetLink && !configuredMeetLink) {
-      toast("Opened a new Google Meet room. Share the link with the student from the Meet window.", { icon: "ℹ" });
+      toast("Opened a new Google Meet room. Save/share this link to auto-email students next time.", { icon: "ℹ" });
     } else {
       toast.success("Google Meet opened. Session auto-completes when the Meet tab is closed.");
     }
