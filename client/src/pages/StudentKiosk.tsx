@@ -693,46 +693,137 @@ export default function StudentKiosk() {
           </Card>
         </div>
 
-        <div className="lg:w-[42%] flex flex-col justify-center gap-4">
-          <button
-            type="button"
-            onClick={() => setLocation("/kiosk/monitor")}
-            className="w-full rounded-[28px] border border-slate-100 bg-white shadow-xl p-5 sm:p-6 text-left hover:bg-slate-50 transition-colors"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400">
-                <Monitor size={28} />
+        <div className="lg:w-[42%] flex flex-col gap-3">
+          <Card className="border-0 shadow-xl rounded-[24px] bg-white overflow-hidden">
+            <CardContent className="p-4 sm:p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#c62828]/75">Live Monitor</p>
+                <Monitor size={18} className="text-[#c62828]" />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-3xl leading-none text-slate-300">CHECK STATUS</p>
-                <p className="text-sm font-bold text-slate-400 mt-1">Track your spot in the line.</p>
-                <p className="text-xs font-black uppercase tracking-wide text-[#c62828]/75 mt-2">
-                  {waitingQueue.length} waiting • {currentServing ? "1 in session" : "no active session"}
-                </p>
-              </div>
-              <ArrowRight size={20} className="text-slate-300" />
-            </div>
-          </button>
 
-          <button
-            type="button"
-            onClick={() => setLocation("/kiosk/schedules")}
-            className="w-full rounded-[28px] border border-slate-100 bg-white shadow-xl p-5 sm:p-6 text-left hover:bg-slate-50 transition-colors"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400">
-                <Calendar size={28} />
+              <div className="grid grid-cols-3 gap-1.5">
+                <div>
+                  <p className="text-[8px] font-black uppercase tracking-widest text-[#c62828]/60 mb-1">College</p>
+                  <Select
+                    value={selectedMonitorCollege}
+                    onValueChange={(value) => {
+                      setSelectedMonitorCollege(value);
+                      setSelectedMonitorDepartment("all");
+                    }}
+                  >
+                    <SelectTrigger className="h-8 rounded-lg border-slate-200 text-[9px] font-black uppercase tracking-wide">
+                      <SelectValue placeholder="College" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Colleges</SelectItem>
+                      {monitorColleges.map((college) => (
+                        <SelectItem key={college.id} value={college.id}>
+                          {college.code} - {college.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <p className="text-[8px] font-black uppercase tracking-widest text-[#c62828]/60 mb-1">Dept</p>
+                  <Select
+                    value={selectedMonitorDepartment}
+                    onValueChange={(value) => setSelectedMonitorDepartment(value)}
+                  >
+                    <SelectTrigger className="h-8 rounded-lg border-slate-200 text-[9px] font-black uppercase tracking-wide">
+                      <SelectValue placeholder="Department" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Departments</SelectItem>
+                      {monitorDepartments.map((department) => (
+                        <SelectItem key={department.id} value={department.id}>
+                          {department.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <p className="text-[8px] font-black uppercase tracking-widest text-[#c62828]/60 mb-1">Prof</p>
+                  <Select
+                    value={selectedMonitorProf || ""}
+                    onValueChange={(value) => setSelectedMonitorProf(value)}
+                    disabled={monitorFaculties.length === 0}
+                  >
+                    <SelectTrigger className="h-8 rounded-lg border-slate-200 text-[9px] font-black uppercase tracking-wide">
+                      <SelectValue placeholder="Professor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {monitorFaculties.map((faculty) => (
+                        <SelectItem key={faculty.id} value={faculty.id}>
+                          {faculty.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-3xl leading-none text-slate-300">DIRECTORY</p>
-                <p className="text-sm font-bold text-slate-400 mt-1">View faculty availability.</p>
-                <p className="text-xs font-black uppercase tracking-wide text-[#c62828]/75 mt-2 break-words">
-                  {selectedFaculty?.name || "Browse all faculty"}
+
+              <p className="text-[11px] font-black text-slate-800 leading-tight break-words">
+                {selectedFaculty?.name || "No professor selected"}
+              </p>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="rounded-lg border border-[#e6ebf0] bg-[#f8fbfd] px-3 py-2 flex items-center justify-between">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-[#c62828]/70">In Session</span>
+                  <span className="text-[10px] font-black text-slate-800">{currentServing ? "1" : "0"}</span>
+                </div>
+                <div className="rounded-lg border border-[#e6ebf0] bg-[#f8fbfd] px-3 py-2 flex items-center justify-between">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-[#c62828]/70">Waiting</span>
+                  <span className="text-[10px] font-black text-slate-800">{waitingQueue.length}</span>
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setLocation("/kiosk/monitor")}
+                className="w-full h-9 rounded-xl border-[#c62828]/30 text-[#c62828] hover:bg-[#fff5f5] font-black text-[10px] uppercase tracking-[0.14em]"
+              >
+                Open Live Monitor <ArrowRight size={14} className="ml-1" />
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-xl rounded-[24px] bg-white overflow-hidden">
+            <CardContent className="p-4 sm:p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#c62828]/75">Prof Schedules</p>
+                <Calendar size={18} className="text-[#c62828]" />
+              </div>
+
+              <div className="rounded-xl bg-slate-50 border border-slate-100 p-3">
+                <p className="text-[8px] font-black uppercase tracking-widest text-[#c62828]/65">Professor</p>
+                <p className="text-[13px] sm:text-sm font-black text-slate-900 leading-snug break-words mt-1">
+                  {selectedFaculty?.name || "No professor selected"}
+                </p>
+                <p className="text-[9px] font-bold uppercase tracking-wider text-[#c62828]/65 mt-1">
+                  {selectedFaculty?.department?.name || "Department unavailable"}
                 </p>
               </div>
-              <ArrowRight size={20} className="text-slate-300" />
-            </div>
-          </button>
+
+              <div className="rounded-lg border border-[#e6ebf0] bg-[#f8fbfd] px-3 py-2 flex items-center gap-2 text-[#c62828]">
+                {isOnline ? <Globe size={14} /> : <UserCheck size={14} />}
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-700">
+                  {meetingMethod.replace(/_/g, " ")}
+                </span>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setLocation("/kiosk/schedules")}
+                className="w-full h-9 rounded-xl border-[#c62828]/30 text-[#c62828] hover:bg-[#fff5f5] font-black text-[10px] uppercase tracking-[0.14em]"
+              >
+                Open Schedule Directory <ArrowRight size={14} className="ml-1" />
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </main>
 
