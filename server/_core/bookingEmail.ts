@@ -37,8 +37,23 @@ const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_P
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 const sendGridApiKey = process.env.SENDGRID_API_KEY || "";
 const sendGridFrom = process.env.SENDGRID_FROM || process.env.BOOKING_EMAIL_FROM || "";
-const googleServiceAccountEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || "";
-const googleServiceAccountPrivateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY || "";
+const googleServiceAccountJsonRaw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON || "";
+const parsedServiceAccount = (() => {
+  if (!googleServiceAccountJsonRaw.trim()) return null;
+  try {
+    return JSON.parse(googleServiceAccountJsonRaw) as {
+      client_email?: string;
+      private_key?: string;
+    };
+  } catch {
+    return null;
+  }
+})();
+
+const googleServiceAccountEmail =
+  String(parsedServiceAccount?.client_email || process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || "").trim();
+const googleServiceAccountPrivateKey =
+  String(parsedServiceAccount?.private_key || process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY || "").trim();
 const googleCalendarId = process.env.GOOGLE_CALENDAR_ID || "primary";
 const googleCalendarTimeZone = process.env.GOOGLE_CALENDAR_TIMEZONE || "Asia/Manila";
 
@@ -306,7 +321,7 @@ export function registerBookingEmailRoutes(app: Express) {
     if (!sendGridApiKey) missing.push("SENDGRID_API_KEY");
     if (!sendGridFrom) missing.push("SENDGRID_FROM or BOOKING_EMAIL_FROM");
     if (!hasGoogleCalendarConfig) {
-      missing.push("GOOGLE_SERVICE_ACCOUNT_EMAIL / GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY / GOOGLE_CALENDAR_ID");
+      missing.push("GOOGLE_SERVICE_ACCOUNT_JSON (preferred) OR GOOGLE_SERVICE_ACCOUNT_EMAIL + GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY");
     }
 
     const ok = missing.length === 0;

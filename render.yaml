@@ -25,6 +25,8 @@ services:
         sync: false
       - key: GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY
         sync: false
+      - key: GOOGLE_SERVICE_ACCOUNT_JSON
+        sync: false
       - key: GOOGLE_CALENDAR_ID
         sync: false
       - key: GOOGLE_CALENDAR_TIMEZONE
