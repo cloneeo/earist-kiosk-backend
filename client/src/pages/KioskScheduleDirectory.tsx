@@ -4,6 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { kioskSupabase } from "@/lib/supabaseKiosk";
 import { ChevronLeft, Clock3, Search } from "lucide-react";
 
@@ -13,7 +20,18 @@ type FacultySchedule = {
   consultation_method: string | null;
   schedule: string | null;
   status: string | null;
-  department: { name: string } | { name: string }[] | null;
+  department_id: string | null;
+  department: {
+    id?: string;
+    name?: string;
+    college_id?: string;
+    college?: { id?: string; name?: string } | Array<{ id?: string; name?: string }>;
+  } | Array<{
+    id?: string;
+    name?: string;
+    college_id?: string;
+    college?: { id?: string; name?: string } | Array<{ id?: string; name?: string }>;
+  }> | null;
 };
 
 type ParsedSlot = {
@@ -22,10 +40,20 @@ type ParsedSlot = {
   methodLabel: string;
 };
 
-const getDepartmentName = (department: FacultySchedule["department"]) => {
-  if (!department) return "No department";
-  if (Array.isArray(department)) return department[0]?.name || "No department";
-  return department.name || "No department";
+const getDepartmentValue = (department: FacultySchedule["department"]) => {
+  if (!department) {
+    return { id: "unassigned-dept", name: "No department", collegeId: "unassigned-college", collegeName: "No college" };
+  }
+
+  const source = Array.isArray(department) ? department[0] : department;
+  const collegeSource = Array.isArray(source?.college) ? source.college[0] : source?.college;
+
+  return {
+    id: String(source?.id || source?.name || "unassigned-dept"),
+    name: String(source?.name || "No department"),
+    collegeId: String(source?.college_id || collegeSource?.id || collegeSource?.name || "unassigned-college"),
+    collegeName: String(collegeSource?.name || "No college"),
+  };
 };
 
 const methodLabel = (method: string | null) => (method === "online" ? "Online" : "Face-to-Face");
@@ -76,6 +104,9 @@ const parseSchedule = (raw: string | null): ParsedSlot[] => {
 export default function KioskScheduleDirectory() {
   const [, setLocation] = useLocation();
   const [search, setSearch] = useState("");
+  const [selectedCollege, setSelectedCollege] = useState("all");
+  const [selectedDepartment, setSelectedDepartment] = useState("all");
+  const [selectedFaculty, setSelectedFaculty] = useState("all");
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<FacultySchedule[]>([]);
 
@@ -84,7 +115,7 @@ export default function KioskScheduleDirectory() {
 
     const { data, error } = await kioskSupabase
       .from("faculty")
-      .select("id, name, consultation_method, schedule, status, department:departments(name)")
+      .select("id, name, consultation_method, schedule, status, department_id, department:departments(id, name, college_id, college:colleges(id, name))")
       .order("name");
 
     if (error) {
@@ -110,18 +141,61 @@ export default function KioskScheduleDirectory() {
     };
   }, [loadDirectory]);
 
+  const enrichedRows = useMemo(() => {
+    return rows.map((row) => {
+      const dept = getDepartmentValue(row.department);
+      return {
+        ...row,
+        departmentName: dept.name,
+        departmentId: dept.id,
+        collegeName: dept.collegeName,
+        collegeId: dept.collegeId,
+      };
+    });
+  }, [rows]);
+
+  const collegeOptions = useMemo(() => {
+    const unique = new Map<string, string>();
+    enrichedRows.forEach((row) => unique.set(row.collegeId, row.collegeName));
+    return Array.from(unique.entries()).map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
+  }, [enrichedRows]);
+
+  const departmentOptions = useMemo(() => {
+    const source = selectedCollege === "all" ? enrichedRows : enrichedRows.filter((row) => row.collegeId === selectedCollege);
+    const unique = new Map<string, string>();
+    source.forEach((row) => unique.set(row.departmentId, row.departmentName));
+    return Array.from(unique.entries()).map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
+  }, [enrichedRows, selectedCollege]);
+
+  const facultyOptions = useMemo(() => {
+    return enrichedRows
+      .filter((row) => {
+        if (selectedCollege !== "all" && row.collegeId !== selectedCollege) return false;
+        if (selectedDepartment !== "all" && row.departmentId !== selectedDepartment) return false;
+        return true;
+      })
+      .map((row) => ({ id: row.id, name: row.name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [enrichedRows, selectedCollege, selectedDepartment]);
+
   const filteredRows = useMemo(() => {
     const needle = search.trim().toLowerCase();
-    if (!needle) return rows;
 
-    return rows.filter((row) => {
+    return enrichedRows.filter((row) => {
+      if (selectedCollege !== "all" && row.collegeId !== selectedCollege) return false;
+      if (selectedDepartment !== "all" && row.departmentId !== selectedDepartment) return false;
+      if (selectedFaculty !== "all" && row.id !== selectedFaculty) return false;
+
+      if (!needle) return true;
+
       return (
         row.name.toLowerCase().includes(needle) ||
-        getDepartmentName(row.department).toLowerCase().includes(needle) ||
+        row.departmentName.toLowerCase().includes(needle) ||
+        row.collegeName.toLowerCase().includes(needle) ||
         methodLabel(row.consultation_method).toLowerCase().includes(needle)
       );
     });
-  }, [rows, search]);
+  }, [enrichedRows, search, selectedCollege, selectedDepartment, selectedFaculty]);
 
   return (
     <div className="min-h-screen bg-[#f4f2f7] p-4 sm:p-8">
@@ -135,19 +209,51 @@ export default function KioskScheduleDirectory() {
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search professor, method, or department"
+              placeholder="Search professor, method, department, or college"
               className="pl-9 rounded-2xl border-[#d9dde2] bg-white"
             />
           </div>
         </div>
 
         <Card className="rounded-[28px] border-0 shadow-sm bg-white">
-          <CardContent className="p-6 sm:p-7">
+          <CardContent className="p-6 sm:p-7 space-y-4">
             <div className="flex items-center gap-3 mb-2">
               <Clock3 className="text-[#c62828]" size={20} />
               <h1 className="text-2xl font-black tracking-tight text-[#024059]">Professor Availability Directory</h1>
             </div>
-            <p className="text-sm text-[#024059]/70">View consultation hours and meeting method per faculty member.</p>
+            <p className="text-sm text-[#024059]/70">Use dropdowns to view schedules per college, department, and faculty.</p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <Select value={selectedCollege} onValueChange={setSelectedCollege}>
+                <SelectTrigger className="rounded-xl bg-white"><SelectValue placeholder="College" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Colleges</SelectItem>
+                  {collegeOptions.map((option) => (
+                    <SelectItem key={option.id} value={option.id}>{option.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+                <SelectTrigger className="rounded-xl bg-white"><SelectValue placeholder="Department" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Departments</SelectItem>
+                  {departmentOptions.map((option) => (
+                    <SelectItem key={option.id} value={option.id}>{option.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedFaculty} onValueChange={setSelectedFaculty}>
+                <SelectTrigger className="rounded-xl bg-white"><SelectValue placeholder="Faculty" /></SelectTrigger>
+                <SelectContent className="max-h-64">
+                  <SelectItem value="all">All Faculty</SelectItem>
+                  {facultyOptions.map((option) => (
+                    <SelectItem key={option.id} value={option.id}>{option.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </CardContent>
         </Card>
 
@@ -163,7 +269,7 @@ export default function KioskScheduleDirectory() {
           {!loading && filteredRows.length === 0 && (
             <Card className="md:col-span-2 rounded-[24px] border-0 shadow-sm">
               <CardContent className="p-10 text-center text-[#024059]/65 text-sm font-bold uppercase tracking-wider">
-                No schedule entries match your search.
+                No schedule entries match your filters.
               </CardContent>
             </Card>
           )}
@@ -178,7 +284,7 @@ export default function KioskScheduleDirectory() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="text-lg font-black text-slate-900 leading-tight">{row.name}</p>
-                        <p className="text-xs font-bold uppercase tracking-wide text-[#024059]/60">{getDepartmentName(row.department)}</p>
+                        <p className="text-xs font-bold uppercase tracking-wide text-[#024059]/60">{row.departmentName} - {row.collegeName}</p>
                       </div>
                       <Badge className="bg-[#eef4f8] text-[#024059] hover:bg-[#eef4f8] border-0 uppercase text-[10px] font-black tracking-wide">
                         {methodLabel(row.consultation_method)}
@@ -192,7 +298,7 @@ export default function KioskScheduleDirectory() {
                         <div className="space-y-2">
                           {slotPreview.map((slot) => (
                             <div key={`${slot.dateLabel}-${slot.timeLabel}-${slot.methodLabel}`} className="flex items-center justify-between text-sm rounded-xl bg-white px-3 py-2 border border-[#ecf1f6]">
-                              <span className="font-bold text-slate-800">{slot.dateLabel} • {slot.timeLabel}</span>
+                              <span className="font-bold text-slate-800">{slot.dateLabel} - {slot.timeLabel}</span>
                               <span className="text-[11px] font-black uppercase tracking-wide text-[#024059]/70">{slot.methodLabel}</span>
                             </div>
                           ))}

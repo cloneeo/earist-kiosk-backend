@@ -4,6 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { kioskSupabase } from "@/lib/supabaseKiosk";
 import { ChevronLeft, Monitor, Search, Users } from "lucide-react";
 
@@ -19,7 +26,18 @@ type FacultyWithQueue = {
   id: string;
   name: string;
   consultation_method: string | null;
-  department: { name: string } | { name: string }[] | null;
+  department_id: string | null;
+  department: {
+    id?: string;
+    name?: string;
+    college_id?: string;
+    college?: { id?: string; name?: string } | Array<{ id?: string; name?: string }>;
+  } | Array<{
+    id?: string;
+    name?: string;
+    college_id?: string;
+    college?: { id?: string; name?: string } | Array<{ id?: string; name?: string }>;
+  }> | null;
   queue_entries: QueueEntry[] | null;
 };
 
@@ -28,6 +46,20 @@ type StudentRow = {
   full_name: string | null;
   student_name: string | null;
   name: string | null;
+};
+
+type MonitorRow = {
+  id: string;
+  facultyName: string;
+  departmentId: string;
+  departmentName: string;
+  collegeId: string;
+  collegeName: string;
+  methodLabel: string;
+  inSession: string;
+  waitingCount: number;
+  queuePreview: string[];
+  queueStudents: Array<{ entryId: string; displayName: string; studentNumber: string }>;
 };
 
 const normalizeStudentNumber = (studentId: string) => studentId.trim().toUpperCase();
@@ -43,34 +75,39 @@ const maskStudentNumber = (studentId: string) => {
   return `${normalized.slice(0, 3)}*****${normalized.slice(-1)}`;
 };
 
-const getDepartmentName = (department: FacultyWithQueue["department"]) => {
-  if (!department) return "No department";
-  if (Array.isArray(department)) return department[0]?.name || "No department";
-  return department.name || "No department";
+const getDepartmentValue = (department: FacultyWithQueue["department"]) => {
+  if (!department) {
+    return { id: "unassigned-dept", name: "No department", collegeId: "unassigned-college", collegeName: "No college" };
+  }
+
+  const source = Array.isArray(department) ? department[0] : department;
+  const collegeSource = Array.isArray(source?.college) ? source.college[0] : source?.college;
+
+  return {
+    id: String(source?.id || source?.name || "unassigned-dept"),
+    name: String(source?.name || "No department"),
+    collegeId: String(source?.college_id || collegeSource?.id || collegeSource?.name || "unassigned-college"),
+    collegeName: String(collegeSource?.name || "No college"),
+  };
 };
 
 export default function KioskQueueMonitor() {
   const [, setLocation] = useLocation();
   const [search, setSearch] = useState("");
+  const [studentLookup, setStudentLookup] = useState("");
+  const [selectedCollege, setSelectedCollege] = useState("all");
+  const [selectedDepartment, setSelectedDepartment] = useState("all");
+  const [selectedFaculty, setSelectedFaculty] = useState("all");
+  const [selectedStudentEntry, setSelectedStudentEntry] = useState("all");
   const [loading, setLoading] = useState(true);
-  const [rows, setRows] = useState<
-    Array<{
-      id: string;
-      facultyName: string;
-      departmentName: string;
-      methodLabel: string;
-      inSession: string;
-      waitingCount: number;
-      queuePreview: string[];
-    }>
-  >([]);
+  const [rows, setRows] = useState<MonitorRow[]>([]);
 
   const loadMonitor = useCallback(async () => {
     setLoading(true);
 
     const { data: facultyRows, error: facultyError } = await kioskSupabase
       .from("faculty")
-      .select("id, name, consultation_method, status, department:departments(name), queue_entries(id, student_number, status, called_at, created_at)")
+      .select("id, name, consultation_method, status, department_id, department:departments(id, name, college_id, college:colleges(id, name)), queue_entries(id, student_number, status, called_at, created_at)")
       .eq("status", "accepting")
       .order("name");
 
@@ -138,15 +175,11 @@ export default function KioskQueueMonitor() {
 
     const displayName = (entry: QueueEntry) => {
       const key = normalizeStudentNumber(entry.student_number || "");
-      return (
-        historyNameMap[entry.id] ||
-        studentNameMap[key] ||
-        maskStudentNumber(entry.student_number || "") ||
-        "Unknown"
-      );
+      return historyNameMap[entry.id] || studentNameMap[key] || maskStudentNumber(entry.student_number || "") || "Unknown";
     };
 
     const formattedRows = typedRows.map((faculty) => {
+      const dept = getDepartmentValue(faculty.department);
       const activeEntries = (faculty.queue_entries || [])
         .filter((entry) => entry.status === "called" || entry.status === "waiting")
         .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
@@ -164,12 +197,20 @@ export default function KioskQueueMonitor() {
       return {
         id: faculty.id,
         facultyName: faculty.name,
-        departmentName: getDepartmentName(faculty.department),
+        departmentId: dept.id,
+        departmentName: dept.name,
+        collegeId: dept.collegeId,
+        collegeName: dept.collegeName,
         methodLabel: faculty.consultation_method === "online" ? "Online" : "F2F",
         inSession: inSessionEntry ? displayName(inSessionEntry) : "No active consultation",
         waitingCount: waitingEntries.length,
         queuePreview: waitingEntries.slice(0, 3).map((entry) => displayName(entry)),
-      };
+        queueStudents: activeEntries.map((entry) => ({
+          entryId: entry.id,
+          displayName: displayName(entry),
+          studentNumber: normalizeStudentNumber(entry.student_number || ""),
+        })),
+      } as MonitorRow;
     });
 
     setRows(formattedRows);
@@ -191,16 +232,71 @@ export default function KioskQueueMonitor() {
     };
   }, [loadMonitor]);
 
+  const collegeOptions = useMemo(() => {
+    const unique = new Map<string, string>();
+    rows.forEach((row) => unique.set(row.collegeId, row.collegeName));
+    return Array.from(unique.entries()).map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
+  }, [rows]);
+
+  const departmentOptions = useMemo(() => {
+    const source = selectedCollege === "all" ? rows : rows.filter((row) => row.collegeId === selectedCollege);
+    const unique = new Map<string, string>();
+    source.forEach((row) => unique.set(row.departmentId, row.departmentName));
+    return Array.from(unique.entries()).map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
+  }, [rows, selectedCollege]);
+
+  const facultyOptions = useMemo(() => {
+    const source = rows.filter((row) => {
+      if (selectedCollege !== "all" && row.collegeId !== selectedCollege) return false;
+      if (selectedDepartment !== "all" && row.departmentId !== selectedDepartment) return false;
+      return true;
+    });
+    return source.map((row) => ({ id: row.id, name: row.facultyName })).sort((a, b) => a.name.localeCompare(b.name));
+  }, [rows, selectedCollege, selectedDepartment]);
+
+  const studentOptions = useMemo(() => {
+    const source = rows.filter((row) => {
+      if (selectedCollege !== "all" && row.collegeId !== selectedCollege) return false;
+      if (selectedDepartment !== "all" && row.departmentId !== selectedDepartment) return false;
+      if (selectedFaculty !== "all" && row.id !== selectedFaculty) return false;
+      return true;
+    });
+
+    const all = source.flatMap((row) =>
+      row.queueStudents.map((student) => ({
+        value: `${row.id}:${student.entryId}`,
+        label: `${student.displayName} - ${maskStudentNumber(student.studentNumber)} - ${row.facultyName}`,
+        searchText: `${student.displayName} ${student.studentNumber} ${row.facultyName}`.toLowerCase(),
+      })),
+    );
+
+    const lookup = studentLookup.trim().toLowerCase();
+    return lookup ? all.filter((item) => item.searchText.includes(lookup)) : all;
+  }, [rows, selectedCollege, selectedDepartment, selectedFaculty, studentLookup]);
+
   const filteredRows = useMemo(() => {
     const needle = search.trim().toLowerCase();
-    if (!needle) return rows;
+
     return rows.filter((row) => {
+      if (selectedCollege !== "all" && row.collegeId !== selectedCollege) return false;
+      if (selectedDepartment !== "all" && row.departmentId !== selectedDepartment) return false;
+      if (selectedFaculty !== "all" && row.id !== selectedFaculty) return false;
+      if (selectedStudentEntry !== "all") {
+        const [, entryId] = selectedStudentEntry.split(":");
+        if (!row.queueStudents.some((student) => student.entryId === entryId)) return false;
+      }
+
+      if (!needle) return true;
+
+      const queueText = row.queueStudents.map((student) => `${student.displayName} ${student.studentNumber}`).join(" ").toLowerCase();
       return (
         row.facultyName.toLowerCase().includes(needle) ||
-        row.departmentName.toLowerCase().includes(needle)
+        row.departmentName.toLowerCase().includes(needle) ||
+        row.collegeName.toLowerCase().includes(needle) ||
+        queueText.includes(needle)
       );
     });
-  }, [rows, search]);
+  }, [rows, search, selectedCollege, selectedDepartment, selectedFaculty, selectedStudentEntry]);
 
   return (
     <div className="min-h-screen bg-[#f4f2f7] p-4 sm:p-8">
@@ -214,19 +310,71 @@ export default function KioskQueueMonitor() {
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search professor or department"
+              placeholder="Search professor, department, college, or student"
               className="pl-9 rounded-2xl border-[#d9dde2] bg-white"
             />
           </div>
         </div>
 
         <Card className="rounded-[28px] border-0 shadow-sm bg-white">
-          <CardContent className="p-6 sm:p-7">
+          <CardContent className="p-6 sm:p-7 space-y-4">
             <div className="flex items-center gap-3 mb-2">
               <Monitor className="text-[#c62828]" size={20} />
               <h1 className="text-2xl font-black tracking-tight text-[#024059]">Professor Queue Monitor</h1>
             </div>
-            <p className="text-sm text-[#024059]/70">Live faculty-by-faculty view of current consultations and waiting students.</p>
+            <p className="text-sm text-[#024059]/70">Filter by college, department, faculty, or student name/number for faster lookup.</p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <Select value={selectedCollege} onValueChange={setSelectedCollege}>
+                <SelectTrigger className="rounded-xl bg-white"><SelectValue placeholder="College" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Colleges</SelectItem>
+                  {collegeOptions.map((option) => (
+                    <SelectItem key={option.id} value={option.id}>{option.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+                <SelectTrigger className="rounded-xl bg-white"><SelectValue placeholder="Department" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Departments</SelectItem>
+                  {departmentOptions.map((option) => (
+                    <SelectItem key={option.id} value={option.id}>{option.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedFaculty} onValueChange={setSelectedFaculty}>
+                <SelectTrigger className="rounded-xl bg-white"><SelectValue placeholder="Faculty" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Faculty</SelectItem>
+                  {facultyOptions.map((option) => (
+                    <SelectItem key={option.id} value={option.id}>{option.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedStudentEntry} onValueChange={setSelectedStudentEntry}>
+                <SelectTrigger className="rounded-xl bg-white"><SelectValue placeholder="Student (scroll list)" /></SelectTrigger>
+                <SelectContent className="max-h-64">
+                  <SelectItem value="all">All Students</SelectItem>
+                  {studentOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="relative">
+              <Search className="w-4 h-4 text-[#024059]/55 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Input
+                value={studentLookup}
+                onChange={(event) => setStudentLookup(event.target.value)}
+                placeholder="Type student number or name"
+                className="pl-9 rounded-xl border-[#d9dde2] bg-white"
+              />
+            </div>
           </CardContent>
         </Card>
 
@@ -242,7 +390,7 @@ export default function KioskQueueMonitor() {
           {!loading && filteredRows.length === 0 && (
             <Card className="md:col-span-2 rounded-[24px] border-0 shadow-sm">
               <CardContent className="p-10 text-center text-[#024059]/65 text-sm font-bold uppercase tracking-wider">
-                No faculty rows match your search.
+                No faculty rows match your filters.
               </CardContent>
             </Card>
           )}
@@ -254,7 +402,7 @@ export default function KioskQueueMonitor() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-lg font-black text-slate-900 leading-tight">{row.facultyName}</p>
-                      <p className="text-xs font-bold uppercase tracking-wide text-[#024059]/60">{row.departmentName}</p>
+                      <p className="text-xs font-bold uppercase tracking-wide text-[#024059]/60">{row.departmentName} - {row.collegeName}</p>
                     </div>
                     <Badge className="bg-[#eef4f8] text-[#024059] hover:bg-[#eef4f8] border-0 uppercase text-[10px] font-black tracking-wide">
                       {row.methodLabel}
@@ -273,10 +421,10 @@ export default function KioskQueueMonitor() {
                     <p className="font-black text-[#024059]">{row.waitingCount}</p>
                   </div>
 
-                  <div className="mt-3 space-y-2">
+                  <div className="mt-3 space-y-2 max-h-36 overflow-y-auto pr-1">
                     {row.queuePreview.length > 0 ? (
                       row.queuePreview.map((name) => (
-                        <div key={name} className="text-sm font-bold text-slate-700 rounded-xl bg-[#f7f7fb] px-3 py-2">
+                        <div key={`${row.id}-${name}`} className="text-sm font-bold text-slate-700 rounded-xl bg-[#f7f7fb] px-3 py-2">
                           {name}
                         </div>
                       ))
