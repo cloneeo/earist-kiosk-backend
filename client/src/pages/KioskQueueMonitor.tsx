@@ -254,6 +254,18 @@ export default function KioskQueueMonitor() {
     return source.map((row) => ({ id: row.id, name: row.facultyName })).sort((a, b) => a.name.localeCompare(b.name));
   }, [rows, selectedCollege, selectedDepartment]);
 
+  useEffect(() => {
+    if (selectedDepartment === "all") return;
+    const exists = departmentOptions.some((option) => option.id === selectedDepartment);
+    if (!exists) setSelectedDepartment("all");
+  }, [selectedDepartment, departmentOptions]);
+
+  useEffect(() => {
+    if (selectedFaculty === "all") return;
+    const exists = facultyOptions.some((option) => option.id === selectedFaculty);
+    if (!exists) setSelectedFaculty("all");
+  }, [selectedFaculty, facultyOptions]);
+
   const studentOptions = useMemo(() => {
     const source = rows.filter((row) => {
       if (selectedCollege !== "all" && row.collegeId !== selectedCollege) return false;
@@ -273,6 +285,12 @@ export default function KioskQueueMonitor() {
     const lookup = studentLookup.trim().toLowerCase();
     return lookup ? all.filter((item) => item.searchText.includes(lookup)) : all;
   }, [rows, selectedCollege, selectedDepartment, selectedFaculty, studentLookup]);
+
+  useEffect(() => {
+    if (selectedStudentEntry === "all") return;
+    const exists = studentOptions.some((option) => option.value === selectedStudentEntry);
+    if (!exists) setSelectedStudentEntry("all");
+  }, [selectedStudentEntry, studentOptions]);
 
   const filteredRows = useMemo(() => {
     const needle = search.trim().toLowerCase();
@@ -302,7 +320,7 @@ export default function KioskQueueMonitor() {
     <div className="min-h-screen bg-[#f4f2f7] p-4 sm:p-8">
       <div className="max-w-6xl mx-auto space-y-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <Button variant="ghost" className="w-fit text-[#024059]" onClick={() => setLocation("/")}>
+          <Button variant="ghost" className="w-fit text-[#024059]" onClick={() => setLocation("/kiosk")}>
             <ChevronLeft size={18} className="mr-2" /> Back to Home
           </Button>
           <div className="relative w-full sm:w-96">

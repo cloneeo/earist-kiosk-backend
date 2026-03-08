@@ -178,6 +178,18 @@ export default function KioskScheduleDirectory() {
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [enrichedRows, selectedCollege, selectedDepartment]);
 
+  useEffect(() => {
+    if (selectedDepartment === "all") return;
+    const exists = departmentOptions.some((option) => option.id === selectedDepartment);
+    if (!exists) setSelectedDepartment("all");
+  }, [selectedDepartment, departmentOptions]);
+
+  useEffect(() => {
+    if (selectedFaculty === "all") return;
+    const exists = facultyOptions.some((option) => option.id === selectedFaculty);
+    if (!exists) setSelectedFaculty("all");
+  }, [selectedFaculty, facultyOptions]);
+
   const filteredRows = useMemo(() => {
     const needle = search.trim().toLowerCase();
 
@@ -201,7 +213,7 @@ export default function KioskScheduleDirectory() {
     <div className="min-h-screen bg-[#f4f2f7] p-4 sm:p-8">
       <div className="max-w-6xl mx-auto space-y-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <Button variant="ghost" className="w-fit text-[#024059]" onClick={() => setLocation("/")}>
+          <Button variant="ghost" className="w-fit text-[#024059]" onClick={() => setLocation("/kiosk")}>
             <ChevronLeft size={18} className="mr-2" /> Back to Home
           </Button>
           <div className="relative w-full sm:w-96">
