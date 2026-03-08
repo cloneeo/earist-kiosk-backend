@@ -289,7 +289,7 @@ export default function KioskScheduleDirectory() {
             </div>
             <p className="text-sm text-[#024059]/70">Use dropdowns to view schedules per college, department, and faculty.</p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Select
                 value={selectedCollege}
                 onValueChange={(value) => {
@@ -323,15 +323,19 @@ export default function KioskScheduleDirectory() {
                 </SelectContent>
               </Select>
 
-              <Select value={selectedFaculty} onValueChange={setSelectedFaculty}>
-                <SelectTrigger className="rounded-xl bg-white"><SelectValue placeholder="Faculty" /></SelectTrigger>
-                <SelectContent className="max-h-64">
-                  <SelectItem value="all">All Faculty</SelectItem>
-                  {facultyOptions.map((option) => (
-                    <SelectItem key={option.id} value={option.id}>{option.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="sm:col-span-2">
+                <Select value={selectedFaculty} onValueChange={setSelectedFaculty}>
+                  <SelectTrigger className="rounded-xl bg-white min-h-10 h-auto py-1.5 text-[11px] font-black text-left [&>span]:whitespace-normal [&>span]:leading-tight [&>span]:break-words">
+                    <SelectValue placeholder="Faculty" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-64">
+                    <SelectItem value="all">All Faculty</SelectItem>
+                    {facultyOptions.map((option) => (
+                      <SelectItem key={option.id} value={option.id}>{option.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -362,7 +366,7 @@ export default function KioskScheduleDirectory() {
                   <CardContent className="p-5">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-lg font-black text-slate-900 leading-tight">{row.name}</p>
+                        <p className="text-base sm:text-lg font-black text-slate-900 leading-snug break-words">{row.name}</p>
                         <p className="text-xs font-bold uppercase tracking-wide text-[#024059]/60">{row.departmentName} - {row.collegeName}</p>
                       </div>
                       <Badge className="bg-[#eef4f8] text-[#024059] hover:bg-[#eef4f8] border-0 uppercase text-[10px] font-black tracking-wide">

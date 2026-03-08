@@ -701,7 +701,7 @@ export default function StudentKiosk() {
                 <Monitor size={18} className="text-[#c62828]" />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                 <div>
                   <p className="text-[9px] font-black uppercase tracking-widest text-[#c62828]/65 mb-1.5">
                     College
@@ -747,7 +747,7 @@ export default function StudentKiosk() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
+                <div className="sm:col-span-2">
                   <p className="text-[9px] font-black uppercase tracking-widest text-[#c62828]/65 mb-1.5">
                     Professor
                   </p>
@@ -756,7 +756,7 @@ export default function StudentKiosk() {
                     onValueChange={(value) => setSelectedMonitorProf(value)}
                     disabled={monitorFaculties.length === 0}
                   >
-                    <SelectTrigger className="rounded-lg border-slate-200 h-9 text-[10px] font-black uppercase tracking-wide">
+                    <SelectTrigger className="rounded-lg border-slate-200 min-h-9 h-auto py-1.5 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.08em] text-left [&>span]:whitespace-normal [&>span]:leading-tight [&>span]:break-words">
                       <SelectValue placeholder="Select Professor" />
                     </SelectTrigger>
                     <SelectContent>
@@ -806,7 +806,7 @@ export default function StudentKiosk() {
                 <p className="text-[10px] font-black text-[#c62828]/65 uppercase tracking-widest mb-2">
                   Selected Professor
                 </p>
-                <p className="text-base font-black text-slate-800 leading-tight">
+                <p className="text-sm sm:text-[15px] font-black text-slate-800 leading-snug break-words">
                   {selectedFaculty?.name || "No professor selected"}
                 </p>
                 <p className="text-[10px] font-bold text-[#c62828]/65 uppercase tracking-widest mt-1">
