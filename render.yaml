@@ -4,8 +4,8 @@ services:
     env: node
     plan: free
     autoDeploy: true
-    buildCommand: NPM_CONFIG_PRODUCTION=false NODE_ENV=development npm install --legacy-peer-deps && npm run build
-    startCommand: npm run start
+    buildCommand: corepack enable && corepack prepare pnpm@10.4.1 --activate && pnpm install --frozen-lockfile && pnpm run build
+    startCommand: pnpm run start
     envVars:
       - key: NODE_ENV
         value: production

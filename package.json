@@ -10,7 +10,7 @@
     "dev": "cross-env NODE_ENV=development tsx watch server/_core/index.ts",
     "build:client": "node ./node_modules/vite/bin/vite.js build",
     "build:server": "node ./node_modules/esbuild/bin/esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
-    "build": "npm run build:client && npm run build:server",
+    "build": "node ./node_modules/vite/bin/vite.js build && node ./node_modules/esbuild/bin/esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "NODE_ENV=production node dist/index.js",
     "check": "tsc --noEmit",
     "format": "prettier --write .",
