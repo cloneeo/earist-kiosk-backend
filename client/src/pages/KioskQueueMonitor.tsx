@@ -474,7 +474,7 @@ export default function KioskQueueMonitor() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {loading && (
             <Card className="md:col-span-2 rounded-[24px] border-0 shadow-sm">
-              <CardContent className="p-10 text-center text-[#024059]/65 text-sm font-bold uppercase tracking-wider">
+              <CardContent className="p-6 sm:p-10 text-center text-[#024059]/65 text-sm font-bold uppercase tracking-wider">
                 Loading queue monitor...
               </CardContent>
             </Card>
@@ -482,7 +482,7 @@ export default function KioskQueueMonitor() {
 
           {!loading && filteredRows.length === 0 && (
             <Card className="md:col-span-2 rounded-[24px] border-0 shadow-sm">
-              <CardContent className="p-10 text-center text-[#024059]/65 text-sm font-bold uppercase tracking-wider">
+              <CardContent className="p-6 sm:p-10 text-center text-[#024059]/65 text-sm font-bold uppercase tracking-wider">
                 No faculty rows match your filters.
               </CardContent>
             </Card>
@@ -492,12 +492,12 @@ export default function KioskQueueMonitor() {
             filteredRows.map((row) => (
               <Card key={row.id} className="rounded-[24px] border-0 shadow-sm bg-white overflow-hidden">
                 <CardContent className="p-5">
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <p className="text-lg font-black text-slate-900 leading-tight">{row.facultyName}</p>
+                      <p className="text-lg font-black text-slate-900 leading-tight break-words">{row.facultyName}</p>
                       <p className="text-xs font-bold uppercase tracking-wide text-[#024059]/60">{row.departmentName} - {row.collegeName}</p>
                     </div>
-                    <Badge className="bg-[#eef4f8] text-[#024059] hover:bg-[#eef4f8] border-0 uppercase text-[10px] font-black tracking-wide">
+                    <Badge className="w-fit bg-[#eef4f8] text-[#024059] hover:bg-[#eef4f8] border-0 uppercase text-[10px] font-black tracking-wide">
                       {row.methodLabel}
                     </Badge>
                   </div>
@@ -517,7 +517,7 @@ export default function KioskQueueMonitor() {
                   <div className="mt-3 space-y-2 max-h-36 overflow-y-auto pr-1">
                     {row.queuePreview.length > 0 ? (
                       row.queuePreview.map((name) => (
-                        <div key={`${row.id}-${name}`} className="text-sm font-bold text-slate-700 rounded-xl bg-[#f7f7fb] px-3 py-2">
+                        <div key={`${row.id}-${name}`} className="text-sm font-bold text-slate-700 rounded-xl bg-[#f7f7fb] px-3 py-2 break-words">
                           {name}
                         </div>
                       ))

@@ -187,13 +187,13 @@ export default function StudentStatus() {
 
   if (error || !queueEntry || !faculty) {
     return (
-      <div className="min-h-screen bg-[#E8E6EB] p-8 flex flex-col items-center justify-center text-center">
+      <div className="min-h-screen bg-[#E8E6EB] p-4 sm:p-8 flex flex-col items-center justify-center text-center">
         <div className="w-20 h-20 bg-[#E8E6EB]/60 text-[#024059] rounded-[28px] flex items-center justify-center mb-6">
            <AlertCircle size={40} />
         </div>
         <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-2">Ticket Not Found</h2>
         <p className="text-[#024059]/65 font-medium max-w-xs mb-8">This session may have ended or the Ticket ID entered is incorrect.</p>
-        <Button onClick={() => setLocation("/kiosk")} className="bg-[#024059] hover:bg-[#024059] text-white rounded-2xl h-16 px-10 font-black uppercase tracking-widest shadow-xl shadow-[#024059]/20 active:scale-95 transition-all">
+        <Button onClick={() => setLocation("/kiosk")} className="bg-[#024059] hover:bg-[#024059] text-white rounded-2xl h-14 sm:h-16 px-8 sm:px-10 font-black uppercase tracking-widest shadow-xl shadow-[#024059]/20 active:scale-95 transition-all">
           Back to Kiosk
         </Button>
       </div>
@@ -206,7 +206,7 @@ export default function StudentStatus() {
 
   return (
     <div className="min-h-screen bg-[#E8E6EB] flex flex-col font-sans">
-      <header className="px-8 py-6 flex items-center justify-between bg-white border-b border-[#E8E6EB] shadow-sm sticky top-0 z-30">
+      <header className="px-4 py-4 sm:px-6 sm:py-5 lg:px-8 flex items-center justify-between bg-white border-b border-[#E8E6EB] shadow-sm sticky top-0 z-30">
         <button onClick={() => setLocation("/kiosk")} className="text-[#024059]/65 hover:text-[#024059] transition-colors flex items-center gap-2 font-black text-[10px] uppercase tracking-widest">
           <ChevronLeft className="w-5 h-5" /> Kiosk
         </button>
@@ -218,7 +218,7 @@ export default function StudentStatus() {
         </button>
       </header>
 
-      <main className="flex-1 p-8 flex flex-col items-center max-w-2xl mx-auto w-full">
+      <main className="flex-1 p-4 sm:p-6 lg:p-8 flex flex-col items-center max-w-2xl mx-auto w-full">
         
         {/* STATUS INDICATOR */}
         <div className="text-center mb-10">
@@ -229,7 +229,7 @@ export default function StudentStatus() {
            >
              {isCalled ? <UserCheck className="w-10 h-10 animate-bounce" /> : <Clock className="w-10 h-10" />}
            </motion.div>
-           <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tighter leading-none">
+           <h2 className="text-3xl sm:text-4xl font-black text-slate-900 uppercase tracking-tighter leading-none">
              {isCalled ? "You are Next!" : "In the Queue"}
            </h2>
            <p className="text-[10px] font-black text-[#024059]/65 uppercase tracking-[0.2em] mt-3">Active Session for Student {queueEntry.student_number}</p>
@@ -239,9 +239,9 @@ export default function StudentStatus() {
           {/* POSITION CARD */}
           <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="relative">
             <div className={`absolute -top-4 left-6 right-6 h-12 rounded-t-[32px] z-0 shadow-inner ${isCalled ? 'bg-[#024059]' : 'bg-[#E8E6EB]/70'}`} />
-            <Card className="relative z-10 border-0 shadow-[0_20px_40px_rgba(0,0,0,0.04)] rounded-[40px] overflow-hidden bg-white text-center p-10">
+            <Card className="relative z-10 border-0 shadow-[0_20px_40px_rgba(0,0,0,0.04)] rounded-[40px] overflow-hidden bg-white text-center p-6 sm:p-8 md:p-10">
               <p className="text-[10px] font-black text-[#024059]/55 uppercase tracking-[0.3em] mb-2">Queue Position</p>
-              <h3 className={`text-7xl font-black tracking-tighter ${isCalled ? 'text-[#024059]' : 'text-slate-800'}`}>
+              <h3 className={`text-5xl sm:text-6xl md:text-7xl font-black tracking-tighter ${isCalled ? 'text-[#024059]' : 'text-slate-800'}`}>
                 {isCalled ? "NOW" : `#${(queuePosition || 0) + 1}`}
               </h3>
               <div className="mt-6 pt-6 border-t border-slate-50 flex items-center justify-center gap-2 text-slate-500 font-black text-[10px] uppercase tracking-widest">
@@ -252,7 +252,7 @@ export default function StudentStatus() {
 
           {/* DETAILS CARD */}
           <motion.div initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.1 }}>
-            <Card className="border-0 shadow-[0_20px_40px_rgba(0,0,0,0.04)] rounded-[40px] bg-white p-10 h-full flex flex-col justify-between">
+            <Card className="border-0 shadow-[0_20px_40px_rgba(0,0,0,0.04)] rounded-[40px] bg-white p-6 sm:p-8 md:p-10 h-full flex flex-col justify-between">
               <div className="space-y-6">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-[#024059] shadow-inner"><Users className="w-6 h-6" /></div>
@@ -288,9 +288,9 @@ export default function StudentStatus() {
 
         {/* MOBILE SCAN SECTION */}
         <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="w-full">
-          <Card className="border-0 shadow-[0_30px_60px_rgba(0,0,0,0.06)] rounded-[48px] bg-white p-12 text-center flex flex-col items-center gap-8 border-t-8 border-[#024059]">
+          <Card className="border-0 shadow-[0_30px_60px_rgba(0,0,0,0.06)] rounded-[48px] bg-white p-6 sm:p-8 md:p-12 text-center flex flex-col items-center gap-8 border-t-8 border-[#024059]">
             <div className="p-6 bg-white rounded-[40px] shadow-inner border-2 border-dashed border-[#E8E6EB] group hover:border-[#024059] transition-colors">
-               <QRCodeSVG value={shareUrl} size={180} />
+               <QRCodeSVG value={shareUrl} size={160} />
             </div>
             <div>
               <h3 className="font-black text-slate-900 uppercase tracking-tight text-xl">Take it with you</h3>
@@ -302,7 +302,7 @@ export default function StudentStatus() {
           </Card>
         </motion.div>
 
-        <footer className="mt-16 text-center pb-12">
+        <footer className="mt-10 sm:mt-16 text-center pb-8 sm:pb-12">
           <p className="text-[10px] font-black text-slate-200 uppercase tracking-[0.4em]">
             EARIST QUEUE SYSTEM © 2026
           </p>

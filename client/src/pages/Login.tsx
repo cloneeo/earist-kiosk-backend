@@ -157,17 +157,17 @@ export default function Login() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Card className="border-0 shadow-[0_30px_60px_rgba(0,0,0,0.08)] bg-white rounded-[48px] overflow-hidden">
+          <Card className="border-0 shadow-[0_30px_60px_rgba(0,0,0,0.08)] bg-white rounded-[36px] sm:rounded-[48px] overflow-hidden">
             {/* Top Branding Strip */}
-            <div className="pt-14 pb-8 text-center border-t-[12px] border-[#c62828]">
+            <div className="pt-10 sm:pt-14 pb-7 sm:pb-8 text-center border-t-[10px] sm:border-t-[12px] border-[#c62828] px-4">
               <div className="w-20 h-20 bg-[#fff5f5] text-[#c62828] rounded-[28px] flex items-center justify-center mx-auto mb-6 shadow-inner">
                 <ShieldCheck size={40} />
               </div>
-              <h1 className="text-4xl font-black text-[#c62828] tracking-tight uppercase">Staff Portal</h1>
+              <h1 className="text-3xl sm:text-4xl font-black text-[#c62828] tracking-tight uppercase">Staff Portal</h1>
               <p className="text-[#c62828]/65 font-bold text-[10px] uppercase tracking-[0.3em] mt-2 opacity-70">Authorized EARIST Personnel Only</p>
             </div>
 
-            <CardContent className="px-10 pb-14">
+            <CardContent className="px-5 sm:px-10 pb-10 sm:pb-14">
               {viewMode === "login" && (
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {error && (
@@ -265,7 +265,7 @@ export default function Login() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <Button
                       type="button"
                       variant="outline"

@@ -41,12 +41,12 @@ const getPriorityStyles = (priority: string) => {
 
 export default function ConsultationList() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-[#E8E6EB]/35 p-6">
+    <div className="min-h-screen bg-gradient-to-b from-white to-[#E8E6EB]/35 p-4 sm:p-6">
       
       {/* Header and Add Button */}
-      <div className="flex items-center justify-between mb-8 pb-4 border-b border-[#E8E6EB]">
-        <h1 className="text-3xl font-bold text-[#024059]">Queue & Consultations</h1>
-        <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#024059] hover:bg-[#024059] text-white transition-colors">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8 pb-4 border-b border-[#E8E6EB]">
+        <h1 className="text-2xl sm:text-3xl font-bold text-[#024059]">Queue & Consultations</h1>
+        <button className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#024059] hover:bg-[#024059] text-white transition-colors">
           <PlusCircle className="w-5 h-5" />
           Add New Queue
         </button>
@@ -84,14 +84,14 @@ export default function ConsultationList() {
               <CardContent className="space-y-4">
                 
                 {/* Avatar and Status */}
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex items-start justify-between gap-4">
                   <div className="flex -space-x-3">
                     <Avatar className="w-9 h-9 border-2 border-white ring-1 ring-slate-100">
                       <AvatarImage src={consult.studentPhoto} alt={consult.studentName} />
                       <AvatarFallback>{consult.studentName[0]}</AvatarFallback>
                     </Avatar>
                   </div>
-                  <Badge className="bg-[#E8E6EB] text-[#024059] hover:bg-[#E8E6EB] rounded-md font-medium text-xs">
+                  <Badge className="bg-[#E8E6EB] text-[#024059] hover:bg-[#E8E6EB] rounded-md font-medium text-xs text-right">
                     {consult.status}
                   </Badge>
                 </div>
@@ -100,7 +100,7 @@ export default function ConsultationList() {
                 <div className="border-t border-slate-100"></div>
 
                 {/* Footer Info (mock stats) */}
-                <div className="flex items-center justify-between text-slate-500 text-sm">
+                <div className="flex items-center justify-between gap-3 text-slate-500 text-sm">
                   <div className="flex items-center gap-1.5">
                     <MessageSquareText className="w-4 h-4" /> 8
                   </div>

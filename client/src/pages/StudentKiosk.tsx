@@ -668,7 +668,7 @@ export default function StudentKiosk() {
                     </div>
                   </div>
 
-                  <DialogFooter className="p-6 pt-0 grid grid-cols-2 gap-3">
+                  <DialogFooter className="p-6 pt-0 grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <Button
                       type="button"
                       variant="outline"
@@ -701,7 +701,7 @@ export default function StudentKiosk() {
                 <Monitor size={18} className="text-[#c62828]" />
               </div>
 
-              <div className="grid grid-cols-3 gap-1.5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
                 <div>
                   <p className="text-[8px] font-black uppercase tracking-widest text-[#c62828]/60 mb-1">College</p>
                   <Select

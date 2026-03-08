@@ -517,6 +517,9 @@ export default defineConfig(({ mode }) => {
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    target: "es2018",
+    cssTarget: "chrome61",
+    chunkSizeWarningLimit: 1200,
   },
   server: {
     host: true,

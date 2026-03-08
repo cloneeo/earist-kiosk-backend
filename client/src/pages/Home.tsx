@@ -165,7 +165,7 @@ export default function Home() {
 
       <main className="max-w-7xl mx-auto w-full px-4 py-6 sm:px-8 sm:py-12 flex flex-col lg:flex-row gap-6 sm:gap-10">
         <div className="lg:w-[58%]">
-          <Card className="border-0 shadow-2xl rounded-[48px] overflow-hidden bg-white sticky top-24">
+          <Card className="border-0 shadow-2xl rounded-[48px] overflow-hidden bg-white lg:sticky lg:top-24">
             <div className="p-7 text-center sm:p-10 border-b border-[#f1e5e5]">
               <h2 className="text-3xl font-black uppercase leading-none tracking-tighter sm:text-4xl text-[#c62828]">Student Registration</h2>
               <p className="text-[#c62828] mt-3 text-sm font-black uppercase tracking-widest">Scan Student ID to Book Consultation</p>

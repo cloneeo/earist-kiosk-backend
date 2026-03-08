@@ -892,20 +892,20 @@ export default function FacultyDashboard() {
 
   return (
     <div className={`min-h-screen bg-[#f3f1f6] flex flex-col font-sans ${keyboardVisible ? "pb-64 md:pb-72" : ""}`}>
-      <nav className="bg-white border-b border-[#f3f1f6] px-8 py-4 flex justify-between items-center shadow-sm z-10">
+      <nav className="bg-white border-b border-[#f3f1f6] px-4 py-3 sm:px-6 sm:py-4 flex justify-between items-center gap-3 shadow-sm z-10">
         <div className="flex items-center gap-3">
           <div className="bg-[#c62828] p-2 rounded-lg text-white shadow-md"><Users className="w-5 h-5" /></div>
           <h1 className="text-xl font-extrabold text-[#c62828] tracking-tight uppercase">Faculty Portal</h1>
         </div>
-        <div className="flex items-center gap-6">
-          <p className="text-[10px] font-black text-[#c62828]/65 uppercase tracking-widest">Prof. {faculty?.name}</p>
+        <div className="flex items-center gap-3 sm:gap-6">
+          <p className="hidden sm:block text-[10px] font-black text-[#c62828]/65 uppercase tracking-widest">Prof. {faculty?.name}</p>
           <button onClick={() => signOut()} className="text-[#c62828]/65 hover:text-[#c62828] font-black uppercase tracking-widest text-[10px] flex items-center gap-2">
             <LogOut size={14} /> Logout
           </button>
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto w-full p-6 lg:p-10 grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div className="max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-10 grid grid-cols-1 lg:grid-cols-4 gap-6 sm:gap-8">
         <div className="lg:col-span-1 space-y-6">
           {/* SCHEDULE EDITOR */}
           <Card className="border-0 shadow-sm rounded-3xl bg-white overflow-hidden border-b-4 border-[#f3f1f6]">
@@ -1095,8 +1095,8 @@ export default function FacultyDashboard() {
         </div>
 
         <div className="lg:col-span-3 space-y-8">
-          <div className="flex items-center justify-end">
-            <div className="flex gap-2 bg-white p-1 rounded-xl border border-slate-100">
+          <div className="flex items-center justify-start sm:justify-end">
+            <div className="flex gap-2 bg-white p-1 rounded-xl border border-slate-100 overflow-x-auto w-full sm:w-auto">
               <Button
                 variant={activePanel === "queue" ? "default" : "ghost"}
                 className={activePanel === "queue" ? "bg-[#c62828] text-white rounded-lg h-8 px-4 text-[10px] font-black uppercase" : "rounded-lg h-8 px-4 text-[10px] font-black uppercase text-slate-500"}
@@ -1119,7 +1119,7 @@ export default function FacultyDashboard() {
 
           {activePanel === "recordings" ? (
             <Card className="border-0 shadow-sm rounded-[32px] bg-white overflow-hidden">
-              <CardHeader className="bg-slate-50 px-8 py-6 border-b border-slate-100 flex flex-row justify-between items-center">
+              <CardHeader className="bg-slate-50 px-4 sm:px-6 lg:px-8 py-5 sm:py-6 border-b border-slate-100 flex flex-row justify-between items-center gap-3">
                 <CardTitle className="text-slate-800 font-black uppercase tracking-widest text-xs">Recent Recordings (48h)</CardTitle>
                 <Badge className="bg-slate-200 text-slate-600 font-black px-3 py-1 rounded-lg text-[10px]">{recordings.length}</Badge>
               </CardHeader>
@@ -1155,12 +1155,12 @@ export default function FacultyDashboard() {
           <div className="relative">
             <div className="absolute -top-4 left-6 right-6 bg-[#c62828] rounded-t-[40px] h-24 shadow-inner opacity-40"></div>
             <Card className="relative z-10 border-0 shadow-2xl rounded-[40px] bg-white overflow-hidden min-h-[450px] flex flex-col">
-              <CardHeader className="border-b border-slate-50 flex flex-row justify-between items-center px-10 py-8">
+              <CardHeader className="border-b border-slate-50 flex flex-col sm:flex-row justify-between sm:items-center px-4 sm:px-6 lg:px-10 py-5 sm:py-8 gap-3">
                 <CardTitle className="text-xs font-black uppercase text-[#c62828]/65 tracking-[0.2em]">Queue Monitor</CardTitle>
                 {timeLeft !== null && <Badge className={`font-mono px-6 py-2 rounded-full text-xl shadow-inner ${timeLeft < 60 ? 'bg-[#c62828] text-white animate-pulse' : 'bg-slate-50 text-slate-600 border border-slate-100'}`}>{formatTime(timeLeft)}</Badge>}
               </CardHeader>
               
-              <CardContent className="flex-grow flex flex-col items-center justify-center p-10 text-center">
+              <CardContent className="flex-grow flex flex-col items-center justify-center p-5 sm:p-8 lg:p-10 text-center">
                 <AnimatePresence mode="wait">
                   {currentCalling ? (
                     <motion.div key="active" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="space-y-10 w-full">
@@ -1169,7 +1169,7 @@ export default function FacultyDashboard() {
                         {currentCalling.student_name && (
                           <p className="text-xl font-black text-[#c62828] tracking-wide">{currentCalling.student_name}</p>
                         )}
-                        <h2 className="text-7xl font-black text-slate-900 tracking-tighter">{currentCalling.student_number}</h2>
+                        <h2 className="text-4xl sm:text-6xl lg:text-7xl font-black text-slate-900 tracking-tighter break-words">{currentCalling.student_number}</h2>
                         <div className="flex items-center justify-center gap-2 mt-4">
                           <span className="text-[#c62828]/65 font-bold uppercase tracking-widest text-[10px]">Method:</span>
                           {currentCalling.consultation_type === "google_meet" ? (
@@ -1204,12 +1204,12 @@ export default function FacultyDashboard() {
                           <p className="text-sm font-bold text-slate-700 leading-relaxed">{currentCalling.concern}</p>
                         </div>
                       )}
-                      <div className="flex gap-4 pt-4 max-w-sm mx-auto w-full">
+                      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4 max-w-sm mx-auto w-full">
                         {currentCalling.consultation_type === "google_meet" && !isRecording && (
                           <Button
                             type="button"
                             variant="outline"
-                            className="h-16 px-4 rounded-2xl border-[#f3f1f6] text-[#c62828] font-black uppercase tracking-widest text-[10px]"
+                            className="h-12 sm:h-16 px-4 rounded-2xl border-[#f3f1f6] text-[#c62828] font-black uppercase tracking-widest text-[10px]"
                             onClick={() => setRecordingMode((prev) => (prev === "meet_tab" ? "mic" : "meet_tab"))}
                             disabled={isUploadingRecording}
                           >
@@ -1232,10 +1232,10 @@ export default function FacultyDashboard() {
                           {isRecording ? <Square size={14} className="mr-2" /> : <Mic size={14} className="mr-2" />}
                           {isRecording ? "Stop Rec" : recordingMode === "meet_tab" && currentCalling.consultation_type === "google_meet" ? "Record Meet" : "Record"}
                         </Button>
-                        <Button className="flex-1 h-16 bg-[#f3f1f6]/60 text-[#c62828] hover:bg-[#f3f1f6]/70 rounded-2xl border-0 font-black uppercase tracking-widest text-[10px] shadow-sm" onClick={() => handleComplete(currentCalling.id)}>
+                        <Button className="flex-1 h-12 sm:h-16 bg-[#f3f1f6]/60 text-[#c62828] hover:bg-[#f3f1f6]/70 rounded-2xl border-0 font-black uppercase tracking-widest text-[10px] shadow-sm" onClick={() => handleComplete(currentCalling.id)}>
                           Complete
                         </Button>
-                        <Button className="flex-1 h-16 bg-[#f3f1f6]/60 text-[#c62828] hover:bg-[#f3f1f6]/70 rounded-2xl border-0 font-black uppercase tracking-widest text-[10px] shadow-sm" onClick={() => handleSkip(currentCalling.id)}>
+                        <Button className="flex-1 h-12 sm:h-16 bg-[#f3f1f6]/60 text-[#c62828] hover:bg-[#f3f1f6]/70 rounded-2xl border-0 font-black uppercase tracking-widest text-[10px] shadow-sm" onClick={() => handleSkip(currentCalling.id)}>
                           Skip
                         </Button>
                       </div>
@@ -1244,7 +1244,7 @@ export default function FacultyDashboard() {
                     <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
                       <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto opacity-40"><Users size={32} className="text-[#c62828]/55" /></div>
                       <p className="text-[#c62828]/55 font-black uppercase tracking-[0.4em] text-xs">No active session</p>
-                      <Button className="bg-[#c62828] hover:bg-[#c62828] text-white px-12 h-16 rounded-[24px] font-black text-lg shadow-xl shadow-[#c62828]/20 uppercase tracking-widest flex items-center gap-3 transition-all active:scale-95" onClick={handleCallNext} disabled={pending.length === 0}>
+                      <Button className="bg-[#c62828] hover:bg-[#c62828] text-white px-8 sm:px-12 h-14 sm:h-16 rounded-[24px] font-black text-base sm:text-lg shadow-xl shadow-[#c62828]/20 uppercase tracking-widest flex items-center gap-3 transition-all active:scale-95" onClick={handleCallNext} disabled={pending.length === 0}>
                         <Play size={20} fill="currentColor" /> Call Next
                       </Button>
                     </motion.div>
@@ -1255,11 +1255,11 @@ export default function FacultyDashboard() {
           </div>
 
           <Card className="border-0 shadow-sm rounded-[32px] bg-white overflow-hidden">
-             <CardHeader className="bg-slate-50 px-8 py-6 border-b border-slate-100 flex flex-row justify-between items-center">
+             <CardHeader className="bg-slate-50 px-4 sm:px-6 lg:px-8 py-5 sm:py-6 border-b border-slate-100 flex flex-row justify-between items-center">
                 <CardTitle className="text-slate-800 font-black uppercase tracking-widest text-xs">Waiting Students</CardTitle>
                 <Badge className="bg-slate-200 text-slate-600 font-black px-3 py-1 rounded-lg text-[10px]">{pending.length}</Badge>
              </CardHeader>
-             <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+             <CardContent className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                 {pending.map((s, i) => (
                   <div key={s.id} className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-5 transition-all hover:border-[#f3f1f6] hover:bg-white group">
                     <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center font-black text-[#c62828]/65 shadow-sm group-hover:text-[#c62828] text-xs">{i + 1}</div>
@@ -1281,7 +1281,7 @@ export default function FacultyDashboard() {
           </Card>
 
           <Card className="border-0 shadow-sm rounded-[32px] bg-white overflow-hidden">
-            <CardHeader className="bg-slate-50 px-8 py-6 border-b border-slate-100 flex flex-row justify-between items-center">
+            <CardHeader className="bg-slate-50 px-4 sm:px-6 lg:px-8 py-5 sm:py-6 border-b border-slate-100 flex flex-row justify-between items-center">
               <CardTitle className="text-slate-800 font-black uppercase tracking-widest text-xs">Consultation Audit Log (Realtime)</CardTitle>
               <Badge className="bg-slate-200 text-slate-600 font-black px-3 py-1 rounded-lg text-[10px]">{recentConsultationAudit.length}</Badge>
             </CardHeader>

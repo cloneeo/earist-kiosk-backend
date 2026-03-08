@@ -32,20 +32,20 @@ export default function ConfirmationPage() {
     fetchTicket();
   }, [queueId]);
 
-  if (loading) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
-  if (!entry) return <div className="text-center p-10">Ticket not found.</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center p-4"><Loader2 className="animate-spin" /></div>;
+  if (!entry) return <div className="text-center p-6 sm:p-10">Ticket not found.</div>;
 
   return (
     <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
       <div className="max-w-3xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row border border-slate-200 animate-in fade-in zoom-in duration-300">
         
         {/* Left Panel: Confirmation Status */}
-        <div className="flex-1 p-12 flex flex-col items-center justify-center text-center space-y-6 bg-white">
+        <div className="flex-1 p-6 sm:p-12 flex flex-col items-center justify-center text-center space-y-6 bg-white">
           <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center">
             <CheckCircle2 className="w-10 h-10 text-emerald-500" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-slate-900">Your ticket is ready!</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Your ticket is ready!</h2>
             <p className="text-slate-500 text-sm leading-relaxed px-4">
               We've sent your entry to the faculty monitor. Please wait for your number to be called.
             </p>
@@ -53,7 +53,7 @@ export default function ConfirmationPage() {
           <div className="pt-6 space-y-3 w-full max-w-xs">
             <Button 
               onClick={() => setLocation("/")}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-6 font-bold"
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-12 font-bold"
             >
               Got It
             </Button>
@@ -68,7 +68,7 @@ export default function ConfirmationPage() {
         </div>
 
         {/* Right Panel: Ticket Details (Split Sidebar Style) */}
-        <div className="w-full md:w-[320px] bg-slate-50 p-8 border-l border-slate-100 flex flex-col">
+        <div className="w-full md:w-[320px] bg-slate-50 p-6 sm:p-8 border-t md:border-t-0 md:border-l border-slate-100 flex flex-col">
           <h3 className="text-slate-900 font-bold mb-8 flex items-center gap-2">
             <Clock className="w-4 h-4 text-[#024059]" /> Ticket Summary
           </h3>
@@ -76,12 +76,12 @@ export default function ConfirmationPage() {
           <div className="space-y-6 flex-1">
             <div className="space-y-1">
               <p className="text-[10px] uppercase tracking-wider font-bold text-[#024059]/65">Professor</p>
-              <p className="text-sm font-semibold text-slate-700">{entry.faculty?.name || "Professor"}</p>
+              <p className="text-sm font-semibold text-slate-700 break-words">{entry.faculty?.name || "Professor"}</p>
             </div>
 
             <div className="space-y-1">
               <p className="text-[10px] uppercase tracking-wider font-bold text-[#024059]/65">Student ID</p>
-              <p className="text-sm font-semibold text-slate-700 font-mono tracking-tighter">{entry.student_number}</p>
+              <p className="text-sm font-semibold text-slate-700 font-mono tracking-tighter break-all">{entry.student_number}</p>
             </div>
 
             <div className="pt-6 border-t border-slate-200 space-y-3">

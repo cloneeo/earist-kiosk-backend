@@ -594,7 +594,7 @@ export default function ComponentsShowcase() {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="month" className="text-sm font-medium">
                         Month
@@ -755,6 +755,7 @@ export default function ComponentsShowcase() {
                 <Separator />
                 <div className="space-y-2">
                   <Label>Table</Label>
+                  <div className="w-full overflow-x-auto">
                   <Table>
                     <TableCaption>A list of your recent invoices.</TableCaption>
                     <TableHeader>
@@ -786,6 +787,7 @@ export default function ComponentsShowcase() {
                       </TableRow>
                     </TableBody>
                   </Table>
+                  </div>
                 </div>
                 <Separator />
                 <div className="space-y-2">

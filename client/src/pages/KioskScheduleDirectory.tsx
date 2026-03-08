@@ -343,7 +343,7 @@ export default function KioskScheduleDirectory() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {loading && (
             <Card className="md:col-span-2 rounded-[24px] border-0 shadow-sm">
-              <CardContent className="p-10 text-center text-[#024059]/65 text-sm font-bold uppercase tracking-wider">
+              <CardContent className="p-6 sm:p-10 text-center text-[#024059]/65 text-sm font-bold uppercase tracking-wider">
                 Loading schedules...
               </CardContent>
             </Card>
@@ -351,7 +351,7 @@ export default function KioskScheduleDirectory() {
 
           {!loading && filteredRows.length === 0 && (
             <Card className="md:col-span-2 rounded-[24px] border-0 shadow-sm">
-              <CardContent className="p-10 text-center text-[#024059]/65 text-sm font-bold uppercase tracking-wider">
+              <CardContent className="p-6 sm:p-10 text-center text-[#024059]/65 text-sm font-bold uppercase tracking-wider">
                 No schedule entries match your filters.
               </CardContent>
             </Card>
@@ -364,12 +364,12 @@ export default function KioskScheduleDirectory() {
               return (
                 <Card key={row.id} className="rounded-[24px] border-0 shadow-sm bg-white overflow-hidden">
                   <CardContent className="p-5">
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <p className="text-base sm:text-lg font-black text-slate-900 leading-snug break-words">{row.name}</p>
                         <p className="text-xs font-bold uppercase tracking-wide text-[#024059]/60">{row.departmentName} - {row.collegeName}</p>
                       </div>
-                      <Badge className="bg-[#eef4f8] text-[#024059] hover:bg-[#eef4f8] border-0 uppercase text-[10px] font-black tracking-wide">
+                      <Badge className="w-fit bg-[#eef4f8] text-[#024059] hover:bg-[#eef4f8] border-0 uppercase text-[10px] font-black tracking-wide">
                         {methodLabel(row.consultation_method)}
                       </Badge>
                     </div>
@@ -380,8 +380,8 @@ export default function KioskScheduleDirectory() {
                       {slotPreview.length > 0 ? (
                         <div className="space-y-2">
                           {slotPreview.map((slot) => (
-                            <div key={`${slot.dateLabel}-${slot.timeLabel}-${slot.methodLabel}`} className="flex items-center justify-between text-sm rounded-xl bg-white px-3 py-2 border border-[#ecf1f6]">
-                              <span className="font-bold text-slate-800">{slot.dateLabel} - {slot.timeLabel}</span>
+                            <div key={`${slot.dateLabel}-${slot.timeLabel}-${slot.methodLabel}`} className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between text-sm rounded-xl bg-white px-3 py-2 border border-[#ecf1f6]">
+                              <span className="font-bold text-slate-800 break-words">{slot.dateLabel} - {slot.timeLabel}</span>
                               <span className="text-[11px] font-black uppercase tracking-wide text-[#024059]/70">{slot.methodLabel}</span>
                             </div>
                           ))}
