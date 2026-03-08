@@ -6,6 +6,7 @@ type PendingBookingEmail = {
 };
 
 const STORAGE_KEY = "pending-booking-emails";
+const SENT_STORAGE_KEY = "sent-booking-emails";
 const MAX_ITEMS = 30;
 
 function readQueue(): PendingBookingEmail[] {
@@ -58,4 +59,41 @@ export function clearPendingBookingEmail(queueId: string) {
 
 export function getPendingBookingEmails(): PendingBookingEmail[] {
   return readQueue();
+}
+
+function readSentQueue(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(SENT_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as string[];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((item) => typeof item === "string" && item.trim().length > 0);
+  } catch {
+    return [];
+  }
+}
+
+function writeSentQueue(items: string[]) {
+  if (typeof window === "undefined") return;
+  try {
+    const deduped = Array.from(new Set(items.map((item) => item.trim()).filter(Boolean)));
+    window.localStorage.setItem(SENT_STORAGE_KEY, JSON.stringify(deduped.slice(-MAX_ITEMS)));
+  } catch {
+    // Ignore storage errors on private browsing limits.
+  }
+}
+
+export function markBookingEmailSent(queueId: string) {
+  const normalizedQueueId = String(queueId || "").trim();
+  if (!normalizedQueueId) return;
+  const sentItems = readSentQueue();
+  sentItems.push(normalizedQueueId);
+  writeSentQueue(sentItems);
+}
+
+export function hasBookingEmailBeenSent(queueId: string): boolean {
+  const normalizedQueueId = String(queueId || "").trim();
+  if (!normalizedQueueId) return false;
+  return readSentQueue().includes(normalizedQueueId);
 }

@@ -14,7 +14,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { addActiveTicketId } from "@/lib/activeTickets";
 import { toast as sonnerToast } from "sonner";
 import { buildApiUrl } from "@/lib/apiBase";
-import { clearPendingBookingEmail, enqueuePendingBookingEmail, getPendingBookingEmails } from "@/lib/pendingBookingEmails";
+import {
+  clearPendingBookingEmail,
+  enqueuePendingBookingEmail,
+  hasBookingEmailBeenSent,
+  markBookingEmailSent,
+} from "@/lib/pendingBookingEmails";
 
 const getMeetingLinkFromSchedule = (scheduleRaw: unknown): string => {
   if (!scheduleRaw) return "";
@@ -96,6 +101,7 @@ export default function QueueConfirmation() {
   useEffect(() => {
     if (!queueId || loading || error || !queueData) return;
     if (emailDispatchRef.current) return;
+    if (hasBookingEmailBeenSent(queueId)) return;
 
     emailDispatchRef.current = true;
 
@@ -160,15 +166,7 @@ export default function QueueConfirmation() {
       return null;
     };
 
-    const flushPending = async () => {
-      const pending = getPendingBookingEmails();
-      for (const item of pending) {
-        await sendOne(item.queueId, item.studentEmail, item.meetLink);
-      }
-    };
-
     const attemptDispatch = async () => {
-      await flushPending();
       const result = await sendOne(queueId, studentEmail, queueMeetLink || undefined);
       if (!result) {
         sonnerToast("Booking email queued. Please check inbox in a moment.", { icon: "ℹ" });
@@ -187,7 +185,13 @@ export default function QueueConfirmation() {
       }
 
       if (payload.ok && !payload.deduped) {
+        markBookingEmailSent(queueId);
         sonnerToast.success("Booking email sent.");
+        return;
+      }
+
+      if (payload.deduped) {
+        markBookingEmailSent(queueId);
         return;
       }
 
