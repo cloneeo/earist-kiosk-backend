@@ -1,4 +1,5 @@
 import type { Express } from "express";
+import { SignJWT, importPKCS8 } from "jose";
 
 type QueueEntryRow = {
   id: string;
@@ -11,6 +12,7 @@ type QueueEntryRow = {
 type FacultyRow = {
   id: string;
   name: string;
+  email?: string | null;
   schedule?: string | null;
 };
 
@@ -35,10 +37,16 @@ const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_P
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 const sendGridApiKey = process.env.SENDGRID_API_KEY || "";
 const sendGridFrom = process.env.SENDGRID_FROM || process.env.BOOKING_EMAIL_FROM || "";
+const googleServiceAccountEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || "";
+const googleServiceAccountPrivateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY || "";
+const googleCalendarId = process.env.GOOGLE_CALENDAR_ID || "primary";
+const googleCalendarTimeZone = process.env.GOOGLE_CALENDAR_TIMEZONE || "Asia/Manila";
 
 const supabaseRestKey = supabaseServiceRoleKey || supabaseAnonKey;
 const hasSupabaseConfig = !!supabaseUrl && !!supabaseRestKey;
 const hasSendGridConfig = !!sendGridApiKey && !!sendGridFrom;
+const hasGoogleCalendarConfig =
+  !!googleServiceAccountEmail && !!googleServiceAccountPrivateKey && !!googleCalendarId;
 
 const isUuid = (value: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -116,6 +124,123 @@ const resolveMeetLink = (value: unknown): string => {
   return sanitizeMeetLink(value);
 };
 
+const normalizePrivateKey = (value: string): string => value.replace(/\\n/g, "\n").trim();
+
+const getGoogleCalendarAccessToken = async (): Promise<string | null> => {
+  if (!hasGoogleCalendarConfig) return null;
+
+  try {
+    const now = Math.floor(Date.now() / 1000);
+    const privateKey = await importPKCS8(normalizePrivateKey(googleServiceAccountPrivateKey), "RS256");
+
+    const assertion = await new SignJWT({
+      scope: "https://www.googleapis.com/auth/calendar.events",
+    })
+      .setProtectedHeader({ alg: "RS256", typ: "JWT" })
+      .setIssuer(googleServiceAccountEmail)
+      .setSubject(googleServiceAccountEmail)
+      .setAudience("https://oauth2.googleapis.com/token")
+      .setIssuedAt(now)
+      .setExpirationTime(now + 3600)
+      .sign(privateKey);
+
+    const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+        assertion,
+      }),
+    });
+
+    if (!tokenResponse.ok) {
+      return null;
+    }
+
+    const tokenPayload = (await tokenResponse.json().catch(() => ({}))) as { access_token?: string };
+    return String(tokenPayload.access_token || "").trim() || null;
+  } catch {
+    return null;
+  }
+};
+
+const createGoogleMeetLinkForBooking = async (params: {
+  queueId: string;
+  professorName: string;
+  studentName: string;
+  studentEmail?: string | null;
+  facultyEmail?: string | null;
+  bookedAtIso: string;
+}): Promise<string> => {
+  const accessToken = await getGoogleCalendarAccessToken();
+  if (!accessToken) return "";
+
+  const startAt = new Date(params.bookedAtIso);
+  if (Number.isNaN(startAt.getTime())) {
+    startAt.setTime(Date.now());
+  }
+  const endAt = new Date(startAt.getTime() + 30 * 60 * 1000);
+
+  const attendees = [params.studentEmail, params.facultyEmail]
+    .map((email) => String(email || "").trim().toLowerCase())
+    .filter((email, index, arr) => !!email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && arr.indexOf(email) === index)
+    .map((email) => ({ email }));
+
+  const eventResponse = await fetch(
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(googleCalendarId)}/events?conferenceDataVersion=1&sendUpdates=none`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        summary: `EARIST Consultation - ${params.professorName || "Faculty"}`,
+        description: `Queue ID: ${params.queueId}\nStudent: ${params.studentName}`,
+        start: {
+          dateTime: startAt.toISOString(),
+          timeZone: googleCalendarTimeZone,
+        },
+        end: {
+          dateTime: endAt.toISOString(),
+          timeZone: googleCalendarTimeZone,
+        },
+        attendees,
+        conferenceData: {
+          createRequest: {
+            requestId: `earist-${params.queueId}-${Date.now()}`,
+            conferenceSolutionKey: {
+              type: "hangoutsMeet",
+            },
+          },
+        },
+      }),
+    }
+  );
+
+  if (!eventResponse.ok) {
+    return "";
+  }
+
+  const eventPayload = (await eventResponse.json().catch(() => ({}))) as {
+    hangoutLink?: string;
+    conferenceData?: {
+      entryPoints?: Array<{ entryPointType?: string; uri?: string }>;
+    };
+  };
+
+  const direct = sanitizeMeetLink(eventPayload.hangoutLink);
+  if (direct) return direct;
+
+  const fromEntryPoint = sanitizeMeetLink(
+    eventPayload.conferenceData?.entryPoints?.find((entry) => entry.entryPointType === "video")?.uri || ""
+  );
+
+  return fromEntryPoint;
+};
+
 const sendBookingEmail = async (toEmail: string, subject: string, html: string): Promise<SendEmailResult> => {
   if (!hasSendGridConfig) {
     return { ok: false, message: "SendGrid is not configured (SENDGRID_API_KEY, SENDGRID_FROM)." };
@@ -180,6 +305,9 @@ export function registerBookingEmailRoutes(app: Express) {
     if (!supabaseRestKey) missing.push("SUPABASE_SERVICE_ROLE_KEY or VITE_SUPABASE_ANON_KEY");
     if (!sendGridApiKey) missing.push("SENDGRID_API_KEY");
     if (!sendGridFrom) missing.push("SENDGRID_FROM or BOOKING_EMAIL_FROM");
+    if (!hasGoogleCalendarConfig) {
+      missing.push("GOOGLE_SERVICE_ACCOUNT_EMAIL / GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY / GOOGLE_CALENDAR_ID");
+    }
 
     const ok = missing.length === 0;
     return res.status(ok ? 200 : 503).json({
@@ -228,7 +356,7 @@ export function registerBookingEmailRoutes(app: Express) {
           `students?select=full_name,email&student_number=eq.${studentNumber}&limit=1`
         ),
         supabaseFetch<FacultyRow>(
-          `faculty?select=id,name,schedule&id=eq.${queueEntry.faculty_id}&limit=1`
+            `faculty?select=id,name,email,schedule&id=eq.${queueEntry.faculty_id}&limit=1`
         ),
       ]);
 
@@ -240,6 +368,17 @@ export function registerBookingEmailRoutes(app: Express) {
       const student = studentResponse.error ? null : (studentResponse.data?.[0] || null);
       const faculty = facultyResponse.data?.[0] || null;
       const facultyScheduleMeetLink = readMeetingLinkFromSchedule(faculty?.schedule);
+      const recipientEmail = resolveStudentEmail(student) || fallbackEmail;
+
+      if (!recipientEmail) {
+        return res.status(200).json({
+          ok: false,
+          skipped: true,
+          message: studentLookupWarning || "No student email found for this booking.",
+        });
+      }
+
+      const studentName = resolveStudentName(student, queueEntry.student_number);
 
       let sharedMeetLink = "";
       let meetLinkWarning: string | null = null;
@@ -250,7 +389,20 @@ export function registerBookingEmailRoutes(app: Express) {
         );
 
         const historyMeetLink = String(meetLinkResponse.data?.[0]?.notes || "").trim();
-        sharedMeetLink = requestedMeetLink || historyMeetLink || facultyScheduleMeetLink || "";
+        sharedMeetLink = requestedMeetLink || historyMeetLink || "";
+
+        if (!sharedMeetLink) {
+          const generatedMeetLink = await createGoogleMeetLinkForBooking({
+            queueId,
+            professorName: faculty?.name || "Faculty",
+            studentName,
+            studentEmail: recipientEmail,
+            facultyEmail: faculty?.email || null,
+            bookedAtIso: queueEntry.created_at,
+          });
+
+          sharedMeetLink = generatedMeetLink || facultyScheduleMeetLink || "";
+        }
 
         if (sharedMeetLink && sharedMeetLink !== historyMeetLink) {
           await insertQueueHistory(queueId, "google_meet_link_shared", sharedMeetLink);
@@ -269,16 +421,6 @@ export function registerBookingEmailRoutes(app: Express) {
         return res.status(200).json({ ok: true, deduped: true, message: "Booking email already sent." });
       }
 
-      const recipientEmail = resolveStudentEmail(student) || fallbackEmail;
-      if (!recipientEmail) {
-        return res.status(200).json({
-          ok: false,
-          skipped: true,
-          message: studentLookupWarning || "No student email found for this booking.",
-        });
-      }
-
-      const studentName = resolveStudentName(student, queueEntry.student_number);
       const subject = "EARIST Booking Confirmation";
       const bookingDate = new Date(queueEntry.created_at).toLocaleString("en-PH", {
         dateStyle: "medium",
