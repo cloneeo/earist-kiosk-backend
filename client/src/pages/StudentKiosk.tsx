@@ -6,26 +6,20 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   AlertCircle,
   ArrowRight,
-  Building2,
   Calendar,
-  Clock,
   Globe,
-  GraduationCap,
   Loader2,
   Monitor,
   ScanBarcode,
-  Search,
   UserCheck,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -56,16 +50,13 @@ export default function StudentKiosk() {
   const [selectedMonitorDepartment, setSelectedMonitorDepartment] = useState<string>("all");
   const [selectedMonitorProf, setSelectedMonitorProf] = useState<string | null>(null);
   const [liveQueue, setLiveQueue] = useState<any[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [queueFinderOpen, setQueueFinderOpen] = useState(false);
-  const [queueFinderQuery, setQueueFinderQuery] = useState("");
   const [isNameDialogOpen, setIsNameDialogOpen] = useState(false);
   const [pendingStudentNumber, setPendingStudentNumber] = useState<string | null>(null);
   const [studentName, setStudentName] = useState("");
   const [studentEmail, setStudentEmail] = useState("");
   const [isResolvingStudent, setIsResolvingStudent] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
-  const [keyboardField, setKeyboardField] = useState<"studentNumber" | "studentName" | "studentEmail" | "directorySearch" | null>(null);
+  const [keyboardField, setKeyboardField] = useState<"studentNumber" | "studentName" | "studentEmail" | null>(null);
 
   const normalizeStudentNumber = (studentId: string) => studentId.trim().toUpperCase();
 
@@ -85,7 +76,7 @@ export default function StudentKiosk() {
     !/android|iphone|ipad|ipod|mobile/i.test(window.navigator.userAgent || "") &&
     window.matchMedia("(pointer: coarse)").matches;
 
-  const openKeyboardFor = (field: "studentNumber" | "studentName" | "studentEmail" | "directorySearch") => {
+  const openKeyboardFor = (field: "studentNumber" | "studentName" | "studentEmail") => {
     if (!shouldUseOnScreenKeyboard) return;
     setKeyboardField(field);
     setKeyboardVisible(true);
@@ -95,7 +86,6 @@ export default function StudentKiosk() {
     if (keyboardField === "studentNumber") return studentNumber;
     if (keyboardField === "studentName") return studentName;
     if (keyboardField === "studentEmail") return studentEmail;
-    if (keyboardField === "directorySearch") return searchQuery;
     return "";
   };
 
@@ -103,7 +93,6 @@ export default function StudentKiosk() {
     if (keyboardField === "studentNumber") setStudentNumber(next.toUpperCase());
     if (keyboardField === "studentName") setStudentName(next);
     if (keyboardField === "studentEmail") setStudentEmail(next.toLowerCase());
-    if (keyboardField === "directorySearch") setSearchQuery(next);
   };
 
   const keyboardMode = keyboardField === "studentEmail" ? "email" : keyboardField === "studentName" ? "text" : "alphanumeric";
@@ -504,11 +493,6 @@ export default function StudentKiosk() {
     void openStudentIdentityDialog(normalized);
   }, [studentNumber, isNameDialogOpen, loading]);
 
-  const handleCheckStatus = async () => {
-    setQueueFinderQuery("");
-    setQueueFinderOpen(true);
-  };
-
   const departmentById = new Map(departments.map((department) => [department.id, department]));
 
   const monitorColleges = colleges.filter((college) =>
@@ -541,33 +525,9 @@ export default function StudentKiosk() {
   const selectedFaculty = faculties.find((f) => f.id === selectedMonitorProf);
   const currentServing = liveQueue.find((q) => q.status === "called");
   const waitingQueue = liveQueue.filter((q) => q.status === "waiting");
-  const availableFaculties = faculties.filter((f) => f.status === "accepting");
-  const filteredFaculties = availableFaculties.filter((f) => {
-    const normalized = searchQuery.toLowerCase();
-    return (
-      f.name.toLowerCase().includes(normalized) ||
-      (f.department?.name || "").toLowerCase().includes(normalized)
-    );
-  });
 
   const meetingMethod = selectedFaculty?.consultation_method || "face_to_face";
   const isOnline = meetingMethod === "online";
-
-  const queueFinderRows = liveQueue.filter((ticket) => {
-    const needle = queueFinderQuery.trim().toLowerCase();
-    if (!needle) return true;
-
-    const candidateName = String(ticket.student_display_name || "").toLowerCase();
-    const candidateStudentNumber = String(ticket.student_number || "").toLowerCase();
-    return candidateName.includes(needle) || candidateStudentNumber.includes(needle);
-  });
-
-  const getRemainingTime = (calledAt: string | null) => {
-    if (!calledAt) return 15;
-    const start = new Date(calledAt).getTime();
-    const end = start + 15 * 60 * 1000;
-    return Math.max(0, Math.floor((end - currentTime.getTime()) / 60000));
-  };
 
   const formattedDate = currentTime.toLocaleDateString("en-US", {
     weekday: "long",
@@ -729,207 +689,16 @@ export default function StudentKiosk() {
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
-
-              <div className="grid grid-cols-2 gap-3 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCheckStatus}
-                  className="rounded-xl h-11 text-[10px] font-black uppercase tracking-widest border-slate-200"
-                >
-                  Check Status
-                </Button>
-
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="rounded-xl h-11 text-[10px] font-black uppercase tracking-widest border-slate-200"
-                    >
-                      Directory
-                    </Button>
-                  </DialogTrigger>
-
-                  <DialogContent className="rounded-[40px] max-w-2xl border-0 shadow-2xl p-0 overflow-hidden bg-white">
-                    <DialogHeader className="bg-[#c62828] p-8 text-white relative">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-full -mr-8 -mt-8" />
-                      <div className="flex justify-between items-center relative z-10">
-                        <div>
-                          <DialogTitle className="text-3xl font-black uppercase tracking-tighter">
-                            Faculty Directory
-                          </DialogTitle>
-                          <p className="text-[#E8E6EB] text-xs opacity-80 uppercase tracking-widest font-bold mt-1">
-                            Live Availability
-                          </p>
-                        </div>
-                        <GraduationCap className="text-white/20 w-14 h-14" />
-                      </div>
-
-                      <div className="mt-8 relative z-10">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 w-4 h-4" />
-                        <input
-                          type="text"
-                          placeholder="Search professor or department..."
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          onFocus={() => openKeyboardFor("directorySearch")}
-                          className="w-full bg-white/10 border border-white/20 rounded-2xl py-4 pl-12 pr-6 text-white placeholder:text-white/40 focus:outline-none focus:ring-4 focus:ring-white/10 transition-all font-bold"
-                        />
-                      </div>
-                    </DialogHeader>
-
-                    <div className="p-8 space-y-4 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
-                      {filteredFaculties.length > 0 ? (
-                        filteredFaculties.map((f) => (
-                          <div
-                            key={f.id}
-                            className="flex items-center justify-between p-6 bg-slate-50 rounded-3xl border border-slate-100"
-                          >
-                            <div className="flex items-center gap-5">
-                              <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-[#c62828] font-black text-xl shadow-sm uppercase border border-[#E8E6EB]">
-                                {f.name[0]}
-                              </div>
-                              <div>
-                                <p className="font-black text-slate-800 text-lg leading-tight">{f.name}</p>
-                                <p className="text-[10px] font-bold text-[#c62828]/65 uppercase tracking-[0.2em] mt-1">
-                                  {f.department?.name || "Faculty Member"}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2 bg-[#f3f1f6]/60 text-[#c62828] px-4 py-2 rounded-xl border border-[#E8E6EB] shadow-sm">
-                              <div className="w-2 h-2 rounded-full bg-[#c62828] animate-pulse" />
-                              <span className="text-[10px] font-black uppercase tracking-wider">Active</span>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="text-center py-16">
-                          <Building2 className="w-16 h-16 text-slate-100 mx-auto mb-4" />
-                          <p className="text-[#c62828]/65 font-bold uppercase tracking-widest text-[10px]">
-                            No active professors matching your search
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </DialogContent>
-                </Dialog>
-
-                <Dialog open={queueFinderOpen} onOpenChange={setQueueFinderOpen}>
-                  <DialogContent className="rounded-[32px] max-w-2xl border-0 shadow-2xl p-0 overflow-hidden bg-white">
-                    <DialogHeader className="bg-[#c62828] p-6 text-white">
-                      <DialogTitle className="text-2xl font-black uppercase tracking-tight">
-                        Find Student Queue
-                      </DialogTitle>
-                      <p className="text-[11px] text-[#E8E6EB] font-bold uppercase tracking-wider mt-2">
-                        Search by student number or name, then open status
-                      </p>
-                    </DialogHeader>
-
-                    <div className="p-6 space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <Select
-                          value={selectedMonitorCollege}
-                          onValueChange={(value) => {
-                            setSelectedMonitorCollege(value);
-                            setSelectedMonitorDepartment("all");
-                          }}
-                        >
-                          <SelectTrigger className="rounded-xl border-slate-200 h-11 text-xs font-black uppercase tracking-wide">
-                            <SelectValue placeholder="Select College" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Colleges</SelectItem>
-                            {monitorColleges.map((college) => (
-                              <SelectItem key={college.id} value={college.id}>
-                                {college.code} - {college.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-
-                        <Select
-                          value={selectedMonitorDepartment}
-                          onValueChange={(value) => setSelectedMonitorDepartment(value)}
-                        >
-                          <SelectTrigger className="rounded-xl border-slate-200 h-11 text-xs font-black uppercase tracking-wide">
-                            <SelectValue placeholder="Select Department" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Departments</SelectItem>
-                            {monitorDepartments.map((department) => (
-                              <SelectItem key={department.id} value={department.id}>
-                                {department.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-
-                        <Select
-                          value={selectedMonitorProf || ""}
-                          onValueChange={(value) => setSelectedMonitorProf(value)}
-                          disabled={monitorFaculties.length === 0}
-                        >
-                          <SelectTrigger className="rounded-xl border-slate-200 h-11 text-xs font-black uppercase tracking-wide">
-                            <SelectValue placeholder="Select Professor" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {monitorFaculties.map((faculty) => (
-                              <SelectItem key={faculty.id} value={faculty.id}>
-                                {faculty.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <Input
-                        placeholder="Type student number or student name"
-                        value={queueFinderQuery}
-                        onChange={(event) => setQueueFinderQuery(event.target.value)}
-                        className="h-12 rounded-xl border-slate-200 font-bold"
-                      />
-
-                      <div className="max-h-[46vh] overflow-y-auto pr-1 space-y-2">
-                        {queueFinderRows.length > 0 ? (
-                          queueFinderRows.map((ticket) => (
-                            <button
-                              key={ticket.id}
-                              type="button"
-                              onClick={() => {
-                                setQueueFinderOpen(false);
-                                setLocation(`/status/${ticket.id}`);
-                              }}
-                              className="w-full text-left rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 hover:border-[#c62828] hover:bg-white transition-colors"
-                            >
-                              <p className="text-sm font-black text-slate-900">{ticket.student_display_name || "Unknown Student"}</p>
-                              <p className="text-[11px] font-bold uppercase tracking-wide text-[#c62828]/70 mt-1">
-                                {ticket.student_number || "No Student Number"} • {ticket.status === "called" ? "In Session" : "Waiting"}
-                              </p>
-                            </button>
-                          ))
-                        ) : (
-                          <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-[#c62828]/65">
-                              No active students match your search
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </div>
             </CardContent>
           </Card>
         </div>
 
-        <div className="lg:w-[42%] grid grid-cols-1 gap-4">
-          <Card className="border-0 shadow-xl rounded-[30px] bg-white overflow-hidden">
-            <CardContent className="p-4 sm:p-5 h-full flex flex-col gap-3">
+        <div className="lg:w-[42%] grid grid-cols-1 gap-3 lg:gap-2.5">
+          <Card className="border-0 shadow-xl rounded-[26px] bg-white overflow-hidden">
+            <CardContent className="p-3.5 sm:p-4 h-full flex flex-col gap-2.5">
               <div className="flex items-center justify-between">
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#c62828]/70">Live Monitor</p>
-                <Monitor size={20} className="text-[#c62828]" />
+                <Monitor size={18} className="text-[#c62828]" />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
@@ -944,7 +713,7 @@ export default function StudentKiosk() {
                       setSelectedMonitorDepartment("all");
                     }}
                   >
-                    <SelectTrigger className="rounded-xl border-slate-200 h-10 text-[11px] font-black uppercase tracking-wide">
+                    <SelectTrigger className="rounded-lg border-slate-200 h-9 text-[10px] font-black uppercase tracking-wide">
                       <SelectValue placeholder="Select College" />
                     </SelectTrigger>
                     <SelectContent>
@@ -965,7 +734,7 @@ export default function StudentKiosk() {
                     value={selectedMonitorDepartment}
                     onValueChange={(value) => setSelectedMonitorDepartment(value)}
                   >
-                    <SelectTrigger className="rounded-xl border-slate-200 h-10 text-[11px] font-black uppercase tracking-wide">
+                    <SelectTrigger className="rounded-lg border-slate-200 h-9 text-[10px] font-black uppercase tracking-wide">
                       <SelectValue placeholder="Select Department" />
                     </SelectTrigger>
                     <SelectContent>
@@ -987,7 +756,7 @@ export default function StudentKiosk() {
                     onValueChange={(value) => setSelectedMonitorProf(value)}
                     disabled={monitorFaculties.length === 0}
                   >
-                    <SelectTrigger className="rounded-xl border-slate-200 h-10 text-[11px] font-black uppercase tracking-wide">
+                    <SelectTrigger className="rounded-lg border-slate-200 h-9 text-[10px] font-black uppercase tracking-wide">
                       <SelectValue placeholder="Select Professor" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1001,24 +770,24 @@ export default function StudentKiosk() {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-[#e4e9ef] bg-[#f8fbfd] p-3">
+              <div className="rounded-xl border border-[#e4e9ef] bg-[#f8fbfd] p-2.5">
                 <p className="text-[10px] font-black uppercase tracking-widest text-[#c62828]/65 mb-1">In Session</p>
-                <p className="text-base sm:text-lg font-black text-slate-900">{currentServing ? currentServing.student_display_name : "No active consultation"}</p>
+                <p className="text-sm sm:text-base font-black text-slate-900 leading-tight">{currentServing ? currentServing.student_display_name : "No active consultation"}</p>
                 <p className="text-[10px] font-black text-[#c62828]/60 uppercase tracking-wide mt-1">{selectedFaculty?.name || "No assigned faculty"}</p>
               </div>
 
-              <div className="rounded-2xl bg-[#f5f8fa] border border-[#e6edf2] px-4 py-2.5 flex items-center justify-between">
+              <div className="rounded-xl bg-[#f5f8fa] border border-[#e6edf2] px-3 py-2 flex items-center justify-between">
                 <span className="text-[11px] font-black uppercase tracking-widest text-[#c62828]/70">Waiting</span>
-                <span className="text-xl font-black text-[#c62828]">{waitingQueue.length}</span>
+                <span className="text-lg font-black text-[#c62828]">{waitingQueue.length}</span>
               </div>
 
               <div className="mt-1 space-y-2">
-                <p className="text-[10px] font-black uppercase tracking-wider text-[#c62828]">Tap "Check Status" to find students quickly</p>
+                <p className="text-[9px] font-black uppercase tracking-wider text-[#c62828]">Tap "Check Status" to find students quickly</p>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setLocation("/kiosk/monitor")}
-                  className="w-full h-10 rounded-xl border-[#c62828]/30 text-[#c62828] hover:bg-[#fff5f5] font-black text-[10px] uppercase tracking-[0.16em]"
+                  className="w-full h-9 rounded-xl border-[#c62828]/30 text-[#c62828] hover:bg-[#fff5f5] font-black text-[10px] uppercase tracking-[0.14em]"
                 >
                   Open Live Monitor <ArrowRight size={14} className="ml-1" />
                 </Button>
@@ -1026,18 +795,18 @@ export default function StudentKiosk() {
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-xl rounded-[30px] bg-white overflow-hidden">
-            <CardContent className="p-4 sm:p-5 h-full flex flex-col justify-between">
-              <div className="flex items-center justify-between mb-3">
+          <Card className="border-0 shadow-xl rounded-[26px] bg-white overflow-hidden">
+            <CardContent className="p-3.5 sm:p-4 h-full flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-2">
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#c62828]/70">Prof Schedules</p>
-                <Calendar size={20} className="text-[#c62828]" />
+                <Calendar size={18} className="text-[#c62828]" />
               </div>
 
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 mb-2.5">
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 mb-2">
                 <p className="text-[10px] font-black text-[#c62828]/65 uppercase tracking-widest mb-2">
                   Selected Professor
                 </p>
-                <p className="text-lg font-black text-slate-800">
+                <p className="text-base font-black text-slate-800 leading-tight">
                   {selectedFaculty?.name || "No professor selected"}
                 </p>
                 <p className="text-[10px] font-bold text-[#c62828]/65 uppercase tracking-widest mt-1">
@@ -1045,43 +814,38 @@ export default function StudentKiosk() {
                 </p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 mb-2.5">
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 mb-2">
                 <p className="text-[10px] font-black text-[#c62828]/65 uppercase tracking-widest mb-3">
                   Consultation Hours
                 </p>
-                <p className="text-xs sm:text-sm font-black text-slate-700 whitespace-pre-line">
+                <p className="text-xs font-black text-slate-700 whitespace-pre-line line-clamp-2">
                   {selectedFaculty?.schedule || "No official hours posted yet."}
                 </p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 mb-2.5">
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 mb-2">
                 <p className="text-[10px] font-black text-[#c62828]/65 uppercase tracking-widest mb-3">
                   Meeting Preference
                 </p>
                 <div className="flex items-center gap-3">
                   {isOnline ? (
-                    <Globe size={20} className="text-[#c62828]" />
+                    <Globe size={18} className="text-[#c62828]" />
                   ) : (
-                    <UserCheck size={20} className="text-[#c62828]" />
+                    <UserCheck size={18} className="text-[#c62828]" />
                   )}
-                  <span className="text-sm font-black text-slate-800 uppercase tracking-wider">
+                  <span className="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-wider">
                     {meetingMethod.replace(/_/g, " ")}
                   </span>
                 </div>
-                <p className="text-[9px] font-bold text-[#c62828]/65 mt-3 uppercase tracking-widest">
-                  {isOnline
-                    ? "A Google Meet link will be shared by your professor."
-                    : "Please proceed to the faculty office for consultation."}
-                </p>
               </div>
 
               <div className="mt-1 space-y-2">
-                <p className="text-[10px] font-black uppercase tracking-wider text-[#c62828]">Use filters above for faculty-by-faculty lookup</p>
+                <p className="text-[9px] font-black uppercase tracking-wider text-[#c62828]">Use filters above for faculty-by-faculty lookup</p>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setLocation("/kiosk/schedules")}
-                  className="w-full h-10 rounded-xl border-[#c62828]/30 text-[#c62828] hover:bg-[#fff5f5] font-black text-[10px] uppercase tracking-[0.16em]"
+                  className="w-full h-9 rounded-xl border-[#c62828]/30 text-[#c62828] hover:bg-[#fff5f5] font-black text-[10px] uppercase tracking-[0.14em]"
                 >
                   Open Schedule Directory <ArrowRight size={14} className="ml-1" />
                 </Button>
