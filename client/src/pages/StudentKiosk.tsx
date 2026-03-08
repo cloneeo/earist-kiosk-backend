@@ -525,17 +525,17 @@ export default function StudentKiosk() {
   });
 
   return (
-    <div className={`min-h-screen bg-[#E8E6EB] flex flex-col font-sans ${keyboardVisible ? "pb-64 md:pb-72" : ""}`}>
+    <div className={`min-h-screen bg-[#f3f1f6] flex flex-col font-sans ${keyboardVisible ? "pb-64 md:pb-72" : ""}`}>
       <header className="px-8 py-8 lg:px-12 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-[#024059] rounded-xl flex items-center justify-center shadow-lg shadow-[#024059]/20">
+          <div className="w-10 h-10 bg-[#c62828] rounded-xl flex items-center justify-center shadow-lg shadow-[#c62828]/20">
             <span className="text-white font-black text-xs">EQ</span>
           </div>
           <div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-none uppercase text-[#024059]">
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-none uppercase text-[#c62828]">
               EARIST Kiosk
             </h1>
-            <p className="text-[#024059]/65 font-bold text-[10px] uppercase tracking-widest mt-1">
+            <p className="text-[#c62828]/65 font-bold text-[10px] uppercase tracking-widest mt-1">
               Consultation Management
             </p>
           </div>
@@ -546,11 +546,11 @@ export default function StudentKiosk() {
             <div className="text-xl font-black text-slate-800 tracking-tight leading-none">
               {formattedTime}
             </div>
-            <div className="text-[10px] font-bold text-[#024059]/65 uppercase mt-1">{formattedDate}</div>
+            <div className="text-[10px] font-bold text-[#c62828]/65 uppercase mt-1">{formattedDate}</div>
           </div>
           <div className="h-8 w-px bg-slate-100" />
           <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-[#024059] animate-pulse" />
+            <div className="h-2 w-2 rounded-full bg-[#c62828] animate-pulse" />
             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Active</span>
           </div>
         </div>
@@ -559,7 +559,7 @@ export default function StudentKiosk() {
       <main className="flex-1 px-8 pb-10 lg:px-12">
         <div className="max-w-7xl mx-auto grid grid-cols-1 xl:grid-cols-3 gap-8">
           <Card className="border-0 shadow-[0_30px_60px_rgba(0,0,0,0.08)] rounded-[40px] overflow-hidden bg-white">
-            <div className="bg-[#024059] pt-12 pb-8 px-8 text-center relative overflow-hidden">
+            <div className="bg-[#c62828] pt-12 pb-8 px-8 text-center relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-full -mr-8 -mt-8" />
               <h2 className="text-3xl font-black text-white relative z-10 tracking-tight uppercase">
                 Student Kiosk
@@ -570,22 +570,22 @@ export default function StudentKiosk() {
             </div>
 
             <CardContent className="px-8 py-8 space-y-6">
-              <div className="p-6 rounded-[28px] bg-[#E8E6EB]/65 border-2 border-dashed border-[#E8E6EB] text-center flex flex-col items-center">
+              <div className="p-6 rounded-[28px] bg-[#f3f1f6]/65 border-2 border-dashed border-[#E8E6EB] text-center flex flex-col items-center">
                 <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-4">
-                  <ScanBarcode className="w-7 h-7 text-[#024059] animate-pulse" />                </div>
-                <p className="text-[10px] text-[#024059]/65 font-bold uppercase mt-1">
+                  <ScanBarcode className="w-7 h-7 text-[#c62828] animate-pulse" />                </div>
+                <p className="text-[10px] text-[#c62828]/65 font-bold uppercase mt-1">
                   Place ID in front of scanner
                 </p>              </div>
               <form onSubmit={handleSubmit} className="space-y-4">
                 {error && (
-                  <Alert variant="destructive" className="bg-[#E8E6EB]/60 border-0 text-[#024059] rounded-2xl p-4">
+                  <Alert variant="destructive" className="bg-[#f3f1f6]/60 border-0 text-[#c62828] rounded-2xl p-4">
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription className="font-bold text-xs">{error}</AlertDescription>
                   </Alert>
                 )}
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-[#024059]/65 uppercase tracking-[0.2em] ml-2">
+                  <label className="text-[10px] font-black text-[#c62828]/65 uppercase tracking-[0.2em] ml-2">
                     Manual Entry
                   </label>
                   <Input
@@ -595,13 +595,13 @@ export default function StudentKiosk() {
                     onChange={(e) => setStudentNumber(e.target.value.toUpperCase())}
                     onFocus={() => openKeyboardFor("studentNumber")}
                     disabled={loading}
-                    className="text-center font-mono h-14 border-slate-100 focus-visible:ring-4 focus-visible:ring-[#E8E6EB] focus-visible:border-[#024059] rounded-[20px] text-lg bg-slate-50 font-bold"
+                    className="text-center font-mono h-14 border-slate-100 focus-visible:ring-4 focus-visible:ring-[#E8E6EB] focus-visible:border-[#c62828] rounded-[20px] text-lg bg-slate-50 font-bold"
                   />
                 </div>
 
                 <Button
                   type="submit"
-                  className="w-full bg-[#024059] hover:bg-[#024059] text-white font-black h-14 text-base rounded-[20px] shadow-xl transition-all uppercase tracking-[0.1em]"
+                  className="w-full bg-[#c62828] hover:bg-[#c62828] text-white font-black h-14 text-base rounded-[20px] shadow-xl transition-all uppercase tracking-[0.1em]"
                   disabled={loading}
                 >
                   {loading ? (
@@ -627,7 +627,7 @@ export default function StudentKiosk() {
                 }}
               >
                 <DialogContent className="rounded-3xl border-0 shadow-2xl p-0 overflow-hidden bg-white max-w-md">
-                  <DialogHeader className="bg-[#024059] text-white p-6">
+                  <DialogHeader className="bg-[#c62828] text-white p-6">
                     <DialogTitle className="text-2xl font-black uppercase tracking-tight">
                       Confirm Identity
                     </DialogTitle>
@@ -637,11 +637,11 @@ export default function StudentKiosk() {
                   </DialogHeader>
 
                   <div className="p-6 space-y-4">
-                    <div className="rounded-2xl bg-[#E8E6EB]/60 border border-[#E8E6EB] p-4">
+                    <div className="rounded-2xl bg-[#f3f1f6]/60 border border-[#E8E6EB] p-4">
                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
                         Student ID
                       </p>
-                      <p className="text-lg font-black text-[#024059]">
+                      <p className="text-lg font-black text-[#c62828]">
                         {pendingStudentNumber ? maskStudentNumber(pendingStudentNumber) : "-"}
                       </p>
                     </div>
@@ -690,7 +690,7 @@ export default function StudentKiosk() {
                       type="button"
                       onClick={handleConfirmStudentIdentity}
                       disabled={loading || isResolvingStudent}
-                      className="w-full rounded-xl h-12 bg-[#024059] hover:bg-[#024059] text-white text-[10px] font-black uppercase tracking-widest"
+                      className="w-full rounded-xl h-12 bg-[#c62828] hover:bg-[#c62828] text-white text-[10px] font-black uppercase tracking-widest"
                     >
                       Continue
                     </Button>
@@ -720,7 +720,7 @@ export default function StudentKiosk() {
                   </DialogTrigger>
 
                   <DialogContent className="rounded-[40px] max-w-2xl border-0 shadow-2xl p-0 overflow-hidden bg-white">
-                    <DialogHeader className="bg-[#024059] p-8 text-white relative">
+                    <DialogHeader className="bg-[#c62828] p-8 text-white relative">
                       <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-full -mr-8 -mt-8" />
                       <div className="flex justify-between items-center relative z-10">
                         <div>
@@ -755,18 +755,18 @@ export default function StudentKiosk() {
                             className="flex items-center justify-between p-6 bg-slate-50 rounded-3xl border border-slate-100"
                           >
                             <div className="flex items-center gap-5">
-                              <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-[#024059] font-black text-xl shadow-sm uppercase border border-[#E8E6EB]">
+                              <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-[#c62828] font-black text-xl shadow-sm uppercase border border-[#E8E6EB]">
                                 {f.name[0]}
                               </div>
                               <div>
                                 <p className="font-black text-slate-800 text-lg leading-tight">{f.name}</p>
-                                <p className="text-[10px] font-bold text-[#024059]/65 uppercase tracking-[0.2em] mt-1">
+                                <p className="text-[10px] font-bold text-[#c62828]/65 uppercase tracking-[0.2em] mt-1">
                                   {f.department?.name || "Faculty Member"}
                                 </p>
                               </div>
                             </div>
-                            <div className="flex items-center gap-2 bg-[#E8E6EB]/60 text-[#024059] px-4 py-2 rounded-xl border border-[#E8E6EB] shadow-sm">
-                              <div className="w-2 h-2 rounded-full bg-[#024059] animate-pulse" />
+                            <div className="flex items-center gap-2 bg-[#f3f1f6]/60 text-[#c62828] px-4 py-2 rounded-xl border border-[#E8E6EB] shadow-sm">
+                              <div className="w-2 h-2 rounded-full bg-[#c62828] animate-pulse" />
                               <span className="text-[10px] font-black uppercase tracking-wider">Active</span>
                             </div>
                           </div>
@@ -774,7 +774,7 @@ export default function StudentKiosk() {
                       ) : (
                         <div className="text-center py-16">
                           <Building2 className="w-16 h-16 text-slate-100 mx-auto mb-4" />
-                          <p className="text-[#024059]/65 font-bold uppercase tracking-widest text-[10px]">
+                          <p className="text-[#c62828]/65 font-bold uppercase tracking-widest text-[10px]">
                             No active professors matching your search
                           </p>
                         </div>
@@ -790,13 +790,13 @@ export default function StudentKiosk() {
             <CardContent className="p-8 h-full flex flex-col">
               <div className="flex items-center justify-between mb-5">
                 <h3 className="font-black text-slate-800 uppercase text-xl flex items-center gap-3 tracking-tight">
-                  <Monitor size={22} className="text-[#024059]" /> Live Monitor
+                  <Monitor size={22} className="text-[#c62828]" /> Live Monitor
                 </h3>
               </div>
 
               <div className="space-y-3">
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-widest text-[#024059]/65 mb-1.5">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-[#c62828]/65 mb-1.5">
                     Department
                   </p>
                   <Select
@@ -818,7 +818,7 @@ export default function StudentKiosk() {
                 </div>
 
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-widest text-[#024059]/65 mb-1.5">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-[#c62828]/65 mb-1.5">
                     Professor
                   </p>
                   <Select
@@ -842,14 +842,14 @@ export default function StudentKiosk() {
 
               <div className="grid grid-cols-3 gap-3 my-5">
                 <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                  <p className="text-[9px] font-black uppercase text-[#024059]/65">In Session</p>
-                  <p className="text-xl font-black text-[#024059]">{currentServing ? 1 : 0}</p>
+                  <p className="text-[9px] font-black uppercase text-[#c62828]/65">In Session</p>
+                  <p className="text-xl font-black text-[#c62828]">{currentServing ? 1 : 0}</p>
                 </div>
                 <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                  <p className="text-[9px] font-black uppercase text-[#024059]/65">Waiting</p>
-                  <p className="text-xl font-black text-[#024059]">{waitingQueue.length}</p>
+                  <p className="text-[9px] font-black uppercase text-[#c62828]/65">Waiting</p>
+                  <p className="text-xl font-black text-[#c62828]">{waitingQueue.length}</p>
                 </div>
-                <div className="bg-[#024059] rounded-xl p-3 text-white">
+                <div className="bg-[#c62828] rounded-xl p-3 text-white">
                   <p className="text-[9px] font-black uppercase opacity-70">Total</p>
                   <p className="text-xl font-black">{liveQueue.length}</p>
                 </div>
@@ -866,13 +866,13 @@ export default function StudentKiosk() {
                         <Badge
                           className={
                             ticket.status === "called"
-                              ? "bg-[#E8E6EB]/60 text-[#024059]"
-                              : "bg-[#E8E6EB]/60 text-[#024059]"
+                              ? "bg-[#f3f1f6]/60 text-[#c62828]"
+                              : "bg-[#f3f1f6]/60 text-[#c62828]"
                           }
                         >
                           {ticket.status === "called" ? "IN SESSION" : "WAITING"}
                         </Badge>
-                        <div className="flex items-center gap-1 text-[#024059]/65 text-xs font-bold">
+                        <div className="flex items-center gap-1 text-[#c62828]/65 text-xs font-bold">
                           <Clock size={12} />
                           {new Date(ticket.created_at).toLocaleTimeString([], {
                             hour: "2-digit",
@@ -883,9 +883,9 @@ export default function StudentKiosk() {
 
                       <p className="text-2xl font-black text-slate-800">{ticket.student_display_name}</p>
                       <div className="p-3 rounded-xl bg-white border border-slate-100 flex items-center gap-3">
-                        <UserCheck className="w-4 h-4 text-[#024059]" />
+                        <UserCheck className="w-4 h-4 text-[#c62828]" />
                         <div>
-                          <p className="text-[10px] font-black text-[#024059]/65 uppercase">Professor</p>
+                          <p className="text-[10px] font-black text-[#c62828]/65 uppercase">Professor</p>
                           <p className="text-xs font-bold text-slate-700">
                             {selectedFaculty?.name || "Not selected"}
                           </p>
@@ -895,7 +895,7 @@ export default function StudentKiosk() {
                   ))
                 ) : (
                   <div className="h-full min-h-36 rounded-2xl border border-dashed border-slate-200 flex items-center justify-center text-center px-6">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-[#024059]/65">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-[#c62828]/65">
                       No active queue for this professor.
                     </p>
                   </div>
@@ -908,24 +908,24 @@ export default function StudentKiosk() {
             <CardContent className="p-8 h-full flex flex-col">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="font-black text-slate-800 uppercase text-xl flex items-center gap-3 tracking-tight">
-                  <Calendar size={22} className="text-[#024059]" /> Prof Schedules
+                  <Calendar size={22} className="text-[#c62828]" /> Prof Schedules
                 </h3>
               </div>
 
               <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 mb-4">
-                <p className="text-[10px] font-black text-[#024059]/65 uppercase tracking-widest mb-2">
+                <p className="text-[10px] font-black text-[#c62828]/65 uppercase tracking-widest mb-2">
                   Selected Professor
                 </p>
                 <p className="text-lg font-black text-slate-800">
                   {selectedFaculty?.name || "No professor selected"}
                 </p>
-                <p className="text-[10px] font-bold text-[#024059]/65 uppercase tracking-widest mt-1">
+                <p className="text-[10px] font-bold text-[#c62828]/65 uppercase tracking-widest mt-1">
                   {selectedFaculty?.department?.name || "Department unavailable"}
                 </p>
               </div>
 
               <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 mb-4">
-                <p className="text-[10px] font-black text-[#024059]/65 uppercase tracking-widest mb-3">
+                <p className="text-[10px] font-black text-[#c62828]/65 uppercase tracking-widest mb-3">
                   Consultation Hours
                 </p>
                 <p className="text-sm font-black text-slate-700 whitespace-pre-line">
@@ -934,20 +934,20 @@ export default function StudentKiosk() {
               </div>
 
               <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 mb-4">
-                <p className="text-[10px] font-black text-[#024059]/65 uppercase tracking-widest mb-3">
+                <p className="text-[10px] font-black text-[#c62828]/65 uppercase tracking-widest mb-3">
                   Meeting Preference
                 </p>
                 <div className="flex items-center gap-3">
                   {isOnline ? (
-                    <Globe size={20} className="text-[#024059]" />
+                    <Globe size={20} className="text-[#c62828]" />
                   ) : (
-                    <UserCheck size={20} className="text-[#024059]" />
+                    <UserCheck size={20} className="text-[#c62828]" />
                   )}
                   <span className="text-sm font-black text-slate-800 uppercase tracking-wider">
                     {meetingMethod.replace(/_/g, " ")}
                   </span>
                 </div>
-                <p className="text-[9px] font-bold text-[#024059]/65 mt-3 uppercase tracking-widest">
+                <p className="text-[9px] font-bold text-[#c62828]/65 mt-3 uppercase tracking-widest">
                   {isOnline
                     ? "A Google Meet link will be shared by your professor."
                     : "Please proceed to the faculty office for consultation."}
@@ -955,15 +955,15 @@ export default function StudentKiosk() {
               </div>
 
               <div className="mt-auto pt-5 border-t border-slate-100">
-                <p className="text-[10px] font-black text-[#024059]/65 uppercase tracking-widest mb-2">
+                <p className="text-[10px] font-black text-[#c62828]/65 uppercase tracking-widest mb-2">
                   Now Consulting 
                 </p>
-                <div className="flex items-center justify-between rounded-2xl bg-[#E8E6EB]/60 border border-[#E8E6EB] px-4 py-3">
-                  <span className="text-lg font-black text-[#024059]">
+                <div className="flex items-center justify-between rounded-2xl bg-[#f3f1f6]/60 border border-[#E8E6EB] px-4 py-3">
+                  <span className="text-lg font-black text-[#c62828]">
                     {currentServing ? currentServing.student_display_name : "IDLE"}
                   </span>
                   {currentServing && (
-                    <span className="text-[10px] font-black uppercase tracking-widest text-[#024059]">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-[#c62828]">
                       ~{getRemainingTime(currentServing.called_at || null)} mins left
                     </span>
                   )}
@@ -986,17 +986,12 @@ export default function StudentKiosk() {
         />
       )}
 
-      <footer className="px-12 py-8 flex justify-between items-center bg-white border-t border-slate-50">
+      <footer className="px-12 py-8 flex justify-center items-center bg-white border-t border-slate-50">
         <p className="text-[10px] font-black text-slate-200 uppercase tracking-[0.4em]">
           EARIST QUEUE SYSTEM (C) 2026
         </p>
-        <button
-          onClick={() => setLocation("/login")}
-          className="text-[10px] font-black text-[#024059]/65 hover:text-[#024059] transition-colors uppercase tracking-[0.2em] border-b border-transparent hover:border-[#024059]"
-        >
-          Staff Login
-        </button>
       </footer>
     </div>
   );
 }
+

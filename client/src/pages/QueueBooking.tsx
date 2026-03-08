@@ -461,29 +461,29 @@ export default function QueueBooking() {
   };
 
   return (
-    <div className={`min-h-screen bg-[#E8E6EB] flex flex-col font-sans ${keyboardVisible ? "pb-64 md:pb-72" : ""}`}>
+    <div className={`min-h-screen bg-[#f3f1f6] flex flex-col font-sans ${keyboardVisible ? "pb-64 md:pb-72" : ""}`}>
       
       <header className="px-4 py-6 sm:px-10 sm:py-8 flex justify-between items-center gap-3">
         <button 
           onClick={handleBack} 
           disabled={step === "college" || loading}
-          className={`flex items-center gap-2 font-bold uppercase text-[10px] tracking-[0.2em] transition-all ${step === "college" ? 'opacity-0' : 'text-[#024059]/65 hover:text-[#024059]'}`}
+          className={`flex items-center gap-2 font-bold uppercase text-[10px] tracking-[0.2em] transition-all ${step === "college" ? 'opacity-0' : 'text-[#c62828]/65 hover:text-[#c62828]'}`}
         >
           <ChevronLeft className="w-4 h-4" /> Back
         </button>
 
         <div className="text-center">
-          <h1 className="text-sm font-black text-[#024059] uppercase tracking-[0.3em]">Booking Portal</h1>
-          <p className="text-[#024059]/65 font-bold text-[10px] mt-0.5 uppercase tracking-widest">
+          <h1 className="text-sm font-black text-[#c62828] uppercase tracking-[0.3em]">Booking Portal</h1>
+          <p className="text-[#c62828]/65 font-bold text-[10px] mt-0.5 uppercase tracking-widest">
             Student: <span className="text-slate-800">{studentName || "Verified Student"}</span>
           </p>
-          <p className="text-[#024059]/55 font-bold text-[9px] mt-1 uppercase tracking-widest">
+          <p className="text-[#c62828]/55 font-bold text-[9px] mt-1 uppercase tracking-widest">
             ID: <span className="text-slate-500">{maskStudentNumber(studentNumber)}</span>
           </p>
         </div>
 
         <div className="bg-white px-4 py-2 rounded-full border border-[#E8E6EB] shadow-sm flex items-center gap-2">
-          <div className="h-2 w-2 rounded-full bg-[#024059] animate-pulse" />
+          <div className="h-2 w-2 rounded-full bg-[#c62828] animate-pulse" />
           <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Active</span>
         </div>
       </header>
@@ -502,7 +502,7 @@ export default function QueueBooking() {
 
             <Card className="relative border-0 shadow-[0_30px_60px_rgba(0,0,0,0.06)] rounded-[32px] sm:rounded-[48px] bg-white overflow-hidden z-10">
               <CardHeader className="pt-14 pb-6 px-6 text-center sm:pt-16 sm:pb-8 sm:px-12">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-[24px] bg-[#E8E6EB]/60 text-[#024059] mb-6">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-[24px] bg-[#f3f1f6]/60 text-[#c62828] mb-6">
                   {step === "college" && <School className="w-8 h-8" />}
                   {step === "department" && <BookOpen className="w-8 h-8" />}
                   {step === "faculty" && <UserCircle className="w-8 h-8" />}
@@ -514,14 +514,14 @@ export default function QueueBooking() {
                   {step === "faculty" && "Choose Your Professor"}
                   {step === "type" && "Select Consultation Slot"}
                 </CardTitle>
-                <CardDescription className="text-[#024059]/65 font-bold uppercase tracking-[0.1em] text-xs">
+                <CardDescription className="text-[#c62828]/65 font-bold uppercase tracking-[0.1em] text-xs">
                   Step {step === "college" ? "1" : step === "department" ? "2" : step === "faculty" ? "3" : "4"} of 4
                 </CardDescription>
               </CardHeader>
 
               <CardContent className="px-6 pb-12 pt-4 sm:px-12 sm:pb-20">
                 {error && (
-                  <Alert variant="destructive" className="mb-8 bg-[#E8E6EB]/60 border-0 text-[#024059] rounded-3xl p-5">
+                  <Alert variant="destructive" className="mb-8 bg-[#f3f1f6]/60 border-0 text-[#c62828] rounded-3xl p-5">
                     <AlertCircle className="h-5 w-5" />
                     <AlertDescription className="font-bold ml-2">{error}</AlertDescription>
                   </Alert>
@@ -531,44 +531,44 @@ export default function QueueBooking() {
                   {step === "college" && colleges.map((college) => (
                     <button 
                       key={college.id} 
-                      className="group flex items-center justify-between p-7 bg-white border border-slate-100 hover:border-[#E8E6EB] hover:shadow-xl hover:shadow-[#024059]/10 rounded-[32px] transition-all duration-300 text-left"
+                      className="group flex items-center justify-between p-7 bg-white border border-slate-100 hover:border-[#E8E6EB] hover:shadow-xl hover:shadow-[#c62828]/10 rounded-[32px] transition-all duration-300 text-left"
                       onClick={() => handleCollegeSelect(college.id)}
                     >
                       <div>
-                        <div className="font-black text-[#024059] text-[10px] tracking-widest uppercase mb-1.5">{college.code}</div>
-                        <div className="font-bold text-slate-800 text-lg leading-tight group-hover:text-[#024059] transition-colors">{college.name}</div>
+                        <div className="font-black text-[#c62828] text-[10px] tracking-widest uppercase mb-1.5">{college.code}</div>
+                        <div className="font-bold text-slate-800 text-lg leading-tight group-hover:text-[#c62828] transition-colors">{college.name}</div>
                       </div>
-                      <div className="h-10 w-10 rounded-full bg-slate-50 group-hover:bg-[#E8E6EB]/60 flex items-center justify-center transition-colors">
-                        <ChevronRight className="w-5 h-5 text-[#024059]/55 group-hover:text-[#024059]" />
+                      <div className="h-10 w-10 rounded-full bg-slate-50 group-hover:bg-[#f3f1f6]/60 flex items-center justify-center transition-colors">
+                        <ChevronRight className="w-5 h-5 text-[#c62828]/55 group-hover:text-[#c62828]" />
                       </div>
                     </button>
                   ))}
                   {step === "college" && colleges.length === 0 && (
                     <div className="md:col-span-2 text-center py-24 bg-slate-50/50 rounded-[40px] border-2 border-dashed border-slate-100">
                       <School className="w-16 h-16 text-slate-200 mx-auto mb-4" />
-                      <div className="text-[#024059]/65 font-black uppercase tracking-widest text-[10px]">No colleges available</div>
+                      <div className="text-[#c62828]/65 font-black uppercase tracking-widest text-[10px]">No colleges available</div>
                     </div>
                   )}
 
                   {step === "department" && departments.map((dept) => (
                     <button 
                       key={dept.id} 
-                      className="group flex items-center justify-between p-7 bg-white border border-slate-100 hover:border-[#E8E6EB] hover:shadow-xl hover:shadow-[#024059]/10 rounded-[32px] transition-all duration-300 text-left"
+                      className="group flex items-center justify-between p-7 bg-white border border-slate-100 hover:border-[#E8E6EB] hover:shadow-xl hover:shadow-[#c62828]/10 rounded-[32px] transition-all duration-300 text-left"
                       onClick={() => handleDepartmentSelect(dept.id)}
                     >
                       <div>
-                        <div className="font-black text-[#024059] text-[10px] tracking-widest uppercase mb-1.5">{dept.code}</div>
-                        <div className="font-bold text-slate-800 text-lg leading-tight group-hover:text-[#024059] transition-colors">{dept.name}</div>
+                        <div className="font-black text-[#c62828] text-[10px] tracking-widest uppercase mb-1.5">{dept.code}</div>
+                        <div className="font-bold text-slate-800 text-lg leading-tight group-hover:text-[#c62828] transition-colors">{dept.name}</div>
                       </div>
-                      <div className="h-10 w-10 rounded-full bg-slate-50 group-hover:bg-[#E8E6EB]/60 flex items-center justify-center transition-colors">
-                        <ChevronRight className="w-5 h-5 text-[#024059]/55 group-hover:text-[#024059]" />
+                      <div className="h-10 w-10 rounded-full bg-slate-50 group-hover:bg-[#f3f1f6]/60 flex items-center justify-center transition-colors">
+                        <ChevronRight className="w-5 h-5 text-[#c62828]/55 group-hover:text-[#c62828]" />
                       </div>
                     </button>
                   ))}
                   {step === "department" && departments.length === 0 && (
                     <div className="md:col-span-2 text-center py-24 bg-slate-50/50 rounded-[40px] border-2 border-dashed border-slate-100">
                       <BookOpen className="w-16 h-16 text-slate-200 mx-auto mb-4" />
-                      <div className="text-[#024059]/65 font-black uppercase tracking-widest text-[10px]">No departments available</div>
+                      <div className="text-[#c62828]/65 font-black uppercase tracking-widest text-[10px]">No departments available</div>
                     </div>
                   )}
 
@@ -583,26 +583,26 @@ export default function QueueBooking() {
                             onClick={() => handleFacultySelect(faculty)}
                           >
                             <div className="flex items-center gap-6">
-                              <div className="h-14 w-14 rounded-2xl bg-[#E8E6EB]/60 flex items-center justify-center text-[#024059] font-black text-xl shadow-sm">
+                              <div className="h-14 w-14 rounded-2xl bg-[#f3f1f6]/60 flex items-center justify-center text-[#c62828] font-black text-xl shadow-sm">
                                 {faculty.name[0]}
                               </div>
                               <div>
-                                <div className="font-black text-slate-800 text-xl group-hover:text-[#024059] transition-colors">{faculty.name}</div>
+                                <div className="font-black text-slate-800 text-xl group-hover:text-[#c62828] transition-colors">{faculty.name}</div>
                                 <div className="flex items-center gap-2 mt-1">
-                                  <Clock className="w-3 h-3 text-[#024059]/55" />
-                                  <span className="text-[#024059]/65 font-bold text-[10px] uppercase tracking-widest">
-                                    Est. Wait: <span className="text-[#024059]">{typeof wait === 'number' ? `~${wait} mins` : wait}</span>
+                                  <Clock className="w-3 h-3 text-[#c62828]/55" />
+                                  <span className="text-[#c62828]/65 font-bold text-[10px] uppercase tracking-widest">
+                                    Est. Wait: <span className="text-[#c62828]">{typeof wait === 'number' ? `~${wait} mins` : wait}</span>
                                   </span>
                                 </div>
                               </div>
                             </div>
-                            <Badge className="bg-[#E8E6EB]/60 text-[#024059] border-0 uppercase text-[9px] px-3 py-1.5 font-black tracking-widest rounded-full">Available</Badge>
+                            <Badge className="bg-[#f3f1f6]/60 text-[#c62828] border-0 uppercase text-[9px] px-3 py-1.5 font-black tracking-widest rounded-full">Available</Badge>
                           </button>
                         );
                       }) : (
                         <div className="text-center py-24 bg-slate-50/50 rounded-[40px] border-2 border-dashed border-slate-100">
                           <UserCircle className="w-16 h-16 text-slate-200 mx-auto mb-4" />
-                          <div className="text-[#024059]/65 font-black uppercase tracking-widest text-[10px]">No Active Professors</div>
+                          <div className="text-[#c62828]/65 font-black uppercase tracking-widest text-[10px]">No Active Professors</div>
                         </div>
                       )}
                     </div>
@@ -611,7 +611,7 @@ export default function QueueBooking() {
                   {step === "type" && (
                     <div className="md:col-span-2 space-y-5">
                       <div className="rounded-[28px] border border-slate-100 bg-slate-50 p-6 text-left">
-                        <p className="text-[10px] font-black text-[#024059]/65 uppercase tracking-[0.2em] mb-3">
+                        <p className="text-[10px] font-black text-[#c62828]/65 uppercase tracking-[0.2em] mb-3">
                           Consultation Mode
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -620,11 +620,11 @@ export default function QueueBooking() {
                             onClick={() => setSelectedConsultationMethod("face_to_face")}
                             className={`rounded-2xl border p-4 text-left transition-all ${
                               selectedConsultationMethod === "face_to_face"
-                                ? "border-[#024059] bg-[#E8E6EB]/60"
+                                ? "border-[#c62828] bg-[#f3f1f6]/60"
                                 : "border-slate-200 bg-white hover:border-[#E8E6EB]"
                             }`}
                           >
-                            <p className="text-[10px] font-black uppercase tracking-widest text-[#024059]/65">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-[#c62828]/65">
                               In-Person
                             </p>
                             <p className="text-lg font-black text-slate-800 mt-1">Face-to-Face</p>
@@ -634,11 +634,11 @@ export default function QueueBooking() {
                             onClick={() => setSelectedConsultationMethod("google_meet")}
                             className={`rounded-2xl border p-4 text-left transition-all ${
                               selectedConsultationMethod === "google_meet"
-                                ? "border-[#024059] bg-[#E8E6EB]/60"
+                                ? "border-[#c62828] bg-[#f3f1f6]/60"
                                 : "border-slate-200 bg-white hover:border-[#E8E6EB]"
                             }`}
                           >
-                            <p className="text-[10px] font-black uppercase tracking-widest text-[#024059]/65">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-[#c62828]/65">
                               Remote
                             </p>
                             <p className="text-lg font-black text-slate-800 mt-1">Online (Google Meet)</p>
@@ -647,7 +647,7 @@ export default function QueueBooking() {
                       </div>
 
                       <div className="rounded-[28px] border border-slate-100 bg-slate-50 p-6 text-left">
-                        <p className="text-[10px] font-black text-[#024059]/65 uppercase tracking-[0.2em] mb-3">
+                        <p className="text-[10px] font-black text-[#c62828]/65 uppercase tracking-[0.2em] mb-3">
                           Consultation Concern (Required)
                         </p>
                         <textarea
@@ -660,13 +660,13 @@ export default function QueueBooking() {
                           className="w-full min-h-[120px] rounded-2xl border border-slate-200 bg-white p-4 text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#E8E6EB]"
                           maxLength={500}
                         />
-                        <p className="text-[10px] font-bold text-[#024059]/65 uppercase tracking-widest mt-2 text-right">
+                        <p className="text-[10px] font-bold text-[#c62828]/65 uppercase tracking-widest mt-2 text-right">
                           {consultationConcern.length}/500
                         </p>
                       </div>
 
                       <div className="rounded-[28px] border border-slate-100 bg-slate-50 p-6 text-left">
-                        <p className="text-[10px] font-black text-[#024059]/65 uppercase tracking-[0.2em] mb-3">
+                        <p className="text-[10px] font-black text-[#c62828]/65 uppercase tracking-[0.2em] mb-3">
                           Available Time Slots
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -677,21 +677,21 @@ export default function QueueBooking() {
                               onClick={() => setSelectedSlotKey(slot.key)}
                               className={`rounded-2xl border p-4 text-left transition-all ${
                                 selectedSlotKey === slot.key
-                                  ? "border-[#024059] bg-[#E8E6EB]/60"
+                                  ? "border-[#c62828] bg-[#f3f1f6]/60"
                                   : "border-slate-200 bg-white hover:border-[#E8E6EB]"
                               }`}
                             >
-                              <p className="text-[10px] font-black uppercase tracking-widest text-[#024059]/65">
+                              <p className="text-[10px] font-black uppercase tracking-widest text-[#c62828]/65">
                                 {slot.dateLabel}
                               </p>
                               <p className="text-lg font-black text-slate-800 mt-1">{slot.timeLabel}</p>
-                              <p className="text-[10px] font-black uppercase tracking-widest text-[#024059] mt-2">
+                              <p className="text-[10px] font-black uppercase tracking-widest text-[#c62828] mt-2">
                                 {selectedConsultationMethod === "google_meet" ? "Online (Google Meet)" : "Face-to-Face"}
                               </p>
                             </button>
                           ))}
                           {slotOptions.length === 0 && (
-                            <p className="text-[10px] font-black uppercase tracking-widest text-[#024059]/65">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-[#c62828]/65">
                               No available time slots configured by this professor.
                             </p>
                           )}
@@ -702,7 +702,7 @@ export default function QueueBooking() {
                         type="button"
                         onClick={handleSlotBooking}
                         disabled={loading || !consultationConcern.trim() || !selectedSlot || !selectedConsultationMethod}
-                        className="w-full h-16 bg-[#024059] hover:bg-[#024059] rounded-2xl font-black text-white uppercase tracking-[0.2em]"
+                        className="w-full h-16 bg-[#c62828] hover:bg-[#c62828] rounded-2xl font-black text-white uppercase tracking-[0.2em]"
                       >
                         Confirm Booking
                       </Button>
@@ -720,7 +720,7 @@ export default function QueueBooking() {
               onClick={() => setLocation("/kiosk")}
               disabled={loading}
               variant="outline"
-              className="w-full h-14 border-[#024059] text-[#024059] bg-white hover:bg-[#E8E6EB]/60 rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-sm"
+              className="w-full h-14 border-[#c62828] text-[#c62828] bg-white hover:bg-[#f3f1f6]/60 rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-sm"
              >
               Cancel Booking
              </Button>
@@ -731,10 +731,10 @@ export default function QueueBooking() {
       {loading && (
         <div className="fixed inset-0 bg-white/90 backdrop-blur-md z-50 flex flex-col items-center justify-center animate-in fade-in duration-300">
           <div className="relative">
-            <Loader2 className="w-20 h-20 animate-spin text-[#024059] opacity-20" />
-            <CheckCircle2 className="w-10 h-10 text-[#024059] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" />
+            <Loader2 className="w-20 h-20 animate-spin text-[#c62828] opacity-20" />
+            <CheckCircle2 className="w-10 h-10 text-[#c62828] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" />
           </div>
-          <p className="font-black text-[#024059] uppercase tracking-[0.4em] text-[10px] mt-8">Booking Ticket...</p>
+          <p className="font-black text-[#c62828] uppercase tracking-[0.4em] text-[10px] mt-8">Booking Ticket...</p>
         </div>
       )}
 
@@ -751,3 +751,4 @@ export default function QueueBooking() {
     </div>
   );
 }
+

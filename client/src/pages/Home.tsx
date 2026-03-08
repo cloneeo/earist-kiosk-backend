@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLocation } from "wouter";
-import { QrCode, LogOut, Monitor, Clock3, ArrowRight, Users } from "lucide-react";
+import { QrCode, LogOut, Monitor, Clock3, ArrowRight } from "lucide-react";
 import { kioskSupabase } from "@/lib/supabaseKiosk";
 
 type QueueStatus = "waiting" | "called";
@@ -184,10 +184,6 @@ export default function Home() {
               >
                 Start Booking <ArrowRight size={18} className="ml-2" />
               </Button>
-
-              <p className="mt-5 text-xs font-black uppercase tracking-wider text-[#024059]/60">
-                Faculty and Admin access remains available via login portal.
-              </p>
             </CardContent>
           </Card>
         </div>
@@ -255,18 +251,6 @@ export default function Home() {
             </Card>
           </button>
 
-          <Card className="border-0 shadow-sm rounded-[28px] bg-white/80 sm:col-span-2 lg:col-span-1">
-            <CardContent className="p-5 flex items-center gap-3">
-              <Users size={18} className="text-[#024059]" />
-              <Button
-                variant="ghost"
-                onClick={() => setLocation("/login")}
-                className="h-auto p-0 text-[10px] font-black text-[#024059]/65 hover:text-[#024059] uppercase tracking-[0.25em]"
-              >
-                Faculty and Admin Portal
-              </Button>
-            </CardContent>
-          </Card>
         </div>
       </main>
 
