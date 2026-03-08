@@ -47,7 +47,6 @@ const sanitizeMeetLink = (value: unknown): string => {
   const candidate = String(value || "").trim();
   if (!candidate) return "";
   if (!/^https:\/\/meet\.google\.com\//i.test(candidate)) return "";
-  if (/^https:\/\/meet\.google\.com\/new(?:[/?#]|$)/i.test(candidate)) return "";
   return candidate;
 };
 
@@ -249,7 +248,7 @@ export function registerBookingEmailRoutes(app: Express) {
         );
 
         const historyMeetLink = String(meetLinkResponse.data?.[0]?.notes || "").trim();
-        sharedMeetLink = requestedMeetLink || historyMeetLink || facultyScheduleMeetLink;
+        sharedMeetLink = requestedMeetLink || historyMeetLink || facultyScheduleMeetLink || "https://meet.google.com/new";
 
         if (sharedMeetLink && sharedMeetLink !== historyMeetLink) {
           await insertQueueHistory(queueId, "google_meet_link_shared", sharedMeetLink);
