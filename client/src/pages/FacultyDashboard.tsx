@@ -674,15 +674,11 @@ export default function FacultyDashboard() {
     const parsedSchedule = parseScheduleConfig(faculty?.schedule);
     const queueMeetLink = String(queueEntry.meet_link || "").trim();
     const configuredMeetLink = String(parsedSchedule.meetingLink || "").trim();
-    const meetUrl = queueMeetLink || configuredMeetLink || "https://meet.google.com/new";
+    const meetUrl = queueMeetLink || configuredMeetLink;
 
     if (!meetUrl) {
-      toast.error("No Google Meet link is available for this booking yet.");
+      toast.error("No fixed Google Meet link is set for this booking. Please set your Meet room in schedule.");
       return;
-    }
-
-    if (/^https:\/\/meet\.google\.com\/new(?:[/?#]|$)/i.test(meetUrl)) {
-      toast("No fixed Meet room is set. Opening meet.google.com/new.", { icon: "ℹ️" });
     }
 
     const meetWindow = window.open(meetUrl, "_blank", "noopener,noreferrer");
