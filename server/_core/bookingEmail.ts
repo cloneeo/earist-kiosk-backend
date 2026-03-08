@@ -43,12 +43,20 @@ const hasSendGridConfig = !!sendGridApiKey && !!sendGridFrom;
 const isUuid = (value: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 
+const sanitizeMeetLink = (value: unknown): string => {
+  const candidate = String(value || "").trim();
+  if (!candidate) return "";
+  if (!/^https:\/\/meet\.google\.com\//i.test(candidate)) return "";
+  if (/^https:\/\/meet\.google\.com\/new(?:[/?#]|$)/i.test(candidate)) return "";
+  return candidate;
+};
+
 const readMeetingLinkFromSchedule = (scheduleRaw: unknown): string => {
   if (!scheduleRaw) return "";
 
   if (typeof scheduleRaw === "object") {
     const meetingLink = (scheduleRaw as { meetingLink?: unknown }).meetingLink;
-    return typeof meetingLink === "string" ? meetingLink.trim() : "";
+    return sanitizeMeetLink(meetingLink);
   }
 
   const raw = String(scheduleRaw).trim();
@@ -56,7 +64,7 @@ const readMeetingLinkFromSchedule = (scheduleRaw: unknown): string => {
 
   try {
     const parsed = JSON.parse(raw) as { meetingLink?: unknown };
-    return typeof parsed.meetingLink === "string" ? parsed.meetingLink.trim() : "";
+    return sanitizeMeetLink(parsed.meetingLink);
   } catch {
     return "";
   }
@@ -105,9 +113,7 @@ const resolveFallbackEmail = (value: unknown): string | null => {
 };
 
 const resolveMeetLink = (value: unknown): string => {
-  const candidate = String(value || "").trim();
-  if (!candidate) return "";
-  return /^https:\/\/meet\.google\.com\//i.test(candidate) ? candidate : "";
+  return sanitizeMeetLink(value);
 };
 
 const sendBookingEmail = async (toEmail: string, subject: string, html: string): Promise<SendEmailResult> => {
@@ -237,17 +243,15 @@ export function registerBookingEmailRoutes(app: Express) {
 
       let sharedMeetLink = "";
       if (queueEntry.consultation_type === "google_meet") {
-        sharedMeetLink = requestedMeetLink || facultyScheduleMeetLink;
+        // Use the most ticket-stable source first so student and faculty views stay consistent.
+        const meetLinkResponse = await supabaseFetch<{ notes?: string | null }>(
+          `queue_history?select=notes&queue_entry_id=eq.${queueId}&action=eq.google_meet_link_shared&order=created_at.desc&limit=1`
+        );
 
-        if (!sharedMeetLink) {
-          const meetLinkResponse = await supabaseFetch<{ notes?: string | null }>(
-            `queue_history?select=notes&queue_entry_id=eq.${queueId}&action=eq.google_meet_link_shared&order=created_at.desc&limit=1`
-          );
+        const historyMeetLink = String(meetLinkResponse.data?.[0]?.notes || "").trim();
+        sharedMeetLink = requestedMeetLink || historyMeetLink || facultyScheduleMeetLink;
 
-          sharedMeetLink = String(meetLinkResponse.data?.[0]?.notes || "").trim();
-        }
-
-        if (sharedMeetLink) {
+        if (sharedMeetLink && sharedMeetLink !== historyMeetLink) {
           await insertQueueHistory(queueId, "google_meet_link_shared", sharedMeetLink);
         }
       }

@@ -394,6 +394,12 @@ export default function FacultyDashboard() {
   const handleSaveSchedule = async () => {
     if (!faculty) return;
 
+    const trimmedMeetingLink = meetingLink.trim();
+    if (/^https:\/\/meet\.google\.com\/new(?:[/?#]|$)/i.test(trimmedMeetingLink)) {
+      toast.error("Please save a fixed Google Meet room link, not meet.google.com/new.");
+      return;
+    }
+
     const normalizedDates = (availableDates || [])
       .map((date) => normalizeDateOnly(date))
       .sort((a, b) => a.getTime() - b.getTime());
@@ -416,7 +422,7 @@ export default function FacultyDashboard() {
       return;
     }
 
-    const schedulePayload = buildScheduleConfig(uniqueDates, cleanedSlots, meetingLink.trim(), officeLocation.trim());
+    const schedulePayload = buildScheduleConfig(uniqueDates, cleanedSlots, trimmedMeetingLink, officeLocation.trim());
 
     const { error: err } = await supabase
       .from("faculty")
@@ -543,7 +549,20 @@ export default function FacultyDashboard() {
     if (!queueEntry || queueEntry.consultation_type !== "google_meet") return;
 
     const parsedSchedule = parseScheduleConfig(faculty?.schedule);
-    const meetUrl = parsedSchedule.meetingLink || String(queueEntry.meet_link || "").trim() || "https://meet.google.com/new";
+    const queueMeetLink = String(queueEntry.meet_link || "").trim();
+    const configuredMeetLink = String(parsedSchedule.meetingLink || "").trim();
+    const meetUrl = queueMeetLink || configuredMeetLink;
+
+    if (!meetUrl) {
+      toast.error("No Google Meet link is available for this booking yet.");
+      return;
+    }
+
+    if (/^https:\/\/meet\.google\.com\/new(?:[/?#]|$)/i.test(meetUrl)) {
+      toast.error("Dynamic Meet links are blocked. Please save a fixed Meet room link in your schedule.");
+      return;
+    }
+
     const meetWindow = window.open(meetUrl, "_blank", "noopener,noreferrer");
 
     if (!meetWindow) {

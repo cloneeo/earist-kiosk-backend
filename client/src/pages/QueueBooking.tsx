@@ -26,18 +26,25 @@ type SlotOption = {
 const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
 const getMeetingLinkFromSchedule = (scheduleRaw: unknown): string => {
+  const sanitizeMeetLink = (value: unknown): string => {
+    const link = String(value || "").trim();
+    if (!/^https:\/\/meet\.google\.com\//i.test(link)) return "";
+    if (/^https:\/\/meet\.google\.com\/new(?:[/?#]|$)/i.test(link)) return "";
+    return link;
+  };
+
   if (!scheduleRaw) return "";
 
   if (typeof scheduleRaw === "object") {
     const meetingLink = (scheduleRaw as { meetingLink?: unknown }).meetingLink;
-    return typeof meetingLink === "string" ? meetingLink.trim() : "";
+    return sanitizeMeetLink(meetingLink);
   }
 
   const raw = String(scheduleRaw).trim();
   if (!raw) return "";
   try {
     const parsed = JSON.parse(raw) as { meetingLink?: unknown };
-    return typeof parsed.meetingLink === "string" ? parsed.meetingLink.trim() : "";
+    return sanitizeMeetLink(parsed.meetingLink);
   } catch {
     return "";
   }
