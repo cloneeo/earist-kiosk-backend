@@ -1061,10 +1061,18 @@ export default function StudentKiosk() {
         />
       )}
 
-      <footer className="px-12 py-8 flex justify-center items-center bg-white border-t border-slate-50">
-        <p className="text-[10px] font-black text-slate-200 uppercase tracking-[0.4em]">
+      <footer className="px-4 py-6 sm:px-8 flex flex-col sm:flex-row justify-between items-center gap-3 bg-white border-t border-slate-100">
+        <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.34em] text-center sm:text-left">
           EARIST QUEUE SYSTEM (C) 2026
         </p>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setLocation("/login")}
+          className="h-10 px-4 rounded-xl border-[#c62828]/30 text-[#c62828] bg-white hover:bg-[#fff5f5] font-black text-[10px] uppercase tracking-[0.18em]"
+        >
+          Staff Login
+        </Button>
       </footer>
     </div>
   );
