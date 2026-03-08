@@ -12,6 +12,8 @@ import StudentKiosk from "./pages/StudentKiosk";
 import QueueBooking from "./pages/QueueBooking";
 import QueueConfirmation from "./pages/QueueConfirmation";
 import StudentStatus from "./pages/StudentStatus";
+import KioskQueueMonitor from "./pages/KioskQueueMonitor";
+import KioskScheduleDirectory from "./pages/KioskScheduleDirectory";
 import FacultyDashboard from "./pages/FacultyDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 
@@ -48,6 +50,8 @@ function Router() {
       <Route path="/kiosk/booking" component={QueueBooking} />
       <Route path="/kiosk/confirmation" component={QueueConfirmation} />
       <Route path="/status/:queueId" component={StudentStatus} />
+      <Route path="/kiosk/monitor" component={KioskQueueMonitor} />
+      <Route path="/kiosk/schedules" component={KioskScheduleDirectory} />
 
       <Route path="/login">
         {user ? (
