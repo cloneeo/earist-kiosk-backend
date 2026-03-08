@@ -4,6 +4,11 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 type AdminDeleteTable = "faculty" | "departments" | "colleges";
 
+type SendEmailResult = {
+  ok: boolean;
+  message?: string;
+};
+
 const ADMIN_EMAILS = new Set(["admin@earist.edu.ph", "adminj@earist.edu.ph"]);
 
 const supabaseUrl =
@@ -12,6 +17,10 @@ const supabaseAnonKey =
   process.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const serviceRoleKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+const sendGridApiKey = process.env.SENDGRID_API_KEY || "";
+const sendGridFrom = process.env.SENDGRID_FROM || process.env.BOOKING_EMAIL_FROM || "";
+
+const hasSendGridConfig = !!sendGridApiKey && !!sendGridFrom;
 
 function getBearerToken(req: Request): string | null {
   const header = req.header("authorization");
@@ -38,6 +47,88 @@ async function verifyAdminEmail(accessToken: string): Promise<string | null> {
   return payload.email.toLowerCase();
 }
 
+function generateTemporaryPassword(length = 12): string {
+  const passwordChars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$";
+  return Array.from({ length }, () => passwordChars[Math.floor(Math.random() * passwordChars.length)]).join("");
+}
+
+async function sendTemporaryPasswordEmail(
+  toEmail: string,
+  facultyName: string,
+  temporaryPassword: string,
+): Promise<SendEmailResult> {
+  if (!hasSendGridConfig) {
+    return { ok: false, message: "SendGrid not configured (SENDGRID_API_KEY / SENDGRID_FROM)." };
+  }
+
+  const loginUrl = `${process.env.APP_URL || process.env.PUBLIC_APP_URL || "http://localhost:3000"}/login`;
+
+  const subject = "EARIST Faculty Portal Account Created";
+  const html = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #0f172a;">
+      <h2 style="margin-bottom: 12px;">Faculty Portal Account Created</h2>
+      <p>Hello ${facultyName || "Professor"},</p>
+      <p>Your EARIST Faculty Portal account is ready.</p>
+      <ul>
+        <li><strong>Email:</strong> ${toEmail}</li>
+        <li><strong>Temporary Password:</strong> ${temporaryPassword}</li>
+        <li><strong>Login Page:</strong> <a href="${loginUrl}">${loginUrl}</a></li>
+      </ul>
+      <p>Please sign in and change your password immediately after first login.</p>
+    </div>
+  `;
+
+  try {
+    const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${sendGridApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        personalizations: [{ to: [{ email: toEmail }] }],
+        from: { email: sendGridFrom },
+        subject,
+        content: [{ type: "text/html", value: html }],
+      }),
+    });
+
+    if (!response.ok) {
+      const detail = await response.text().catch(() => "");
+      return { ok: false, message: detail || `SendGrid rejected request (${response.status}).` };
+    }
+
+    return { ok: true };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Email request failed.",
+    };
+  }
+}
+
+async function validateAdminRequest(req: Request): Promise<{ ok: true; email: string } | { ok: false; status: number; error: string }> {
+  if (!supabaseUrl || !serviceRoleKey) {
+    return {
+      ok: false,
+      status: 500,
+      error: "Server is missing SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SERVICE_KEY).",
+    };
+  }
+
+  const accessToken = getBearerToken(req);
+  if (!accessToken) {
+    return { ok: false, status: 401, error: "Missing authorization token." };
+  }
+
+  const requesterEmail = await verifyAdminEmail(accessToken);
+  if (!requesterEmail || !ADMIN_EMAILS.has(requesterEmail)) {
+    return { ok: false, status: 403, error: "Admin access required." };
+  }
+
+  return { ok: true, email: requesterEmail };
+}
+
 async function deleteFacultyAuthUsers(
   adminClient: SupabaseClient,
   userIds: string[],
@@ -53,23 +144,81 @@ async function deleteFacultyAuthUsers(
 }
 
 export function registerAdminRoutes(app: Express) {
+  app.post("/api/admin/faculty/create", async (req: Request, res: Response) => {
+    try {
+      const auth = await validateAdminRequest(req);
+      if (!auth.ok) {
+        return res.status(auth.status).json({ error: auth.error });
+      }
+
+      const name = String(req.body?.name || "").trim();
+      const email = String(req.body?.email || "").trim().toLowerCase();
+      const departmentId = String(req.body?.department_id || "").trim();
+
+      if (!name || !email || !departmentId) {
+        return res.status(400).json({ error: "Missing required fields: name, email, department_id." });
+      }
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return res.status(400).json({ error: "Invalid faculty email address." });
+      }
+
+      const adminClient = createClient(supabaseUrl!, serviceRoleKey!, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false,
+        },
+      });
+
+      const temporaryPassword = generateTemporaryPassword();
+
+      const { data: createdUser, error: createUserError } = await adminClient.auth.admin.createUser({
+        email,
+        password: temporaryPassword,
+        email_confirm: true,
+        user_metadata: { role: "faculty", full_name: name },
+      });
+
+      if (createUserError) {
+        return res.status(400).json({ error: createUserError.message || "Failed to create faculty auth user." });
+      }
+
+      const userId = createdUser.user?.id;
+      if (!userId) {
+        return res.status(500).json({ error: "Auth user was created without an ID." });
+      }
+
+      const { error: insertFacultyError } = await adminClient.from("faculty").insert({
+        user_id: userId,
+        name,
+        email,
+        department_id: departmentId,
+        status: "offline",
+      });
+
+      if (insertFacultyError) {
+        await adminClient.auth.admin.deleteUser(userId);
+        return res.status(400).json({ error: insertFacultyError.message || "Failed to save faculty profile." });
+      }
+
+      const emailResult = await sendTemporaryPasswordEmail(email, name, temporaryPassword);
+      return res.json({
+        success: true,
+        emailSent: emailResult.ok,
+        emailWarning: emailResult.ok ? undefined : emailResult.message,
+      });
+    } catch (error: any) {
+      console.error("[Admin Faculty Create] Failed:", error);
+      return res.status(500).json({ error: error?.message || "Failed to create faculty account." });
+    }
+  });
+
   app.post("/api/admin/delete", async (req: Request, res: Response) => {
     try {
-      if (!supabaseUrl || !serviceRoleKey) {
-        return res.status(500).json({
-          error:
-            "Server is missing SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SERVICE_KEY).",
-        });
-      }
-
-      const accessToken = getBearerToken(req);
-      if (!accessToken) {
-        return res.status(401).json({ error: "Missing authorization token." });
-      }
-
-      const requesterEmail = await verifyAdminEmail(accessToken);
-      if (!requesterEmail || !ADMIN_EMAILS.has(requesterEmail)) {
-        return res.status(403).json({ error: "Admin access required." });
+      const auth = await validateAdminRequest(req);
+      if (!auth.ok) {
+        return res.status(auth.status).json({ error: auth.error });
       }
 
       const table = req.body?.table as AdminDeleteTable;
@@ -79,7 +228,7 @@ export function registerAdminRoutes(app: Express) {
         return res.status(400).json({ error: "Invalid delete payload." });
       }
 
-      const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+      const adminClient = createClient(supabaseUrl!, serviceRoleKey!, {
         auth: {
           persistSession: false,
           autoRefreshToken: false,

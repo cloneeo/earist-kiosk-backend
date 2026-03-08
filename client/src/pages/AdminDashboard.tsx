@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
-import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase";
 import { toast } from "react-hot-toast";
 
@@ -138,42 +137,40 @@ export default function AdminDashboard() {
     if (!newFaculty.name || !newFaculty.email || !newFaculty.department_id) return toast.error("Fill in all fields");
     setIsSubmitting(true);
     try {
-      const passwordChars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$";
-      const tempPassword = Array.from({ length: 12 }, () => passwordChars[Math.floor(Math.random() * passwordChars.length)]).join("");
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      if (!supabaseUrl || !supabaseAnonKey) throw new Error("Missing Supabase environment variables");
+      if (!session?.access_token) {
+        throw new Error("Session expired. Please sign in again.");
+      }
 
-      // Use isolated auth client so admin session is not replaced by new faculty session.
-      const signupClient = createClient(supabaseUrl, supabaseAnonKey, {
-        auth: {
-          persistSession: false,
-          autoRefreshToken: false,
-          detectSessionInUrl: false,
+      const response = await fetch("/api/admin/faculty/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
         },
+        body: JSON.stringify({
+          name: newFaculty.name.trim(),
+          email: newFaculty.email.trim().toLowerCase(),
+          department_id: newFaculty.department_id,
+        }),
       });
 
-      const { data: signUpData, error: signUpError } = await signupClient.auth.signUp({
-        email: newFaculty.email.trim(),
-        password: tempPassword,
-      });
-      if (signUpError) throw signUpError;
-      if (!signUpData.user?.id) throw new Error("Auth user was not created");
-
-      const { error } = await supabase.from("faculty").insert({
-        user_id: signUpData.user.id,
-        name: newFaculty.name.trim(),
-        email: newFaculty.email.trim(),
-        department_id: newFaculty.department_id,
-        status: "offline",
-      });
-      if (error) throw error;
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(payload?.error || "Failed to create faculty account.");
+      }
 
       toast.success("Faculty member added");
+      if (payload?.emailSent === false) {
+        toast(payload?.emailWarning || "Faculty created but temporary password email was not sent.", { icon: "⚠️" });
+      } else {
+        toast.success("Temporary password has been emailed to faculty.");
+      }
       setIsFacultyModalOpen(false);
       setNewFaculty({ name: "", email: "", department_id: "" });
-      alert(`Faculty account created.\nEmail: ${signUpData.user.email}\nTemporary Password: ${tempPassword}`);
       loadData();
     } catch (err: any) { toast.error(err.message); } finally { setIsSubmitting(false); }
   };
@@ -361,7 +358,7 @@ export default function AdminDashboard() {
           <div className="space-y-3">
             <Input placeholder="Full Name" value={newFaculty.name} onChange={e => setNewFaculty(p => ({...p, name: e.target.value}))}/>
             <Input placeholder="Email" value={newFaculty.email} onChange={e => setNewFaculty(p => ({...p, email: e.target.value}))}/>
-            <p className="text-xs text-slate-500">A temporary password will be generated automatically after saving.</p>
+            <p className="text-xs text-slate-500">A temporary password will be generated and emailed automatically after saving.</p>
             <Select value={newFaculty.department_id} onValueChange={v => setNewFaculty(p => ({...p, department_id: v}))}><SelectTrigger><SelectValue placeholder="Select Dept"/></SelectTrigger><SelectContent>{departments.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent></Select>
           </div>
           <DialogFooter><Button variant="ghost" onClick={() => setIsFacultyModalOpen(false)}>Cancel</Button><Button onClick={handleAddFaculty} disabled={isSubmitting} className="bg-[#024059] text-white">Save</Button></DialogFooter>
