@@ -6,7 +6,6 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import ActiveTicketNotifier from "./components/ActiveTicketNotifier";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import Home from "./pages/Home";
 import Login from "./pages/Login";
 import StudentKiosk from "./pages/StudentKiosk";
 import QueueBooking from "./pages/QueueBooking";
@@ -45,7 +44,9 @@ function Router() {
 
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      <Route path="/">
+        <Redirect to="/kiosk" />
+      </Route>
       <Route path="/kiosk" component={StudentKiosk} />
       <Route path="/kiosk/booking" component={QueueBooking} />
       <Route path="/kiosk/confirmation" component={QueueConfirmation} />

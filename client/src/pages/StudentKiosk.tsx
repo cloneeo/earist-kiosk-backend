@@ -49,10 +49,15 @@ export default function StudentKiosk() {
 
   const [currentTime, setCurrentTime] = useState(new Date());
   const [faculties, setFaculties] = useState<any[]>([]);
+  const [colleges, setColleges] = useState<Array<{ id: string; name: string; code: string }>>([]);
+  const [departments, setDepartments] = useState<Array<{ id: string; name: string; college_id: string | null }>>([]);
+  const [selectedMonitorCollege, setSelectedMonitorCollege] = useState<string>("all");
   const [selectedMonitorDepartment, setSelectedMonitorDepartment] = useState<string>("all");
   const [selectedMonitorProf, setSelectedMonitorProf] = useState<string | null>(null);
   const [liveQueue, setLiveQueue] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [queueFinderOpen, setQueueFinderOpen] = useState(false);
+  const [queueFinderQuery, setQueueFinderQuery] = useState("");
   const [isNameDialogOpen, setIsNameDialogOpen] = useState(false);
   const [pendingStudentNumber, setPendingStudentNumber] = useState<string | null>(null);
   const [studentName, setStudentName] = useState("");
@@ -221,6 +226,25 @@ export default function StudentKiosk() {
   }, [loadFaculties]);
 
   useEffect(() => {
+    const loadLookups = async () => {
+      const [collegesRes, departmentsRes] = await Promise.all([
+        kioskSupabase.from("colleges").select("id, name, code").order("name"),
+        kioskSupabase.from("departments").select("id, name, college_id").order("name"),
+      ]);
+
+      if (!collegesRes.error) {
+        setColleges((collegesRes.data || []) as Array<{ id: string; name: string; code: string }>);
+      }
+
+      if (!departmentsRes.error) {
+        setDepartments((departmentsRes.data || []) as Array<{ id: string; name: string; college_id: string | null }>);
+      }
+    };
+
+    void loadLookups();
+  }, []);
+
+  useEffect(() => {
     if (!selectedMonitorProf) {
       setLiveQueue([]);
       return;
@@ -253,7 +277,16 @@ export default function StudentKiosk() {
   }, []);
 
   useEffect(() => {
+    const validDepartmentIds = selectedMonitorCollege === "all"
+      ? null
+      : new Set(
+          departments
+            .filter((department) => department.college_id === selectedMonitorCollege)
+            .map((department) => department.id),
+        );
+
     const monitorFaculties = faculties.filter((faculty) => {
+      if (validDepartmentIds && !validDepartmentIds.has(faculty.department_id)) return false;
       if (selectedMonitorDepartment === "all") return true;
       return faculty.department_id === selectedMonitorDepartment;
     });
@@ -262,7 +295,20 @@ export default function StudentKiosk() {
       if (prev && monitorFaculties.some((faculty) => faculty.id === prev)) return prev;
       return monitorFaculties.length > 0 ? monitorFaculties[0].id : null;
     });
-  }, [selectedMonitorDepartment, faculties]);
+  }, [selectedMonitorCollege, selectedMonitorDepartment, faculties, departments]);
+
+  useEffect(() => {
+    if (selectedMonitorDepartment === "all") return;
+    const selectedDepartment = departments.find((department) => department.id === selectedMonitorDepartment);
+    if (!selectedDepartment) {
+      setSelectedMonitorDepartment("all");
+      return;
+    }
+
+    if (selectedMonitorCollege !== "all" && selectedDepartment.college_id !== selectedMonitorCollege) {
+      setSelectedMonitorDepartment("all");
+    }
+  }, [selectedMonitorCollege, selectedMonitorDepartment, departments]);
 
   const validateStudentNumber = (number: string): boolean => {
     const pattern = /^\d{3}-\d{5}[A-Z]?$/;
@@ -444,50 +490,35 @@ export default function StudentKiosk() {
   };
 
   const handleCheckStatus = async () => {
-    const input = prompt("Enter your Student Number or Ticket ID:");
-    if (!input || input.trim() === "") return;
-
-    const cleanInput = input.trim();
-    const toastId = toast.loading("Searching for active session...");
-
-    try {
-      const { data, error: queryError } = await kioskSupabase
-        .from("queue_entries")
-        .select("id")
-        .or(`id.eq.${cleanInput},student_number.eq.${cleanInput.toUpperCase()}`)
-        .in("status", ["waiting", "called"])
-        .order("created_at", { ascending: false })
-        .maybeSingle();
-
-      if (queryError) throw queryError;
-
-      if (!data) {
-        toast.error("No active session found. Please book first.", { id: toastId });
-      } else {
-        toast.success("Active session found!", { id: toastId });
-        setLocation(`/status/${data.id}`);
-      }
-    } catch (lookupError) {
-      console.error(lookupError);
-      toast.error("Error connecting to system. Please try again.", { id: toastId });
-    }
+    setQueueFinderQuery("");
+    setQueueFinderOpen(true);
   };
+
+  const departmentById = new Map(departments.map((department) => [department.id, department]));
+
+  const monitorColleges = colleges.filter((college) =>
+    departments.some((department) => department.college_id === college.id),
+  );
 
   const monitorDepartments = Array.from(
     new Map(
-      faculties
-        .filter((faculty) => !!faculty.department_id)
-        .map((faculty) => [
-          faculty.department_id,
+      departments
+        .filter((department) => selectedMonitorCollege === "all" || department.college_id === selectedMonitorCollege)
+        .map((department) => [
+          department.id,
           {
-            id: faculty.department_id,
-            name: faculty.department?.name || "Unassigned Department",
+            id: department.id,
+            name: department.name || "Unassigned Department",
           },
         ]),
     ).values(),
   ).sort((a, b) => a.name.localeCompare(b.name));
 
   const monitorFaculties = faculties.filter((faculty) => {
+    if (selectedMonitorCollege !== "all") {
+      const department = departmentById.get(faculty.department_id);
+      if (!department || department.college_id !== selectedMonitorCollege) return false;
+    }
     if (selectedMonitorDepartment === "all") return true;
     return faculty.department_id === selectedMonitorDepartment;
   });
@@ -506,6 +537,15 @@ export default function StudentKiosk() {
 
   const meetingMethod = selectedFaculty?.consultation_method || "face_to_face";
   const isOnline = meetingMethod === "online";
+
+  const queueFinderRows = liveQueue.filter((ticket) => {
+    const needle = queueFinderQuery.trim().toLowerCase();
+    if (!needle) return true;
+
+    const candidateName = String(ticket.student_display_name || "").toLowerCase();
+    const candidateStudentNumber = String(ticket.student_number || "").toLowerCase();
+    return candidateName.includes(needle) || candidateStudentNumber.includes(needle);
+  });
 
   const getRemainingTime = (calledAt: string | null) => {
     if (!calledAt) return 15;
@@ -782,6 +822,111 @@ export default function StudentKiosk() {
                     </div>
                   </DialogContent>
                 </Dialog>
+
+                <Dialog open={queueFinderOpen} onOpenChange={setQueueFinderOpen}>
+                  <DialogContent className="rounded-[32px] max-w-2xl border-0 shadow-2xl p-0 overflow-hidden bg-white">
+                    <DialogHeader className="bg-[#c62828] p-6 text-white">
+                      <DialogTitle className="text-2xl font-black uppercase tracking-tight">
+                        Find Student Queue
+                      </DialogTitle>
+                      <p className="text-[11px] text-[#E8E6EB] font-bold uppercase tracking-wider mt-2">
+                        Search by student number or name, then open status
+                      </p>
+                    </DialogHeader>
+
+                    <div className="p-6 space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <Select
+                          value={selectedMonitorCollege}
+                          onValueChange={(value) => {
+                            setSelectedMonitorCollege(value);
+                            setSelectedMonitorDepartment("all");
+                          }}
+                        >
+                          <SelectTrigger className="rounded-xl border-slate-200 h-11 text-xs font-black uppercase tracking-wide">
+                            <SelectValue placeholder="Select College" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Colleges</SelectItem>
+                            {monitorColleges.map((college) => (
+                              <SelectItem key={college.id} value={college.id}>
+                                {college.code} - {college.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                        <Select
+                          value={selectedMonitorDepartment}
+                          onValueChange={(value) => setSelectedMonitorDepartment(value)}
+                        >
+                          <SelectTrigger className="rounded-xl border-slate-200 h-11 text-xs font-black uppercase tracking-wide">
+                            <SelectValue placeholder="Select Department" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Departments</SelectItem>
+                            {monitorDepartments.map((department) => (
+                              <SelectItem key={department.id} value={department.id}>
+                                {department.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                        <Select
+                          value={selectedMonitorProf || ""}
+                          onValueChange={(value) => setSelectedMonitorProf(value)}
+                          disabled={monitorFaculties.length === 0}
+                        >
+                          <SelectTrigger className="rounded-xl border-slate-200 h-11 text-xs font-black uppercase tracking-wide">
+                            <SelectValue placeholder="Select Professor" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {monitorFaculties.map((faculty) => (
+                              <SelectItem key={faculty.id} value={faculty.id}>
+                                {faculty.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <Input
+                        placeholder="Type student number or student name"
+                        value={queueFinderQuery}
+                        onChange={(event) => setQueueFinderQuery(event.target.value)}
+                        className="h-12 rounded-xl border-slate-200 font-bold"
+                      />
+
+                      <div className="max-h-[46vh] overflow-y-auto pr-1 space-y-2">
+                        {queueFinderRows.length > 0 ? (
+                          queueFinderRows.map((ticket) => (
+                            <button
+                              key={ticket.id}
+                              type="button"
+                              onClick={() => {
+                                setQueueFinderOpen(false);
+                                setLocation(`/status/${ticket.id}`);
+                              }}
+                              className="w-full text-left rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 hover:border-[#c62828] hover:bg-white transition-colors"
+                            >
+                              <p className="text-sm font-black text-slate-900">{ticket.student_display_name || "Unknown Student"}</p>
+                              <p className="text-[11px] font-bold uppercase tracking-wide text-[#c62828]/70 mt-1">
+                                {ticket.student_number || "No Student Number"} • {ticket.status === "called" ? "In Session" : "Waiting"}
+                              </p>
+                            </button>
+                          ))
+                        ) : (
+                          <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-[#c62828]/65">
+                              No active students match your search
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
             </CardContent>
           </Card>
@@ -795,6 +940,31 @@ export default function StudentKiosk() {
               </div>
 
               <div className="space-y-3">
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-[#c62828]/65 mb-1.5">
+                    College
+                  </p>
+                  <Select
+                    value={selectedMonitorCollege}
+                    onValueChange={(value) => {
+                      setSelectedMonitorCollege(value);
+                      setSelectedMonitorDepartment("all");
+                    }}
+                  >
+                    <SelectTrigger className="rounded-xl border-slate-200 h-11 text-xs font-black uppercase tracking-wide">
+                      <SelectValue placeholder="Select College" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Colleges</SelectItem>
+                      {monitorColleges.map((college) => (
+                        <SelectItem key={college.id} value={college.id}>
+                          {college.code} - {college.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div>
                   <p className="text-[9px] font-black uppercase tracking-widest text-[#c62828]/65 mb-1.5">
                     Department
