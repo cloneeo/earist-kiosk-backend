@@ -674,12 +674,7 @@ export default function FacultyDashboard() {
     const parsedSchedule = parseScheduleConfig(faculty?.schedule);
     const queueMeetLink = String(queueEntry.meet_link || "").trim();
     const configuredMeetLink = String(parsedSchedule.meetingLink || "").trim();
-    const meetUrl = queueMeetLink || configuredMeetLink;
-
-    if (!meetUrl) {
-      toast.error("No fixed Google Meet link is set for this booking. Please set your Meet room in schedule.");
-      return;
-    }
+    const meetUrl = queueMeetLink || configuredMeetLink || "https://meet.google.com/new";
 
     const meetWindow = window.open(meetUrl, "_blank", "noopener,noreferrer");
 
@@ -688,7 +683,11 @@ export default function FacultyDashboard() {
       return;
     }
 
-    toast.success("Google Meet opened. Session auto-completes when the Meet tab is closed.");
+    if (!queueMeetLink && !configuredMeetLink) {
+      toast("Opened a new Google Meet room. Share the link with the student from the Meet window.", { icon: "ℹ" });
+    } else {
+      toast.success("Google Meet opened. Session auto-completes when the Meet tab is closed.");
+    }
     clearMeetWatcher();
 
     let completed = false;

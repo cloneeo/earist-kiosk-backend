@@ -153,7 +153,6 @@ const getGoogleCalendarAccessToken = async (): Promise<string | null> => {
     })
       .setProtectedHeader({ alg: "RS256", typ: "JWT" })
       .setIssuer(googleServiceAccountEmail)
-      .setSubject(googleServiceAccountEmail)
       .setAudience("https://oauth2.googleapis.com/token")
       .setIssuedAt(now)
       .setExpirationTime(now + 3600)
