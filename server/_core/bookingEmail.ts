@@ -242,6 +242,7 @@ export function registerBookingEmailRoutes(app: Express) {
       const facultyScheduleMeetLink = readMeetingLinkFromSchedule(faculty?.schedule);
 
       let sharedMeetLink = "";
+      let meetLinkWarning: string | null = null;
       if (queueEntry.consultation_type === "google_meet") {
         // Use the most ticket-stable source first so student and faculty views stay consistent.
         const meetLinkResponse = await supabaseFetch<{ notes?: string | null }>(
@@ -256,11 +257,7 @@ export function registerBookingEmailRoutes(app: Express) {
         }
 
         if (!sharedMeetLink) {
-          return res.status(200).json({
-            ok: false,
-            skipped: true,
-            message: "No fixed Google Meet room link is configured for this booking.",
-          });
+          meetLinkWarning = "No fixed Google Meet room link is configured yet. The faculty will share it before the session.";
         }
       }
 
@@ -300,6 +297,9 @@ export function registerBookingEmailRoutes(app: Express) {
           ${queueEntry.consultation_type === "google_meet" && sharedMeetLink
             ? `<li><strong>Google Meet:</strong> <a href="${sharedMeetLink}">${sharedMeetLink}</a></li>`
             : ""}
+          ${queueEntry.consultation_type === "google_meet" && !sharedMeetLink
+            ? `<li><strong>Google Meet:</strong> Link will be shared by your professor before the consultation.</li>`
+            : ""}
           <li><strong>Booked At:</strong> ${bookingDate}</li>
         </ul>
         <p>You can track your status here:</p>
@@ -327,7 +327,7 @@ export function registerBookingEmailRoutes(app: Express) {
         ok: true,
         recipient: recipientEmail,
         provider: emailResult.provider || "unknown",
-        warning: studentLookupWarning || undefined,
+        warning: meetLinkWarning || studentLookupWarning || undefined,
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown server error";
