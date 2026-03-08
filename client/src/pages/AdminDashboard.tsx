@@ -271,40 +271,42 @@ export default function AdminDashboard() {
 
   return (
     <div className="flex flex-col h-screen w-full bg-[#f3f1f6] overflow-hidden font-sans">
-      <nav className="bg-white border-b border-[#f3f1f6] px-8 py-4 flex justify-between items-center shadow-sm z-10">
+      <nav className="bg-white border-b border-[#f3f1f6] px-4 sm:px-8 py-4 flex justify-between items-center shadow-sm z-10">
         <div className="flex items-center gap-3">
           <div className="bg-[#c62828] p-2 rounded-lg text-white"><LayoutDashboard className="w-5 h-5" /></div>
           <h1 className="text-xl font-extrabold text-[#c62828] tracking-tight uppercase">Admin Portal</h1>
         </div>
         <Button variant="ghost" onClick={() => signOut()} className="text-[#c62828]/65 hover:text-[#c62828] font-bold uppercase text-[10px] tracking-widest">
-          <LogOut className="mr-2 h-4 w-4" /> Sign Out
+          <LogOut className="mr-2 h-4 w-4" /> <span className="hidden sm:inline">Sign Out</span>
         </Button>
       </nav>
 
-      <div className="flex-1 overflow-auto p-8 lg:p-12">
-        <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-8">
+      <div className="flex-1 overflow-auto p-4 sm:p-8 lg:p-12">
+        <div className="flex flex-col gap-6 mb-8">
           <div className="space-y-4">
-            <h2 className="text-4xl font-black text-slate-800 tracking-tighter uppercase">Queue Monitor</h2>
-            <div className="flex gap-4">
-              <div className="bg-white px-6 py-4 rounded-2xl border border-slate-100"><p className="text-[10px] font-black uppercase text-[#c62828]/65">In Session</p><p className="text-2xl font-black text-[#c62828]">{stats.inSession}</p></div>
-              <div className="bg-white px-6 py-4 rounded-2xl border border-slate-100"><p className="text-[10px] font-black uppercase text-[#c62828]/65">Waiting</p><p className="text-2xl font-black text-[#c62828]">{stats.waiting}</p></div>
-              <div className="bg-[#c62828] px-6 py-4 rounded-2xl text-white"><p className="text-[10px] font-black uppercase opacity-70">Total</p><p className="text-2xl font-black">{stats.total}</p></div>
+            <h2 className="text-2xl sm:text-4xl font-black text-slate-800 tracking-tighter uppercase">Queue Monitor</h2>
+            <div className="flex gap-3">
+              <div className="bg-white px-4 sm:px-6 py-3 sm:py-4 rounded-2xl border border-slate-100"><p className="text-[10px] font-black uppercase text-[#c62828]/65">In Session</p><p className="text-xl sm:text-2xl font-black text-[#c62828]">{stats.inSession}</p></div>
+              <div className="bg-white px-4 sm:px-6 py-3 sm:py-4 rounded-2xl border border-slate-100"><p className="text-[10px] font-black uppercase text-[#c62828]/65">Waiting</p><p className="text-xl sm:text-2xl font-black text-[#c62828]">{stats.waiting}</p></div>
+              <div className="bg-[#c62828] px-4 sm:px-6 py-3 sm:py-4 rounded-2xl text-white"><p className="text-[10px] font-black uppercase opacity-70">Total</p><p className="text-xl sm:text-2xl font-black">{stats.total}</p></div>
             </div>
           </div>
 
-          <div className="flex gap-2 bg-white p-1.5 rounded-2xl border border-slate-100">
-            {[
-              { id: "consultations", label: "Live Queue", icon: LayoutDashboard },
-              { id: "colleges", label: "Colleges", icon: Building2 },
-              { id: "departments", label: "Depts", icon: Building2 },
-              { id: "faculty", label: "Faculty", icon: Users },
-              { id: "recordings", label: "Recordings", icon: Clock },
-              { id: "audits", label: "Audit Logs", icon: AlertCircle },
-            ].map((tab) => (
-              <Button key={tab.id} variant={activeTab === tab.id ? "default" : "ghost"} className={activeTab === tab.id ? "bg-[#c62828] hover:bg-[#c62828] text-white rounded-xl" : "rounded-xl text-slate-500"} onClick={() => setActiveTab(tab.id as any)}>
-                <tab.icon className="w-4 h-4 mr-2" /> {tab.label}
-              </Button>
-            ))}
+          <div className="overflow-x-auto">
+            <div className="flex gap-2 bg-white p-1.5 rounded-2xl border border-slate-100 min-w-full sm:min-w-0 sm:w-auto">
+              {[
+                { id: "consultations", label: "Live Queue", icon: LayoutDashboard },
+                { id: "colleges", label: "Colleges", icon: Building2 },
+                { id: "departments", label: "Depts", icon: Building2 },
+                { id: "faculty", label: "Faculty", icon: Users },
+                { id: "recordings", label: "Recordings", icon: Clock },
+                { id: "audits", label: "Audit Logs", icon: AlertCircle },
+              ].map((tab) => (
+                <Button key={tab.id} variant={activeTab === tab.id ? "default" : "ghost"} className={activeTab === tab.id ? "bg-[#c62828] hover:bg-[#c62828] text-white rounded-xl whitespace-nowrap" : "rounded-xl text-slate-500 whitespace-nowrap"} onClick={() => setActiveTab(tab.id as any)}>
+                  <tab.icon className="w-4 h-4 mr-2" /> {tab.label}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -325,7 +327,7 @@ export default function AdminDashboard() {
           </div>
         ) : (
           <Card className="rounded-3xl border-0 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between border-b px-8 py-6">
+            <CardHeader className="flex flex-row items-center justify-between border-b px-4 sm:px-8 py-6">
               <CardTitle className="uppercase text-xs font-black text-slate-800">{activeTab === "recordings" ? "Recordings" : activeTab === "audits" ? "Consultation Audit Logs" : `${activeTab} Registry`}</CardTitle>
               {/* FIXED ADD BUTTON FOR ALL TABS */}
               {activeTab !== "recordings" && activeTab !== "audits" && (
@@ -369,22 +371,28 @@ export default function AdminDashboard() {
                  </div>
                )}
                {activeTab === "colleges" && (
-                 <table className="w-full text-sm">
-                   <thead className="bg-slate-50"><tr><th className="text-left p-4">Name</th><th className="text-left p-4">Code</th><th className="text-right p-4">Actions</th></tr></thead>
-                   <tbody>{colleges.map(c => (<tr key={c.id} className="border-t"><td className="p-4 font-bold">{c.name}</td><td className="p-4 font-mono">{c.code}</td><td className="p-4 text-right"><Button variant="ghost" size="icon" onClick={() => handleDelete("colleges", c.id)}><Trash2 className="h-4 w-4 text-[#c62828]" /></Button></td></tr>))}</tbody>
-                 </table>
+                 <div className="overflow-x-auto">
+                   <table className="w-full text-sm">
+                     <thead className="bg-slate-50"><tr><th className="text-left p-4">Name</th><th className="text-left p-4">Code</th><th className="text-right p-4">Actions</th></tr></thead>
+                     <tbody>{colleges.map(c => (<tr key={c.id} className="border-t"><td className="p-4 font-bold">{c.name}</td><td className="p-4 font-mono">{c.code}</td><td className="p-4 text-right"><Button variant="ghost" size="icon" onClick={() => handleDelete("colleges", c.id)}><Trash2 className="h-4 w-4 text-[#c62828]" /></Button></td></tr>))}</tbody>
+                   </table>
+                 </div>
                )}
                {activeTab === "departments" && (
-                 <table className="w-full text-sm">
-                   <thead className="bg-slate-50"><tr><th className="text-left p-4">Name</th><th className="text-left p-4">Code</th><th className="text-left p-4">College</th><th className="text-right p-4">Actions</th></tr></thead>
-                   <tbody>{departments.map(d => (<tr key={d.id} className="border-t"><td className="p-4 font-bold">{d.name}</td><td className="p-4 font-mono">{d.code}</td><td className="p-4">{colleges.find(c => c.id === d.college_id)?.name}</td><td className="p-4 text-right"><Button variant="ghost" size="icon" onClick={() => handleDelete("departments", d.id)}><Trash2 className="h-4 w-4 text-[#c62828]" /></Button></td></tr>))}</tbody>
-                 </table>
+                 <div className="overflow-x-auto">
+                   <table className="w-full text-sm">
+                     <thead className="bg-slate-50"><tr><th className="text-left p-4">Name</th><th className="text-left p-4">Code</th><th className="text-left p-4">College</th><th className="text-right p-4">Actions</th></tr></thead>
+                     <tbody>{departments.map(d => (<tr key={d.id} className="border-t"><td className="p-4 font-bold">{d.name}</td><td className="p-4 font-mono">{d.code}</td><td className="p-4">{colleges.find(c => c.id === d.college_id)?.name}</td><td className="p-4 text-right"><Button variant="ghost" size="icon" onClick={() => handleDelete("departments", d.id)}><Trash2 className="h-4 w-4 text-[#c62828]" /></Button></td></tr>))}</tbody>
+                   </table>
+                 </div>
                )}
                {activeTab === "faculty" && (
-                 <table className="w-full text-sm">
-                   <thead className="bg-slate-50"><tr><th className="text-left p-4">Name</th><th className="text-left p-4">Email</th><th className="text-left p-4">Department</th><th className="text-right p-4">Actions</th></tr></thead>
-                   <tbody>{faculties.map(f => (<tr key={f.id} className="border-t"><td className="p-4 font-bold">{f.name}</td><td className="p-4">{f.email}</td><td className="p-4">{departments.find(d => d.id === f.department_id)?.name}</td><td className="p-4 text-right"><Button variant="ghost" size="icon" onClick={() => handleDelete("faculty", f.id)}><Trash2 className="h-4 w-4 text-[#c62828]" /></Button></td></tr>))}</tbody>
-                 </table>
+                 <div className="overflow-x-auto">
+                   <table className="w-full text-sm">
+                     <thead className="bg-slate-50"><tr><th className="text-left p-4">Name</th><th className="text-left p-4">Email</th><th className="text-left p-4">Department</th><th className="text-right p-4">Actions</th></tr></thead>
+                     <tbody>{faculties.map(f => (<tr key={f.id} className="border-t"><td className="p-4 font-bold">{f.name}</td><td className="p-4">{f.email}</td><td className="p-4">{departments.find(d => d.id === f.department_id)?.name}</td><td className="p-4 text-right"><Button variant="ghost" size="icon" onClick={() => handleDelete("faculty", f.id)}><Trash2 className="h-4 w-4 text-[#c62828]" /></Button></td></tr>))}</tbody>
+                   </table>
+                 </div>
                )}
                {activeTab === "audits" && (
                  <div className="p-6 space-y-4">
