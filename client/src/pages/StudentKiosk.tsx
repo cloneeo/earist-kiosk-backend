@@ -40,7 +40,6 @@ export default function StudentKiosk() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const scanLockRef = useRef(false);
-  const autoPromptedStudentRef = useRef<string>("");
 
   const [currentTime, setCurrentTime] = useState(new Date());
   const [faculties, setFaculties] = useState<any[]>([]);
@@ -479,20 +478,6 @@ export default function StudentKiosk() {
     await openStudentIdentityDialog(studentNumber.trim().toUpperCase());
   };
 
-  useEffect(() => {
-    if (isNameDialogOpen || scanLockRef.current || loading) return;
-
-    const normalized = studentNumber.trim().toUpperCase();
-    if (!validateStudentNumber(normalized)) {
-      autoPromptedStudentRef.current = "";
-      return;
-    }
-
-    if (autoPromptedStudentRef.current === normalized) return;
-    autoPromptedStudentRef.current = normalized;
-    void openStudentIdentityDialog(normalized);
-  }, [studentNumber, isNameDialogOpen, loading]);
-
   const departmentById = new Map(departments.map((department) => [department.id, department]));
 
   const monitorColleges = colleges.filter((college) =>
@@ -614,7 +599,6 @@ export default function StudentKiosk() {
                     setStudentName("");
                     setStudentEmail("");
                     setIsResolvingStudent(false);
-                    autoPromptedStudentRef.current = "";
                   }
                 }}
               >
