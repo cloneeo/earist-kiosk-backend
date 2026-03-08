@@ -40,6 +40,18 @@ type ParsedSlot = {
   methodLabel: string;
 };
 
+type CollegeRow = {
+  id: string;
+  name: string;
+  code: string | null;
+};
+
+type DepartmentRow = {
+  id: string;
+  name: string;
+  college_id: string | null;
+};
+
 const getDepartmentValue = (department: FacultySchedule["department"]) => {
   if (!department) {
     return { id: "unassigned-dept", name: "No department", collegeId: "unassigned-college", collegeName: "No college" };
@@ -109,6 +121,27 @@ export default function KioskScheduleDirectory() {
   const [selectedFaculty, setSelectedFaculty] = useState("all");
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<FacultySchedule[]>([]);
+  const [colleges, setColleges] = useState<CollegeRow[]>([]);
+  const [departments, setDepartments] = useState<DepartmentRow[]>([]);
+
+  const loadLookups = useCallback(async () => {
+    const [collegeResult, departmentResult] = await Promise.all([
+      kioskSupabase.from("colleges").select("id, name, code").order("name"),
+      kioskSupabase.from("departments").select("id, name, college_id").order("name"),
+    ]);
+
+    if (collegeResult.error) {
+      console.error("Failed to load college options:", collegeResult.error);
+    } else {
+      setColleges((collegeResult.data || []) as CollegeRow[]);
+    }
+
+    if (departmentResult.error) {
+      console.error("Failed to load department options:", departmentResult.error);
+    } else {
+      setDepartments((departmentResult.data || []) as DepartmentRow[]);
+    }
+  }, []);
 
   const loadDirectory = useCallback(async () => {
     setLoading(true);
@@ -130,16 +163,19 @@ export default function KioskScheduleDirectory() {
 
   useEffect(() => {
     void loadDirectory();
+    void loadLookups();
 
     const channel = kioskSupabase
       .channel("kiosk-schedule-page")
       .on("postgres_changes", { event: "*", schema: "public", table: "faculty" }, () => void loadDirectory())
+      .on("postgres_changes", { event: "*", schema: "public", table: "colleges" }, () => void loadLookups())
+      .on("postgres_changes", { event: "*", schema: "public", table: "departments" }, () => void loadLookups())
       .subscribe();
 
     return () => {
       kioskSupabase.removeChannel(channel);
     };
-  }, [loadDirectory]);
+  }, [loadDirectory, loadLookups]);
 
   const enrichedRows = useMemo(() => {
     return rows.map((row) => {
@@ -155,17 +191,35 @@ export default function KioskScheduleDirectory() {
   }, [rows]);
 
   const collegeOptions = useMemo(() => {
-    const unique = new Map<string, string>();
-    enrichedRows.forEach((row) => unique.set(row.collegeId, row.collegeName));
-    return Array.from(unique.entries()).map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
-  }, [enrichedRows]);
+    const fromLookup = colleges.map((college) => ({
+      id: college.id,
+      name: college.code ? `${college.code} - ${college.name}` : college.name,
+    }));
+
+    const fallback = enrichedRows
+      .filter((row) => !fromLookup.some((college) => college.id === row.collegeId))
+      .map((row) => ({ id: row.collegeId, name: row.collegeName }));
+
+    return [...fromLookup, ...fallback].sort((a, b) => a.name.localeCompare(b.name));
+  }, [colleges, enrichedRows]);
 
   const departmentOptions = useMemo(() => {
-    const source = selectedCollege === "all" ? enrichedRows : enrichedRows.filter((row) => row.collegeId === selectedCollege);
-    const unique = new Map<string, string>();
-    source.forEach((row) => unique.set(row.departmentId, row.departmentName));
-    return Array.from(unique.entries()).map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
-  }, [enrichedRows, selectedCollege]);
+    const lookupRows = departments.filter((department) => {
+      if (selectedCollege === "all") return true;
+      return department.college_id === selectedCollege;
+    });
+
+    const fromLookup = lookupRows.map((department) => ({ id: department.id, name: department.name }));
+
+    const fallback = enrichedRows
+      .filter((row) => {
+        if (selectedCollege !== "all" && row.collegeId !== selectedCollege) return false;
+        return !fromLookup.some((department) => department.id === row.departmentId);
+      })
+      .map((row) => ({ id: row.departmentId, name: row.departmentName }));
+
+    return [...fromLookup, ...fallback].sort((a, b) => a.name.localeCompare(b.name));
+  }, [departments, enrichedRows, selectedCollege]);
 
   const facultyOptions = useMemo(() => {
     return enrichedRows
@@ -236,7 +290,14 @@ export default function KioskScheduleDirectory() {
             <p className="text-sm text-[#024059]/70">Use dropdowns to view schedules per college, department, and faculty.</p>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <Select value={selectedCollege} onValueChange={setSelectedCollege}>
+              <Select
+                value={selectedCollege}
+                onValueChange={(value) => {
+                  setSelectedCollege(value);
+                  setSelectedDepartment("all");
+                  setSelectedFaculty("all");
+                }}
+              >
                 <SelectTrigger className="rounded-xl bg-white"><SelectValue placeholder="College" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Colleges</SelectItem>
@@ -246,7 +307,13 @@ export default function KioskScheduleDirectory() {
                 </SelectContent>
               </Select>
 
-              <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+              <Select
+                value={selectedDepartment}
+                onValueChange={(value) => {
+                  setSelectedDepartment(value);
+                  setSelectedFaculty("all");
+                }}
+              >
                 <SelectTrigger className="rounded-xl bg-white"><SelectValue placeholder="Department" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Departments</SelectItem>
