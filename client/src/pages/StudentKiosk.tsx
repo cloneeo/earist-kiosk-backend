@@ -46,6 +46,7 @@ export default function StudentKiosk() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const scanLockRef = useRef(false);
+  const autoPromptedStudentRef = useRef<string>("");
 
   const [currentTime, setCurrentTime] = useState(new Date());
   const [faculties, setFaculties] = useState<any[]>([]);
@@ -489,6 +490,20 @@ export default function StudentKiosk() {
     await openStudentIdentityDialog(studentNumber.trim().toUpperCase());
   };
 
+  useEffect(() => {
+    if (isNameDialogOpen || scanLockRef.current || loading) return;
+
+    const normalized = studentNumber.trim().toUpperCase();
+    if (!validateStudentNumber(normalized)) {
+      autoPromptedStudentRef.current = "";
+      return;
+    }
+
+    if (autoPromptedStudentRef.current === normalized) return;
+    autoPromptedStudentRef.current = normalized;
+    void openStudentIdentityDialog(normalized);
+  }, [studentNumber, isNameDialogOpen, loading]);
+
   const handleCheckStatus = async () => {
     setQueueFinderQuery("");
     setQueueFinderOpen(true);
@@ -604,6 +619,12 @@ export default function StudentKiosk() {
                   placeholder="Type student number (e.g., 222-00000M)"
                   value={studentNumber}
                   onChange={(e) => setStudentNumber(e.target.value.toUpperCase())}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      void handleSubmit(event as unknown as React.FormEvent);
+                    }
+                  }}
                   onFocus={() => openKeyboardFor("studentNumber")}
                   disabled={loading}
                   className="text-center font-mono h-12 sm:h-13 border-slate-200 focus-visible:ring-4 focus-visible:ring-[#f1c4c4] focus-visible:border-[#c62828] rounded-[16px] text-base sm:text-lg bg-slate-50 font-bold"
@@ -633,6 +654,7 @@ export default function StudentKiosk() {
                     setStudentName("");
                     setStudentEmail("");
                     setIsResolvingStudent(false);
+                    autoPromptedStudentRef.current = "";
                   }
                 }}
               >

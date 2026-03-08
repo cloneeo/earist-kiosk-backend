@@ -27,6 +27,19 @@ class BarcodeScannerService {
   }
 
   private handleKeyDown(event: KeyboardEvent) {
+    const target = event.target as HTMLElement | null;
+    if (target) {
+      const tagName = target.tagName;
+      const isTypingField =
+        tagName === "INPUT" ||
+        tagName === "TEXTAREA" ||
+        tagName === "SELECT" ||
+        target.isContentEditable;
+
+      // Don't treat manual typing as a scanner stream.
+      if (isTypingField) return;
+    }
+
     if (event.key === "Enter") {
       if (this.buffer.length > 0 && this.handler) {
         this.handler(this.buffer);
